@@ -60,11 +60,11 @@ public class PollService {
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());
         int totalVotes = options.stream()
-                .mapToInt(o -> voteRepository.countByOptionId(o.getId()))
+                .mapToInt(o -> voteRepository.countByOption_Id(o.getId()))
                 .sum();
 
         List<OptionResponse> optionResponses = options.stream().map(o -> {
-            int count = voteRepository.countByOptionId(o.getId());
+            int count = voteRepository.countByOption_Id(o.getId());
             return OptionResponse.builder()
                     .id(o.getId())
                     .text(o.getOptionText())

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VoteRepository extends JpaRepository<Vote, Long> {
-    List<Vote> findByPollOptionPollId(Long pollId);
-    Optional<Vote> findByUserIdAndPollOptionPollId(Long userId, Long pollId);
-    boolean existsByUserIdAndPollOptionPollId(Long userId, Long pollId);
-    int countByPollOptionId(Long optionId);
+    List<Vote> findByPoll_Id(Long pollId);
+    Optional<Vote> findByUserIdAndPoll_Id(Long userId, Long pollId);
+    boolean existsByUserIdAndPoll_Id(Long userId, Long pollId);
+    int countByOption_Id(Long optionId);
 }
