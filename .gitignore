@@ -1,0 +1,59 @@
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Terraform files
+terraform.tfvars
+terraform.tfvars.json
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Java build files
+target/
+*.jar
+*.war
+*.nar
+*.class
+*.log
+
+# Node.js files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.angular/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.qodo

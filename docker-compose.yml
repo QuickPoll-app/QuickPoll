@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: quickpoll-db
+    environment:
+      POSTGRES_DB: quickpoll
+      POSTGRES_USER: quickpoll
+      POSTGRES_PASSWORD: quickpoll123
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quickpoll"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quickpoll-network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quickpoll-backend
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quickpoll
+      SPRING_DATASOURCE_USERNAME: quickpoll
+      SPRING_DATASOURCE_PASSWORD: quickpoll123
+      JWT_SECRET: Z29vZC1zZWNyZXQta2V5LWZvcg==
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - quickpoll-network
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quickpoll-frontend
+    ports:
+      - "4200:80"
+    environment:
+      - API_BASE_URL=http://localhost:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - quickpoll-network
+
+  data-engineering:
+    build: 
+      context: ./data-engineering
+      dockerfile: Dockerfile
+    container_name: quickpoll-data-engineering
+    environment:
+      DATABASE_URL: postgresql://quickpoll:quickpoll123@postgres:5432/quickpoll
+      BACKEND_API_URL: http://backend:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./data-engineering/data:/app/data
+    networks:
+      - quickpoll-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: quickpoll-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - quickpoll-network
+
+volumes:
+  pgdata:
+  redis-data:
+
+networks:
+  quickpoll-network:
+    driver: bridge

@@ -1,0 +1,2 @@
+# Production Environment - Terraform Variables
+# Example values for production environment (copy to terraform.tfvars)

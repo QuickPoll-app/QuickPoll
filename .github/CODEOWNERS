@@ -1,0 +1,20 @@
+# DevOps and Infrastructure
+infrastructure/ @Viateur-akimana
+.github/ @Viateur-akimana
+**/Dockerfile @Viateur-akimana
+docker-compose*.yml @Viateur-akimana
+
+# Backend
+backend/ @mahorobonheur @GargoilXD
+
+# Frontend
+frontend/ @Bentil4
+
+# QA
+qa/ @Lennox-Owusu
+
+# Data Engineering
+data-engineering/ @Damas200
+
+# Default
+* @Viateur-akimana @Lennox-Owusu 
