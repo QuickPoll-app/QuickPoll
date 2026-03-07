@@ -1,56 +1,91 @@
 """ETL Pipeline for QuickPoll Analytics"""
+
+import logging
 import pandas as pd
 from sqlalchemy import create_engine, text
 from config import DATABASE_URL
 
+logging.basicConfig(level=logging.INFO)
+
 engine = create_engine(DATABASE_URL)
 
-def extract_polls():
+
+def extract_poll_summary():
+    logging.info("Extracting poll summary")
+
     query = text("""
-        SELECT p.id, p.question, p.status, p.created_at,
-               p.multiple_choice, u.name AS creator_name
-        FROM polls p JOIN users u ON p.creator_id = u.id
+        SELECT 
+            p.id,
+            p.question,
+            u.name AS creator_name,
+            COUNT(v.id) AS total_votes,
+            p.created_at
+        FROM polls p
+        JOIN users u ON p.creator_id = u.id
+        LEFT JOIN poll_options po ON po.poll_id = p.id
+        LEFT JOIN votes v ON v.poll_option_id = po.id
+        GROUP BY p.id, p.question, u.name, p.created_at
     """)
+
     with engine.connect() as conn:
         return pd.read_sql(query, conn)
 
-def extract_votes():
+
+def extract_participation_metrics():
+    logging.info("Extracting participation metrics")
+
     query = text("""
-        SELECT v.id, v.created_at, po.text AS option_text,
-               po.poll_id, u.name AS voter_name
-        FROM votes v
-        JOIN poll_options po ON v.poll_option_id = po.id
-        JOIN users u ON v.user_id = u.id
+        SELECT 
+            p.id AS poll_id,
+            COUNT(DISTINCT v.user_id) AS unique_voters,
+            (COUNT(DISTINCT v.user_id)::float /
+             (SELECT COUNT(*) FROM users)) * 100 AS participation_rate
+        FROM polls p
+        LEFT JOIN poll_options po ON po.poll_id = p.id
+        LEFT JOIN votes v ON v.poll_option_id = po.id
+        GROUP BY p.id
     """)
+
     with engine.connect() as conn:
         return pd.read_sql(query, conn)
 
-def transform_poll_analytics(polls_df, votes_df):
-    """Aggregate vote data per poll."""
-    if votes_df.empty:
-        return pd.DataFrame()
-    vote_counts = votes_df.groupby("poll_id").size().reset_index(name="total_votes")
-    result = polls_df.merge(vote_counts, left_on="id", right_on="poll_id", how="left")
-    result["total_votes"] = result["total_votes"].fillna(0).astype(int)
-    return result[["id", "question", "creator_name", "total_votes", "created_at"]]
+
+def extract_vote_trends():
+    logging.info("Extracting voting trends")
+
+    query = text("""
+        SELECT 
+            DATE(created_at) AS vote_date,
+            COUNT(*) AS votes_per_day
+        FROM votes
+        GROUP BY vote_date
+        ORDER BY vote_date
+    """)
+
+    with engine.connect() as conn:
+        return pd.read_sql(query, conn)
+
 
 def load_analytics(df, table_name):
-    df.to_sql(table_name, engine, if_exists="replace", index=False)
-    print(f"Loaded {len(df)} rows into {table_name}")
+    logging.info(f"Loading {len(df)} rows into {table_name}")
+
+    with engine.begin() as conn:
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
+
 
 def run_pipeline():
-    print("Starting QuickPoll ETL pipeline...")
-    polls_df = extract_polls()
-    votes_df = extract_votes()
-    print(f"Extracted {len(polls_df)} polls, {len(votes_df)} votes")
+    logging.info("Starting QuickPoll ETL pipeline")
 
-    analytics = transform_poll_analytics(polls_df, votes_df)
-    if not analytics.empty:
-        load_analytics(analytics, "analytics_poll_summary")
+    poll_summary = extract_poll_summary()
+    participation = extract_participation_metrics()
+    vote_trends = extract_vote_trends()
 
-    # TODO: Add time-series voting trends
-    # TODO: Add user participation metrics
-    print("ETL pipeline complete!")
+    load_analytics(poll_summary, "analytics_poll_summary")
+    load_analytics(participation, "analytics_participation")
+    load_analytics(vote_trends, "analytics_vote_trends")
+
+    logging.info("ETL pipeline completed successfully")
+
 
 if __name__ == "__main__":
     run_pipeline()
