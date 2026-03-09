@@ -2,6 +2,8 @@
 # ECS Module - Main Configuration
 # ECS Fargate Cluster, Services, Task Definitions
 
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
 
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
@@ -70,8 +72,8 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       secrets = [
-        { name = "SPRING_DATASOURCE_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/db-password" },
-        { name = "JWT_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/jwt-secret" },
+        { name = "SPRING_DATASOURCE_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/db-password" },
+        { name = "JWT_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/jwt-secret" },
       ]
 
       logConfiguration = {
