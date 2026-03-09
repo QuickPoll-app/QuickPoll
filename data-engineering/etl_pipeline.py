@@ -158,7 +158,7 @@ def transform_vote_trends(votes_df):
     return trends
 
 
-def transform_user_participation(votes_df):
+def transform_user_participation(votes_df, polls_df):
 
     logger.info("Transforming user participation")
 
@@ -167,6 +167,13 @@ def transform_user_participation(votes_df):
         .groupby("voter_name")
         .size()
         .reset_index(name="total_votes_cast")
+    )
+
+    total_users = participation.shape[0]
+
+    participation["participation_rate"] = (
+        participation["total_votes_cast"] /
+        participation["total_votes_cast"].sum()
     )
 
     return participation
