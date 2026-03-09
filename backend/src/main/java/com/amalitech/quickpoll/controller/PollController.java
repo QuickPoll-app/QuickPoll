@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/polls")
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class PollController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PollResponse> getPollById(@PathVariable Long id) {
+    public ResponseEntity<PollResponse> getPollById(@PathVariable UUID id) {
         return ResponseEntity.ok(pollService.getPollById(id));
     }
 

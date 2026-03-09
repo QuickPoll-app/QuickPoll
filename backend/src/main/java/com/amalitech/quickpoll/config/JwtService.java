@@ -1,5 +1,6 @@
 package com.amalitech.quickpoll.config;
 
+import com.amalitech.quickpoll.model.enums.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String email, Role role) {
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)

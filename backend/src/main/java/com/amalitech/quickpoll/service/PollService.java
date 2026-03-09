@@ -8,6 +8,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class PollService {
                 .map(this::toResponse);
     }
 
-    public PollResponse getPollById(Long id) {
+    public PollResponse getPollById(UUID id) {
         Poll poll = pollRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Poll not found"));
         return toResponse(poll);
@@ -34,7 +35,6 @@ public class PollService {
                 .description(request.getDescription())
                 .creator(creator)
                 .multiSelect(request.isMultipleChoice())
-                .active(true)
                 .createdAt(LocalDateTime.now())
                 .build();
         poll = pollRepository.save(poll);
@@ -46,7 +46,7 @@ public class PollService {
                     .build();
             optionRepository.save(option);
         }
-        return toResponse(pollRepository.findById(poll.getId()).get());
+        return toResponse(pollRepository.findById(poll.getPollId()).get());
     }
 
     // TODO: Implement vote method
@@ -58,15 +58,15 @@ public class PollService {
     // TODO: Implement deletePoll method
 
     private PollResponse toResponse(Poll poll) {
-        List<PollOption> options = optionRepository.findByPollId(poll.getId());
+        List<PollOption> options = optionRepository.findByPollId(poll.getPollId());
         int totalVotes = options.stream()
-                .mapToInt(o -> voteRepository.countByOption_Id(o.getId()))
+                .mapToInt(o -> voteRepository.countByOption_Id(o.getPollOptionId()))
                 .sum();
 
         List<OptionResponse> optionResponses = options.stream().map(o -> {
-            int count = voteRepository.countByOption_Id(o.getId());
+            int count = voteRepository.countByOption_Id(o.getPollOptionId());
             return OptionResponse.builder()
-                    .id(o.getId())
+                    .id(o.getPollOptionId())
                     .text(o.getOptionText())
                     .voteCount(count)
                     .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
@@ -74,11 +74,11 @@ public class PollService {
         }).collect(java.util.stream.Collectors.toList());
 
         return PollResponse.builder()
-                .id(poll.getId())
+                .id(poll.getPollId())
                 .question(poll.getTitle())
                 .description(poll.getDescription())
                 .creatorName(poll.getCreator().getFullName())
-                .status(poll.isActive() ? "ACTIVE" : "INACTIVE")
+                .status(poll.getStatus())
                 .multipleChoice(poll.isMultiSelect())
                 .createdAt(poll.getCreatedAt())
                 .totalVotes(totalVotes)
