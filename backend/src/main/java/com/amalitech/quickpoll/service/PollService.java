@@ -2,6 +2,7 @@ package com.amalitech.quickpoll.service;
 
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.*;
+import com.amalitech.quickpoll.model.enums.PollStatus;
 import com.amalitech.quickpoll.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -33,7 +34,7 @@ public class PollService {
                 .description(request.description())
                 .creator(creator)
                 .multiSelect(request.multipleChoice())
-                .active(true)
+                .status(PollStatus.ACTIVE.name())
                 .createdAt(LocalDateTime.now())
                 .build();
         poll = pollRepository.save(poll);
@@ -77,7 +78,7 @@ public class PollService {
                 .question(poll.getTitle())
                 .description(poll.getDescription())
                 .creatorName(poll.getCreator().getFullName())
-                .status(poll.isActive() ? "ACTIVE" : "INACTIVE")
+                .status(poll.getStatus())
                 .multipleChoice(poll.isMultiSelect())
                 .createdAt(poll.getCreatedAt())
                 .totalVotes(totalVotes)

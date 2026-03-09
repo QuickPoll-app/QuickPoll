@@ -2,6 +2,7 @@ package com.amalitech.quickpoll.service;
 
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.User;
+import com.amalitech.quickpoll.model.enums.Role;
 import com.amalitech.quickpoll.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +23,7 @@ public class AuthService {
                 .fullName(request.name())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .role("USER")
+                .role(Role.USER.name())
                 .build();
         userRepository.save(user);
         String token = jwtService.generateToken(user.getEmail(), user.getRole());

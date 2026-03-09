@@ -32,7 +32,7 @@ public class Poll {
     private boolean multiSelect;
 
     @Builder.Default
-    private boolean active = true;
+    private String status = "ACTIVE";
 
     @Column(name = "expires_at", nullable = false)
     @UpdateTimestamp

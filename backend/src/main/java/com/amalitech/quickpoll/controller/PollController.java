@@ -5,7 +5,6 @@ import com.amalitech.quickpoll.model.User;
 import com.amalitech.quickpoll.service.PollService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
