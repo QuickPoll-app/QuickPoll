@@ -1,0 +1,247 @@
+.registration-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  padding: var(--spacing-6);
+}
+
+.registration-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-surface-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-8);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-8);
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.logo svg {
+  color: var(--color-primary-700);
+}
+
+.logo h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-700);
+  line-height: 1.33;
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+app-input {
+  display: block;
+  margin-bottom: var(--spacing-6);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.toggle-visibility {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  transition: color 150ms ease;
+}
+
+.toggle-visibility:hover {
+  color: var(--color-text-secondary);
+}
+
+.status-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-icon.success {
+  color: var(--color-success-700);
+}
+
+.password-strength {
+  margin-top: var(--spacing-2);
+}
+
+.strength-meter {
+  height: 4px;
+  background: var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--spacing-2);
+}
+
+.strength-fill {
+  height: 100%;
+  transition:
+    width 300ms ease,
+    background-color 300ms ease;
+}
+
+.strength-fill.weak {
+  width: 33%;
+  background: var(--color-error-700);
+}
+
+.strength-fill.medium {
+  width: 66%;
+  background: var(--color-warning-700);
+}
+
+.strength-fill.strong {
+  width: 100%;
+  background: var(--color-success-700);
+}
+
+.strength-text {
+  font-size: var(--font-size-sm);
+  line-height: 1.43;
+}
+
+.strength-text.weak {
+  color: var(--color-error-700);
+}
+
+.strength-text.medium {
+  color: var(--color-warning-700);
+}
+
+.strength-text.strong {
+  color: var(--color-success-700);
+}
+
+.success-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-success-700);
+  margin-top: var(--spacing-1);
+}
+
+.submit-section {
+  padding-top: var(--spacing-4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: var(--spacing-6);
+  width: 100%;
+}
+
+.submit-section app-button {
+  width: 100%;
+  margin-bottom: var(--spacing-4);
+}
+
+.checkbox-group {
+  padding-top: var(--spacing-2);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  cursor: pointer;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-box {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-primary);
+  margin-top: 2px;
+  transition: all 150ms ease;
+}
+
+.checkbox-box svg {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.checkbox-input:checked + .checkbox-box {
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
+}
+
+.checkbox-input:checked + .checkbox-box svg {
+  opacity: 1;
+}
+
+.checkbox-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.43;
+}
+
+.link {
+  color: var(--color-primary-700);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.link:hover {
+  color: var(--color-primary-900);
+}
+
+.footer {
+  text-align: center;
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-border-primary);
+}
+
+.footer p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.footer .link {
+  font-weight: var(--font-weight-medium);
+}
+
+@media (max-width: 767px) {
+  .registration-container {
+    padding: var(--spacing-4);
+  }
+
+  .registration-card {
+    padding: var(--spacing-6);
+  }
+}
