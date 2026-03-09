@@ -65,6 +65,8 @@ jobs:
     name: Terraform Apply (Staging)
     runs-on: ubuntu-latest
     needs: build-and-push
+    outputs:
+      alb_url: ${{ steps.capture-alb.outputs.alb_url }}
     environment:
       name: staging
       url: "${{ vars.STAGING_ALB_URL }}"
@@ -108,13 +110,16 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
       - name: Capture ALB URL and set GitHub Variable
+        id: capture-alb
         working-directory: ./infrastructure/environments/staging
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ALB_DNS=$(terraform output -raw alb_dns_name)
           echo "ALB DNS: $ALB_DNS"
-          gh variable set STAGING_ALB_URL --env staging --body "http://$ALB_DNS"
+          echo "alb_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
+          gh variable set STAGING_ALB_URL --env staging --body "http://$ALB_DNS" || echo "::warning::Could not set STAGING_ALB_URL variable. Set it manually to http://$ALB_DNS"
           echo "STAGING_ALB_URL set to http://$ALB_DNS"
 
   # Health check after deploy
@@ -122,6 +127,8 @@ jobs:
     name: Post-Deploy Health Check
     runs-on: ubuntu-latest
     needs: terraform-apply
+    env:
+      ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
     steps:
       - name: Wait for services to stabilize
         run: sleep 60
@@ -130,7 +137,7 @@ jobs:
         run: |
           for i in {1..10}; do
             status=$(curl -s -o /dev/null -w "%{http_code}" \
-              "${{ vars.STAGING_ALB_URL }}/actuator/health" || true)
+              "${ALB_URL}/actuator/health" || true)
             if [ "$status" = "200" ]; then
               echo "Backend health check passed"
               exit 0
@@ -144,7 +151,7 @@ jobs:
       - name: Health check frontend
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ vars.STAGING_ALB_URL }}/" || true)
+            "${ALB_URL}/" || true)
           if [ "$status" = "200" ]; then
             echo "Frontend health check passed"
           else
@@ -158,6 +165,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push, terraform-apply, health-check]
     if: always()
+    env:
+      ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
     steps:
       - name: Set commit status
         if: needs.health-check.result == 'success'
@@ -169,7 +178,7 @@ jobs:
               repo: context.repo.repo,
               sha: context.sha,
               state: 'success',
-              target_url: '${{ vars.STAGING_ALB_URL }}',
+              target_url: '${{ needs.terraform-apply.outputs.alb_url }}',
               description: 'Staging deployment successful',
               context: 'staging/deploy'
             });
@@ -188,7 +197,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*QuickPoll Staging Deployed*\n*Commit:* `${{ github.sha }}`\n*By:* ${{ github.actor }}\n*URL:* ${{ vars.STAGING_ALB_URL }}"
+                    "text": "*QuickPoll Staging Deployed*\n*Commit:* `${{ github.sha }}`\n*By:* ${{ github.actor }}\n*URL:* ${{ needs.terraform-apply.outputs.alb_url }}"
                   }
                 }
               ]
