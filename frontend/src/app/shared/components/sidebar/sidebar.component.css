@@ -1,0 +1,106 @@
+.sidebar {
+  flex-shrink: 0;
+  min-width: fit-content;
+  background: var(--color-surface-primary);
+  display: flex;
+  flex-direction: column;
+  width: 16rem;
+  height: 100vh;
+  border-right: 1px solid var(--color-border-primary);
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  color: var(--color-primary-700);
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+}
+
+.sidebar-nav li {
+  margin-bottom: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-secondary);
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 150ms ease;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  color: var(--color-primary-700);
+  background: var(--color-bg-secondary);
+}
+
+.nav-item.active {
+  background: color-mix(in oklab, var(--color-primary-700) 5%, transparent);
+  color: var(--color-primary-700);
+  border-left-color: var(--color-primary-700);
+}
+
+.nav-item iconify-icon {
+  font-size: 1rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--color-border-primary);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 9999px;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
