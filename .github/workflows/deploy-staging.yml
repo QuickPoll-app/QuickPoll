@@ -107,7 +107,14 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ./infrastructure/environments/staging
-        run: terraform apply -auto-approve tfplan
+        run: |
+          terraform apply -auto-approve tfplan
+          # If apply succeeded but state save failed, push the errored state
+          if [ -f errored.tfstate ]; then
+            echo "::warning::State save failed during apply. Pushing errored.tfstate..."
+            terraform state push errored.tfstate
+            rm -f errored.tfstate
+          fi
 
       - name: Capture ALB URL and set GitHub Variable
         id: capture-alb
