@@ -2,6 +2,8 @@
 # ECS Module - Main Configuration
 # ECS Fargate Cluster, Services, Task Definitions
 
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
 
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
@@ -38,6 +40,39 @@ resource "aws_cloudwatch_log_group" "frontend" {
   })
 }
 
+# SSM Parameters for secrets (Terraform-managed to stay in sync with RDS)
+resource "aws_ssm_parameter" "db_password" {
+  name        = "/${var.project_name}/${var.environment}/db-password"
+  description = "Database password for ${var.environment}"
+  type        = "SecureString"
+  value       = var.db_password
+  overwrite   = true
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-db-password"
+  })
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "jwt_secret" {
+  name        = "/${var.project_name}/${var.environment}/jwt-secret"
+  description = "JWT secret for ${var.environment}"
+  type        = "SecureString"
+  value       = var.jwt_secret
+  overwrite   = true
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-jwt-secret"
+  })
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 # Backend Task Definition
 resource "aws_ecs_task_definition" "backend" {
   family                   = "${var.project_name}-${var.environment}-backend"
@@ -47,6 +82,8 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = var.backend_memory
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
+
+  depends_on = [aws_ssm_parameter.db_password, aws_ssm_parameter.jwt_secret]
 
   container_definitions = jsonencode([
     {
@@ -70,8 +107,8 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       secrets = [
-        { name = "SPRING_DATASOURCE_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/db-password" },
-        { name = "JWT_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/jwt-secret" },
+        { name = "SPRING_DATASOURCE_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/db-password" },
+        { name = "JWT_SECRET", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/jwt-secret" },
       ]
 
       logConfiguration = {
@@ -116,7 +153,7 @@ resource "aws_ecs_task_definition" "frontend" {
 
       portMappings = [
         {
-          containerPort = 80
+          containerPort = 8080
           protocol      = "tcp"
         }
       ]
@@ -131,7 +168,7 @@ resource "aws_ecs_task_definition" "frontend" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1"]
+        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
@@ -195,7 +232,7 @@ resource "aws_ecs_service" "frontend" {
   load_balancer {
     target_group_arn = var.frontend_target_group_arn
     container_name   = "frontend"
-    container_port   = 80
+    container_port   = 8080
   }
 
   deployment_circuit_breaker {
