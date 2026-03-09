@@ -5,11 +5,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest (
-        @NotBlank(message = "Expected Name")
+        @NotBlank(message = "Name is required")
         String name,
-        @Email(message = "Expected Email") @NotBlank(message = "Expected Email")
+
+        @NotBlank(message = "Email is required")
+        @Email(message = "Invalid email format")
         String email,
-        @NotBlank(message = "Expected Password") @Size(min = 6, message = "Password Must Be Greater Than 6 Characters")
+
+        @NotBlank(message = "Password is required")
+        @Size(min = 8, message = "Password must be at least 8 characters")
         String password
 ) {
     public RegisterRequest {
