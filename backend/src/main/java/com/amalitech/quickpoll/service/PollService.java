@@ -1,12 +1,17 @@
 package com.amalitech.quickpoll.service;
 
 import com.amalitech.quickpoll.dto.*;
+import com.amalitech.quickpoll.exceptionHandler.BadRequestException;
+import com.amalitech.quickpoll.exceptionHandler.DuplicateResourceException;
+import com.amalitech.quickpoll.exceptionHandler.ResourceNotFoundException;
 import com.amalitech.quickpoll.model.*;
 import com.amalitech.quickpoll.model.enums.PollStatus;
 import com.amalitech.quickpoll.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,15 +24,18 @@ public class PollService {
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
 
+    @Transactional(readOnly = true)
     public Page<PollResponse> getAllPolls(Pageable pageable) {
         return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public PollResponse getPollById(UUID id) {
         Poll poll = pollRepository.findById(id).orElseThrow(() -> new RuntimeException("Poll not found"));
         return toResponse(poll);
     }
 
+    @Transactional
     public PollResponse createPoll(PollRequest request, User creator) {
         Poll poll = Poll.builder()
                 .title(request.question())
@@ -36,22 +44,37 @@ public class PollService {
                 .multiSelect(request.multipleChoice())
                 .status(PollStatus.ACTIVE)
                 .createdAt(Instant.now())
+                .expiresAt(request.expiresAt())
                 .build();
+        if (poll == null) throw new IllegalStateException("Failed to create poll");
         poll = pollRepository.save(poll);
-
         for (String optionText : request.options()) {
-            PollOption option = PollOption.builder()
-                    .optionText(optionText)
-                    .poll(poll)
-                    .build();
-            optionRepository.save(option);
+            PollOption pollOption = PollOption.builder().optionText(optionText).poll(poll).build();
+            if (pollOption == null) throw new IllegalStateException("Failed to create poll option");
+            optionRepository.save(pollOption);
         }
-        return toResponse(pollRepository.findById(poll.getId()).get());
+        return toResponse(pollRepository.findById(poll.getId()).orElseThrow(() -> new ResourceNotFoundException("Poll not found")));
     }
 
-    // TODO: Implement vote method
-    // public void vote(Long pollId, VoteRequest request, User voter) { ... }
-
+    @Transactional
+    public void vote(@NonNull UUID pollId, VoteRequest request, User voter) {
+        Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
+        if (!poll.getStatus().equals(PollStatus.ACTIVE)) throw new IllegalStateException("Poll is closed");
+        if (poll.getExpiresAt().isBefore(Instant.now())) throw new IllegalStateException("Poll has expired");
+        if (voteRepository.existsByUserIdAndOptionPollId(voter.getId(), pollId)) throw new DuplicateResourceException("User has already voted for this poll");
+        if (poll.isMultiSelect()) {
+            for (UUID optionId : request.optionIds()) {
+                PollOption option = optionRepository.findById(optionId).orElseThrow(() -> new ResourceNotFoundException("Option not found"));
+                if (!option.getPoll().getId().equals(pollId)) throw new BadRequestException("Option does not belong to this poll");
+                voteRepository.save(Vote.builder().option(option).user(voter).build());
+            }
+        } else {
+            if (request.optionIds().size() > 1) throw new BadRequestException("Multiple options not allowed for this poll");
+            PollOption option = optionRepository.findById(request.optionIds().iterator().next()).orElseThrow(() -> new ResourceNotFoundException("Option not found"));
+            if (!option.getPoll().getId().equals(pollId)) throw new BadRequestException("Option does not belong to this poll");
+            voteRepository.save(Vote.builder().option(option).user(voter).build());
+        }
+    }
     // TODO: Implement closePoll method
     // public PollResponse closePoll(Long pollId, User creator) { ... }
 
@@ -78,6 +101,7 @@ public class PollService {
                 .status(poll.getStatus())
                 .multipleChoice(poll.isMultiSelect())
                 .createdAt(poll.getCreatedAt())
+                .expiresAt(poll.getExpiresAt())
                 .totalVotes(totalVotes)
                 .options(optionResponses)
                 .build();

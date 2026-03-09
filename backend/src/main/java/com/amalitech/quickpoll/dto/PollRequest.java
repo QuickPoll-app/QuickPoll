@@ -3,6 +3,7 @@ package com.amalitech.quickpoll.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public record PollRequest (
         @NotEmpty(message = "Expected Poll Options")
         List<String> options,
         boolean multipleChoice,
-        LocalDateTime expiresAt
+        Instant expiresAt
 ) {
     public PollRequest {
         question = question.trim();
