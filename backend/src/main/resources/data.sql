@@ -1,22 +1,21 @@
--- Seed data for QuickPoll
--- Passwords are BCrypt hash of password123
-INSERT INTO users (id,email,password,full_name,role,created_at) VALUES
-(1,'admin@quickpoll.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy','Admin User','ADMIN',NOW()),
-(2,'user@quickpoll.com','$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy','Regular User','USER',NOW())
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO polls (id,title,description,creator_id,multi_select,expires_at,active,created_at) VALUES
-(1,'Best Programming Language','Vote for your favorite',1,false,NOW()+INTERVAL '30 days',true,NOW()),
-(2,'Preferred Work Model','What arrangement do you prefer?',1,false,NOW()+INTERVAL '14 days',true,NOW()),
-(3,'Favorite Frontend Framework','Which do you use most?',2,false,NOW()+INTERVAL '7 days',true,NOW())
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO poll_options (id,poll_id,option_text,vote_count) VALUES
-(1,1,'Java',15),(2,1,'Python',22),(3,1,'JavaScript',18),(4,1,'Go',8),
-(5,2,'Remote',30),(6,2,'Hybrid',25),(7,2,'On-site',10),
-(8,3,'Angular',20),(9,3,'React',28),(10,3,'Vue',15),(11,3,'Svelte',7)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO votes (id,poll_id,option_id,user_id,created_at) VALUES
-(1,1,1,1,NOW()),(2,1,2,2,NOW()),(3,2,5,1,NOW()),(4,2,6,2,NOW()),(5,3,8,1,NOW())
+INSERT INTO users (id, email, password, full_name, role, created_at) VALUES
+('550e8400-e29b-41d4-a716-446655440000', 'admin@quickpoll.com', '$2a$10$yGdqJexElrJF8JwJUrL7aeVFtogIF5BfEhIls7TxLcpM6Q06WgNTa', 'Admin User', 'ADMIN', NOW()),
+('550e8400-e29b-41d4-a716-446655440001', 'user@quickpoll.com', '$2a$10$yGdqJexElrJF8JwJUrL7aeVFtogIF5BfEhIls7TxLcpM6Q06WgNTa', 'Regular User', 'USER', NOW())
+                                                                     ON CONFLICT DO NOTHING;
+INSERT INTO polls (id, title, description, creator_id, multi_select, created_at, expires_at, active) VALUES
+('660e8400-e29b-41d4-a716-446655440001', 'Best Programming Language', 'Vote for your favorite', '550e8400-e29b-41d4-a716-446655440000', true, NOW() + INTERVAL '30 days', NOW() + INTERVAL '30 days', true),
+('660e8400-e29b-41d4-a716-446655440002', 'Preferred Work Model', 'What arrangement do you prefer?', '550e8400-e29b-41d4-a716-446655440000', false, NOW() + INTERVAL '14 days', NOW() + INTERVAL '14 days', true),
+('660e8400-e29b-41d4-a716-446655440003', 'Favorite Frontend Framework', 'Which do you use most?', '550e8400-e29b-41d4-a716-446655440001', false, NOW() + INTERVAL '7 days', NOW() + INTERVAL '7 days', true)
+ON CONFLICT DO NOTHING;
+INSERT INTO poll_options (id, poll_id, option_text) VALUES
+        ('770e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', 'Java'),
+        ('770e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440001', 'Python'),
+        ('770e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440001', 'JavaScript'),
+        ('770e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440002', 'Remote'),
+        ('770e8400-e29b-41d4-a716-446655440005', '660e8400-e29b-41d4-a716-446655440002', 'Hybrid'),
+        ('770e8400-e29b-41d4-a716-446655440006', '660e8400-e29b-41d4-a716-446655440003', 'React')
+        ON CONFLICT DO NOTHING;
+INSERT INTO votes (id, poll_id, option_id, user_id, created_at) VALUES
+(gen_random_uuid(), '660e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440000', NOW()),
+(gen_random_uuid(), '660e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440001', NOW())
 ON CONFLICT DO NOTHING;
