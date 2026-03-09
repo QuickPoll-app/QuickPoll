@@ -14,12 +14,6 @@ variable "environment" {
   type        = string
 }
 
-variable "image_retention_count" {
-  description = "Number of images to retain in ECR"
-  type        = number
-  default     = 10
-}
-
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)
