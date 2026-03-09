@@ -5,7 +5,6 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from config import DATABASE_URL
 
-# -----------------------------------
 # Logging Configuration
 # -----------------------------------
 
@@ -16,7 +15,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# -----------------------------------
 # Database Engine
 # -----------------------------------
 
@@ -24,8 +22,6 @@ engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True
 )
-
-# -----------------------------------
 # Table Dependency Check
 # -----------------------------------
 
@@ -54,8 +50,6 @@ def check_required_tables():
 
     return True
 
-
-# -----------------------------------
 # Extract Layer
 # -----------------------------------
 
@@ -104,8 +98,6 @@ def extract_votes():
 
     return df
 
-
-# -----------------------------------
 # Data Quality Checks
 # -----------------------------------
 
@@ -119,8 +111,6 @@ def validate_data(df, name):
     if df.isnull().sum().sum() > 0:
         logger.warning(f"{name} contains missing values")
 
-
-# -----------------------------------
 # Transform Layer
 # -----------------------------------
 
@@ -181,8 +171,6 @@ def transform_user_participation(votes_df):
 
     return participation
 
-
-# -----------------------------------
 # Load Layer
 # -----------------------------------
 
@@ -202,8 +190,6 @@ def load_table(df, table_name):
             index=False
         )
 
-
-# -----------------------------------
 # Pipeline Orchestration
 # -----------------------------------
 
@@ -231,8 +217,6 @@ def run_pipeline():
 
     logger.info("ETL pipeline completed successfully")
 
-
-# -----------------------------------
 # Entry Point
 # -----------------------------------
 

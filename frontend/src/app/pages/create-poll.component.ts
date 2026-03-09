@@ -35,11 +35,16 @@ export class CreatePollComponent {
 
   constructor(private pollService: PollService, private router: Router) {}
 
-  addOption() { this.options.push(""); }
+  addOption() {
+ this.options.push(""); 
+}
 
   onSubmit() {
     const validOptions = this.options.filter(o => o.trim());
-    if (validOptions.length < 2) { this.error = "At least 2 options required"; return; }
+
+    if (validOptions.length < 2) {
+ this.error = "At least 2 options required"; return; 
+}
     this.pollService.create({
       question: this.question, description: this.description,
       options: validOptions, multipleChoice: this.multipleChoice

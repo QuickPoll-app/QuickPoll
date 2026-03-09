@@ -1,0 +1,12 @@
+# Backend .dockerignore
+target/
+.git/
+.gitignore
+.idea/
+.vscode/
+*.md
+*.log
+.env*
+docker-compose*.yml
+Dockerfile
+.dockerignore

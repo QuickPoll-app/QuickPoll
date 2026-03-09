@@ -43,8 +43,12 @@ export class PollListComponent implements OnInit {
 
   ngOnInit() {
     this.pollService.getAll().subscribe({
-      next: (res) => { this.polls = res.content || []; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (res) => {
+ this.polls = res.content || []; this.loading = false; 
+},
+      error: () => {
+ this.loading = false; 
+}
     });
   }
 }

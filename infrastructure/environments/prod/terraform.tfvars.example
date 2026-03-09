@@ -1,2 +1,26 @@
-# Production Environment - Terraform Variables
-# Example values for production environment (copy to terraform.tfvars)
+# ============================================
+# Production Environment — Example tfvars
+# Copy to terraform.tfvars and fill in values
+# NEVER commit terraform.tfvars — secrets come from GitHub Secrets as TF_VAR_
+# ============================================
+
+aws_region   = "us-east-1"
+project_name = "quickpoll"
+environment  = "prod"
+
+# Container images — set via TF_VAR_ in CI/CD
+# backend_image  = "<account>.dkr.ecr.us-east-1.amazonaws.com/quickpoll-backend:prod-<sha>"
+# frontend_image = "<account>.dkr.ecr.us-east-1.amazonaws.com/quickpoll-frontend:prod-<sha>"
+
+# Sizing — production runs larger with HA
+db_instance_class      = "db.t3.small"
+backend_cpu            = 1024
+backend_memory         = 2048
+frontend_cpu           = 512
+frontend_memory        = 1024
+backend_desired_count  = 2
+frontend_desired_count = 2
+
+# Secrets — NEVER put here, use:
+#   export TF_VAR_db_password="..."
+#   export TF_VAR_jwt_secret="..."

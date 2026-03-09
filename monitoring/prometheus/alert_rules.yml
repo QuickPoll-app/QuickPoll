@@ -1,0 +1,191 @@
+# Prometheus Alert Rules - QuickPoll
+
+groups:
+  # ECS / Service Health
+  - name: service_health
+    rules:
+      - alert: BackendDown
+        expr: up{job="quickpoll-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "QuickPoll backend is down"
+          description: "The backend service has been unreachable for more than 1 minute."
+
+      - alert: FrontendDown
+        expr: up{job="quickpoll-frontend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: frontend
+        annotations:
+          summary: "QuickPoll frontend is down"
+          description: "The frontend service has been unreachable for more than 1 minute."
+
+      - alert: ZeroHealthyECSTasks
+        expr: aws_ecs_service_running_tasks == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Zero healthy ECS tasks for {{ $labels.service_name }}"
+          description: "ECS service {{ $labels.service_name }} has 0 running tasks for more than 2 minutes."
+
+  # HTTP Error Rates
+  - name: http_errors
+    rules:
+      - alert: HighErrorRate5xx
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            /
+            sum(rate(http_server_requests_seconds_count[5m]))
+          ) * 100 > 5
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx error rate above 5%"
+          description: 'The 5xx error rate is {{ $value | printf "%.1f" }}% over the last 5 minutes.'
+
+      - alert: HighErrorRate4xx
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"4.."}[5m]))
+            /
+            sum(rate(http_server_requests_seconds_count[5m]))
+          ) * 100 > 25
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "4xx error rate above 25%"
+          description: 'The 4xx error rate is {{ $value | printf "%.1f" }}% over the last 5 minutes.'
+
+  # Response Time
+  - name: latency
+    rules:
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 response time above 2 seconds"
+          description: 'The 95th percentile response time is {{ $value | printf "%.2f" }}s.'
+
+      - alert: CriticalResponseTime
+        expr: |
+          histogram_quantile(0.99, 
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le)
+          ) > 5
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "P99 response time above 5 seconds"
+          description: 'The 99th percentile response time is {{ $value | printf "%.2f" }}s.'
+
+  # Resource Usage
+  - name: resources
+    rules:
+      - alert: HighMemoryUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM heap memory usage above 85%"
+          description: 'Backend JVM heap usage is {{ $value | printf "%.1f" }}%.'
+
+      - alert: CriticalMemoryUsage
+        expr: |
+          (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JVM heap memory usage above 95%"
+          description: 'Backend JVM heap usage is {{ $value | printf "%.1f" }}%. Possible OOM.'
+
+      - alert: HighCPUUsage
+        expr: |
+          system_cpu_usage * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage above 80%"
+          description: 'System CPU usage is {{ $value | printf "%.1f" }}%.'
+
+  # Database
+  - name: database
+    rules:
+      - alert: HighDBConnectionUsage
+        expr: |
+          (hikaricp_connections_active / hikaricp_connections_max) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool usage above 80%"
+          description: 'HikariCP active connections are at {{ $value | printf "%.1f" }}% of max.'
+
+      - alert: CriticalDBConnectionUsage
+        expr: |
+          (hikaricp_connections_active / hikaricp_connections_max) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: 'HikariCP active connections are at {{ $value | printf "%.1f" }}% of max.'
+
+      - alert: RDSConnectionsHigh
+        expr: |
+          pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RDS connections above 80%"
+          description: "PostgreSQL has {{ $value }} active connections."
+
+      - alert: SlowQueries
+        expr: |
+          rate(hikaricp_connections_usage_seconds_sum[5m]) 
+          / rate(hikaricp_connections_usage_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Average query execution time above 1 second"
+          description: 'Average DB query time is {{ $value | printf "%.2f" }}s.'
+
+  # JVM Health
+  - name: jvm
+    rules:
+      - alert: HighGCPauseTime
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High GC pause time"
+          description: 'Average GC pause time is {{ $value | printf "%.2f" }}s.'
+
+      - alert: TooManyThreads
+        expr: jvm_threads_live_threads > 500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High thread count"
+          description: "JVM has {{ $value }} live threads."
