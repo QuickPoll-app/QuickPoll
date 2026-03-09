@@ -1,18 +1,21 @@
 package com.amalitech.quickpoll.dto;
 
-import lombok.*;
+import lombok.Builder;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class PollResponse {
-    private Long id;
-    private String question;
-    private String description;
-    private String creatorName;
-    private String status;
-    private boolean multipleChoice;
-    private LocalDateTime createdAt;
-    private int totalVotes;
-    private List<OptionResponse> options;
-}
+@Builder
+public record PollResponse (
+        UUID id,
+        String question,
+        String description,
+        String creatorName,
+        boolean HasVoted,
+        String status,
+        boolean multipleChoice,
+        LocalDateTime createdAt,
+        LocalDateTime expiresAt,
+        int totalVotes,
+        List<OptionResponse> options
+) {}
