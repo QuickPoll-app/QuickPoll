@@ -29,16 +29,16 @@ public class PollService {
 
     public PollResponse createPoll(PollRequest request, User creator) {
         Poll poll = Poll.builder()
-                .title(request.getQuestion())
-                .description(request.getDescription())
+                .title(request.question())
+                .description(request.description())
                 .creator(creator)
-                .multiSelect(request.isMultipleChoice())
+                .multiSelect(request.multipleChoice())
                 .active(true)
                 .createdAt(LocalDateTime.now())
                 .build();
         poll = pollRepository.save(poll);
 
-        for (String optionText : request.getOptions()) {
+        for (String optionText : request.options()) {
             PollOption option = PollOption.builder()
                     .optionText(optionText)
                     .poll(poll)
