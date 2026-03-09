@@ -5,19 +5,22 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "polls")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Poll {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false)
     private String title;
 
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "creator_id")
     private User creator;
 
@@ -28,15 +31,14 @@ public class Poll {
     @Column(name = "multi_select")
     private boolean multiSelect;
 
-    @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
-
     @Builder.Default
     private boolean active = true;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @Column(name = "expires_at", nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime expiresAt;
 
-    @PrePersist
-    protected void onCreate() { createdAt = LocalDateTime.now(); }
+    @Column(name = "created_at", updatable = false, insertable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
