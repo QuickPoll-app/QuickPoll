@@ -5,9 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.UUID;
 
-public interface PollRepository extends JpaRepository<Poll, Long> {
+public interface PollRepository extends JpaRepository<Poll, UUID> {
     Page<Poll> findAllByOrderByCreatedAtDesc(Pageable pageable);
-    List<Poll> findByCreatorIdOrderByCreatedAtDesc(Long creatorId);
+    List<Poll> findByCreatorIdOrderByCreatedAtDesc(UUID creatorId);
     // TODO: Add search and filter methods
 }
