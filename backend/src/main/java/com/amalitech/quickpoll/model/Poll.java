@@ -1,44 +1,70 @@
 package com.amalitech.quickpoll.model;
 
+import com.amalitech.quickpoll.model.enums.PollStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 import java.util.*;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 @Entity
-@Table(name = "polls")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(
+    name = "polls",
+    indexes = {
+            @Index(name = "idx_poll_creator", columnList = "creator_id"),
+            @Index(name = "idx_poll_status", columnList = "status")
+    }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Poll {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @EqualsAndHashCode.Include
+    private UUID pollId;
 
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "creator_id")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PollStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
     private User creator;
 
-    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @ToString.Exclude
     private List<PollOption> options = new ArrayList<>();
 
     @Column(name = "multi_select")
     private boolean multiSelect;
 
-    @Builder.Default
-    private String status = "ACTIVE";
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @Column(name = "expires_at", nullable = false)
-    @UpdateTimestamp
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
-    @Column(name = "created_at", updatable = false, insertable = false)
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

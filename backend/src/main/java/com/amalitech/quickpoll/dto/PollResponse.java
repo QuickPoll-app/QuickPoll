@@ -1,7 +1,9 @@
 package com.amalitech.quickpoll.dto;
 
+import com.amalitech.quickpoll.model.enums.PollStatus;
 import lombok.Builder;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,10 +14,10 @@ public record PollResponse (
         String description,
         String creatorName,
         boolean HasVoted,
-        String status,
+        PollStatus status,
         boolean multipleChoice,
-        LocalDateTime createdAt,
-        LocalDateTime expiresAt,
+        Instant createdAt,
+        Instant expiresAt,
         int totalVotes,
         List<OptionResponse> options
 ) {}
