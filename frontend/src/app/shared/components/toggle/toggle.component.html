@@ -1,0 +1,16 @@
+<div class="toggle-wrapper">
+  @if (label()) {
+    <span class="form-label">{{ label() }}</span>
+  }
+  <div 
+    [class]="'toggle' + (checked() ? ' on' : '')"
+    (click)="handleToggle()"
+    (keydown.enter)="handleToggle()"
+    (keydown.space)="handleToggle()"
+    tabindex="0"
+    role="switch"
+    [attr.aria-checked]="checked()"
+    [attr.aria-label]="label() || 'Toggle'">
+    <div class="toggle-thumb"></div>
+  </div>
+</div>
