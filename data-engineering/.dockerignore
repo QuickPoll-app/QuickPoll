@@ -1,0 +1,18 @@
+# Data Engineering .dockerignore
+.git/
+.gitignore
+.idea/
+.vscode/
+*.md
+*.log
+.env*
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+data/
+docker-compose*.yml
+Dockerfile
+.dockerignore
+.venv/
+venv/

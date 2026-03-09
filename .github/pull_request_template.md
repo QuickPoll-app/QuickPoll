@@ -10,11 +10,16 @@ Brief description of what this PR accomplishes
 
 ## Reviewer
 Tag your assigned review partner based on your role area
-**Backend:** @mahorobonheur @GargoilXD  
-**Frontend:** @jube-github  
-**DevOps:** @benjamin-github  
-**QA:** @adoba-github  
-**Data Engineering:** @zainabu-github
+| Role | Reviewers |
+|------|-----------|
+| **Backend** | @mahorobonheur @GargoilXD |
+| **Frontend** | @Bentil4 |
+| **DevOps/Infra** | @Viateur-akimana |
+| **QA** | @Lennox-Owusu |
+| **Data Engineering** | @Damas200 |
+
+> PRs to `main` **require** @Lennox-Owusu approval
+
 
 ## Testing
 How to test these changes

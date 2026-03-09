@@ -2,14 +2,14 @@ spring:
   application:
     name: quickpoll
   datasource:
-    url: jdbc:postgresql://localhost:5432/quickpoll
+    url: ${SPRING_DATASOURCE_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
@@ -20,11 +20,27 @@ spring:
       continue-on-error: true
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
+
+# --- Actuator & Metrics ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 jwt:
-  secret: Z29vZC1zZWNyZXQta2V5
-  expiration: 86400000
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 springdoc:
   api-docs:

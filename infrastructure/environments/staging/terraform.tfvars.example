@@ -1,2 +1,26 @@
-# Staging Environment - Terraform Variables
-# Example values for staging environment (copy to terraform.tfvars)
+# ============================================
+# Staging Environment — Example tfvars
+# Copy to terraform.tfvars and fill in values
+# NEVER commit terraform.tfvars — secrets come from GitHub Secrets as TF_VAR_
+# ============================================
+
+aws_region   = "eu-north-1"
+project_name = "quickpoll"
+environment  = "staging"
+
+# Container images — set via TF_VAR_ in CI/CD
+# backend_image  = "<account>.dkr.ecr.eu-north-1.amazonaws.com/quickpoll-backend:staging-<sha>"
+# frontend_image = "<account>.dkr.ecr.eu-north-1.amazonaws.com/quickpoll-frontend:staging-<sha>"
+
+# Sizing — staging runs smaller
+db_instance_class      = "db.t3.micro"
+backend_cpu            = 512
+backend_memory         = 1024
+frontend_cpu           = 256
+frontend_memory        = 512
+backend_desired_count  = 1
+frontend_desired_count = 1
+
+# Secrets — NEVER put here, use:
+#   export TF_VAR_db_password="..."
+#   export TF_VAR_jwt_secret="..."

@@ -7,8 +7,8 @@ engine = create_engine(DATABASE_URL)
 
 def extract_polls():
     query = text("""
-        SELECT p.id, p.question, p.status, p.created_at,
-               p.multiple_choice, u.name AS creator_name
+        SELECT p.id, p.title AS "question", p.active AS "status", p.created_at,
+               p.multi_select AS "multiple_choice", u.full_name AS "creator_name"
         FROM polls p JOIN users u ON p.creator_id = u.id
     """)
     with engine.connect() as conn:
@@ -16,10 +16,10 @@ def extract_polls():
 
 def extract_votes():
     query = text("""
-        SELECT v.id, v.created_at, po.text AS option_text,
-               po.poll_id, u.name AS voter_name
+        SELECT v.id, v.created_at, po.option_text AS "option_text",
+               po.poll_id, u.full_name AS "voter_name"
         FROM votes v
-        JOIN poll_options po ON v.poll_option_id = po.id
+        JOIN poll_options po ON v.option_id = po.id
         JOIN users u ON v.user_id = u.id
     """)
     with engine.connect() as conn:
