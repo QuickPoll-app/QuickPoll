@@ -121,6 +121,8 @@ jobs:
     name: Deploy Hotfix to Production
     runs-on: ubuntu-latest
     needs: build-and-push
+    outputs:
+      alb_url: ${{ steps.capture-alb.outputs.alb_url }}
     environment:
       name: prod
       url: "${{ vars.PROD_ALB_URL }}"
@@ -161,16 +163,25 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ./infrastructure/environments/prod
-        run: terraform apply -auto-approve tfplan
+        run: |
+          terraform apply -auto-approve tfplan
+          if [ -f errored.tfstate ]; then
+            echo "::warning::State save failed during apply. Pushing errored.tfstate..."
+            terraform state push errored.tfstate
+            rm -f errored.tfstate
+          fi
 
       - name: Capture ALB URL and set GitHub Variable
+        id: capture-alb
         working-directory: ./infrastructure/environments/prod
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ALB_DNS=$(terraform output -raw alb_dns_name)
           echo "ALB DNS: $ALB_DNS"
-          gh variable set PROD_ALB_URL --env prod --body "http://$ALB_DNS"
+          echo "alb_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
+          gh variable set PROD_ALB_URL --env prod --body "http://$ALB_DNS" || echo "::warning::Could not set PROD_ALB_URL variable. Set it manually to http://$ALB_DNS"
           echo "PROD_ALB_URL set to http://$ALB_DNS"
 
   # Health check and notifications
@@ -178,6 +189,8 @@ jobs:
     name: Post-Deploy Health Check
     runs-on: ubuntu-latest
     needs: deploy-hotfix
+    env:
+      ALB_URL: ${{ needs.deploy-hotfix.outputs.alb_url }}
     steps:
       - name: Wait for services to stabilize
         run: sleep 90
@@ -186,7 +199,7 @@ jobs:
         run: |
           for i in {1..15}; do
             status=$(curl -s -o /dev/null -w "%{http_code}" \
-              "${{ vars.PROD_ALB_URL }}/actuator/health" || true)
+              "${ALB_URL}/actuator/health" || true)
             if [ "$status" = "200" ]; then
               echo "Backend health check passed"
               exit 0
@@ -200,7 +213,7 @@ jobs:
       - name: Health check frontend
         run: |
           status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ vars.PROD_ALB_URL }}/" || true)
+            "${ALB_URL}/" || true)
           if [ "$status" = "200" ]; then
             echo "Frontend health check passed"
           else
