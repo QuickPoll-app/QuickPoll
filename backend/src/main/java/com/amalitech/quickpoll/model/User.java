@@ -24,7 +24,7 @@ import java.util.UUID;
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
-    private UUID userId;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String email;

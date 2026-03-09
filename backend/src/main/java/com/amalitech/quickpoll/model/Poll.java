@@ -24,7 +24,7 @@ import java.util.*;
 public class Poll {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
-    private UUID pollId;
+    private UUID id;
 
     @Column(nullable = false)
     private String title;

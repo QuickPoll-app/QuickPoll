@@ -46,7 +46,7 @@ public class PollService {
                     .build();
             optionRepository.save(option);
         }
-        return toResponse(pollRepository.findById(poll.getPollId()).get());
+        return toResponse(pollRepository.findById(poll.getId()).get());
     }
 
     // TODO: Implement vote method
@@ -58,12 +58,12 @@ public class PollService {
     // TODO: Implement deletePoll method
 
     private PollResponse toResponse(Poll poll) {
-        List<PollOption> options = optionRepository.findByPollId(poll.getPollId());
-        int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getPollOptionId())).sum();
+        List<PollOption> options = optionRepository.findByPollId(poll.getId());
+        int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();
         List<OptionResponse> optionResponses = options.stream().map(o -> {
-            int count = voteRepository.countByOption_Id(o.getPollOptionId());
+            int count = voteRepository.countByOption_Id(o.getId());
             return OptionResponse.builder()
-                    .id(o.getPollOptionId())
+                    .id(o.getId())
                     .text(o.getOptionText())
                     .voteCount(count)
                     .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
@@ -71,7 +71,7 @@ public class PollService {
         }).collect(java.util.stream.Collectors.toList());
 
         return PollResponse.builder()
-                .id(poll.getPollId())
+                .id(poll.getId())
                 .question(poll.getTitle())
                 .description(poll.getDescription())
                 .creatorName(poll.getCreator().getFullName())

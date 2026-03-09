@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface PollRepository extends JpaRepository<Poll, UUID> {
     Page<Poll> findAllByOrderByCreatedAtDesc(Pageable pageable);
     List<Poll> findByCreatorIdOrderByCreatedAtDesc(UUID creatorId);
-    @Query("SELECT COUNT(v) FROM Vote v WHERE v.option.pollOptionId = :id")
+    @Query("SELECT COUNT(v) FROM Vote v WHERE v.option.id = :id")
     long countVotesByOptionId(@Param("id") UUID id);
     // TODO: Add search and filter methods
 }
