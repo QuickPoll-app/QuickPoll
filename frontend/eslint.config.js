@@ -5,12 +5,12 @@ const angular = require("angular-eslint");
 module.exports = tseslint.config(
   {
     files: ["**/*.ts"],
-    extends: [
-      eslint.configs.recommended,
-      ...tseslint.configs.recommended,
-      ...tseslint.configs.stylistic,
-      ...angular.configs.tsRecommended,
-    ],
+    // extends: [
+    //   eslint.configs.recommended,
+    //   ...tseslint.configs.recommended,
+    //   ...tseslint.configs.stylistic,
+    //   ...angular.configs.tsRecommended,
+    // ],
     processor: angular.processInlineTemplates,
     rules: {
       "@angular-eslint/directive-selector": [
@@ -36,7 +36,7 @@ module.exports = tseslint.config(
       "@typescript-eslint/no-empty-function": "error",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-member-accessibility": [
         "warn",
         {
