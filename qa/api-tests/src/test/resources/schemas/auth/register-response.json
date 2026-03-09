@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Register Response Schema",
+  "type": "object",
+  "required": ["userId", "name", "email", "role"],
+  "properties": {
+    "userId": {
+      "type": "integer",
+      "description": "Unique user identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "User full name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "User email address"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["USER", "ADMIN"],
+      "description": "Assigned user role"
+    }
+  },
+  "additionalProperties": false
+}

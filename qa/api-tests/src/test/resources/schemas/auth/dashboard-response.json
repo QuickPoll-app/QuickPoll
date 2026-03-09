@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dashboard Response Schema",
+  "type": "object",
+  "required": ["activePolls", "recentResults"],
+  "properties": {
+    "activePolls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pollId", "title", "type", "participationRate"],
+        "properties": {
+          "pollId": { "type": "integer" },
+          "title": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["SINGLE_SELECT", "MULTI_SELECT"]
+          },
+          "participationRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "recentResults": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["pollId", "title", "topOption"],
+        "properties": {
+          "pollId": { "type": "integer" },
+          "title": { "type": "string" },
+          "topOption": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

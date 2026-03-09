@@ -4,27 +4,47 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.testng.annotations.BeforeClass;
-
-import static io.restassured.RestAssured.given;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 
 public class BaseTest {
 
     // ── URLs ──────────────────────────────────────────────────────────────
-    protected static final String BASE_URL = "http://localhost:8080/api";
-    protected static final String AUTH_URL = BASE_URL + "/auth";
+    protected static String BASE_URL;
+    protected static String AUTH_URL;
 
     // ── Default Credentials ───────────────────────────────────────────────
-    protected static final String ADMIN_EMAIL    = "admin@amalitech.com";
-    protected static final String USER_EMAIL     = "user@amalitech.com";
-    protected static final String VALID_PASSWORD = "password123";
+    protected static String ADMIN_EMAIL;
+    protected static String USER_EMAIL;
+    protected static String VALID_PASSWORD;
 
     // ── Shared Tokens ─────────────────────────────────────────────────────
     protected static String userToken;
     protected static String adminToken;
 
+    // ── Read Parameters from testng.xml ───────────────────────────────────
     @BeforeClass
-    public void setup() {
+    @Parameters({"baseUrl", "adminEmail", "userEmail", "validPassword"})
+    public void setup(
+            @Optional("http://localhost:8080/api") String baseUrl,
+            @Optional("admin@amalitech.com")       String adminEmail,
+            @Optional("user@amalitech.com")        String userEmail,
+            @Optional("password123")               String validPassword
+    ) {
+        BASE_URL       = baseUrl;
+        AUTH_URL       = BASE_URL + "/auth";
+        ADMIN_EMAIL    = adminEmail;
+        USER_EMAIL     = userEmail;
+        VALID_PASSWORD = validPassword;
+
         RestAssured.baseURI = BASE_URL;
+
+        System.out.println("========================================");
+        System.out.println("Test Environment Setup");
+        System.out.println("Base URL    : " + BASE_URL);
+        System.out.println("Admin Email : " + ADMIN_EMAIL);
+        System.out.println("User Email  : " + USER_EMAIL);
+        System.out.println("========================================");
     }
 
     // ── Reusable Login Helper ─────────────────────────────────────────────
@@ -56,6 +76,12 @@ public class BaseTest {
     // ── Login as Admin ────────────────────────────────────────────────────
     protected void loginAsAdmin() {
         adminToken = loginAndGetToken(ADMIN_EMAIL, VALID_PASSWORD);
+    }
+
+    // ── Reusable Given Helper ─────────────────────────────────────────────
+    protected static io.restassured.specification.RequestSpecification given() {
+        return io.restassured.RestAssured.given()
+                .contentType(ContentType.JSON);
     }
 
 }
