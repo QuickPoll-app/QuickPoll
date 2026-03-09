@@ -1,0 +1,154 @@
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<main class="registration-container">
+  <section class="registration-card">
+    <header class="header">
+      <div class="logo">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+        </svg>
+        <h1>QuickPoll</h1>
+      </div>
+      <p class="subtitle">Create your account</p>
+    </header>
+
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+      <app-input
+        [label]="'Full Name'"
+        [type]="'text'"
+        [placeholder]="'Enter your full name'"
+        [error]="!!(fullName?.invalid && fullName?.touched)"
+        formControlName="fullName"
+      >
+      </app-input>
+
+      <app-input
+        [label]="'Email'"
+        [type]="'email'"
+        [placeholder]="'Enter your email address'"
+        [error]="!!(email?.invalid && email?.touched)"
+        [errorMessage]="'Please enter a valid email address'"
+        formControlName="email"
+      >
+      </app-input>
+
+      <div class="form-group">
+        <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
+        <label class="form-label">Password</label>
+        <div class="input-wrapper">
+          <input
+            class="form-input"
+            [class.error]="password?.invalid && password?.touched"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Create a strong password"
+          />
+          <button type="button" class="toggle-visibility" (click)="togglePasswordVisibility()">
+            @if (showPassword()) {
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"
+                ></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            } @else {
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            }
+          </button>
+        </div>
+
+        @if (password?.value) {
+          <div class="password-strength">
+            <div class="strength-meter">
+              <div class="strength-fill" [class]="passwordStrength()"></div>
+            </div>
+            @if (passwordStrength() === "weak") {
+              <p class="strength-text weak">Weak - add more characters and variety</p>
+            } @else if (passwordStrength() === "medium") {
+              <p class="strength-text medium">
+                Medium strength - consider adding special characters
+              </p>
+            } @else {
+              <p class="strength-text strong">Strong password!</p>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <div class="input-wrapper">
+          <input
+            class="form-input"
+            [class.error]="
+              confirmPassword?.invalid && confirmPassword?.touched && !passwordsMatch()
+            "
+            [class.success]="passwordsMatch() && confirmPassword?.value"
+            [type]="showConfirmPassword() ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+          />
+          @if (passwordsMatch() && confirmPassword?.value) {
+            <div class="status-icon success">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          }
+        </div>
+        @if (passwordsMatch() && confirmPassword?.value) {
+          <p class="success-text">Passwords match</p>
+        }
+      </div>
+
+      <div class="submit-section">
+        <app-buttons
+          [type]="'submit'"
+          [variant]="'primary'"
+          [disabled]="registrationForm.invalid"
+          [loading]="isLoading()"
+        >
+          {{ isLoading() ? "Creating Account..." : "Create Account" }}
+        </app-buttons>
+      </div>
+    </form>
+
+    <footer class="footer">
+      <p>
+        Already have an account?
+        <a routerLink="/login" class="link">Sign in</a>
+      </p>
+    </footer>
+  </section>
+</main>
