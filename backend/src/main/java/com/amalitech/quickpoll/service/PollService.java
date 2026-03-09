@@ -8,6 +8,8 @@ import com.amalitech.quickpoll.model.*;
 import com.amalitech.quickpoll.model.enums.PollStatus;
 import com.amalitech.quickpoll.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -25,17 +27,20 @@ public class PollService {
     private final VoteRepository voteRepository;
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "polls", key = "'page_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<PollResponse> getAllPolls(Pageable pageable) {
         return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "polls", key = "'id_' + #id")
     public PollResponse getPollById(UUID id) {
         Poll poll = pollRepository.findById(id).orElseThrow(() -> new RuntimeException("Poll not found"));
         return toResponse(poll);
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "polls", allEntries = true)
     public PollResponse createPoll(PollRequest request, User creator) {
         Poll poll = Poll.builder()
                 .title(request.question())
@@ -57,6 +62,7 @@ public class PollService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "polls", allEntries = true)
     public void vote(@NonNull UUID pollId, VoteRequest request, User voter) {
         Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
         if (!poll.getStatus().equals(PollStatus.ACTIVE)) throw new IllegalStateException("Poll is closed");
@@ -66,13 +72,13 @@ public class PollService {
             for (UUID optionId : request.optionIds()) {
                 PollOption option = optionRepository.findById(optionId).orElseThrow(() -> new ResourceNotFoundException("Option not found"));
                 if (!option.getPoll().getId().equals(pollId)) throw new BadRequestException("Option does not belong to this poll");
-                voteRepository.save(Vote.builder().option(option).user(voter).build());
+                voteRepository.save(Vote.builder().poll(poll).option(option).user(voter).build());
             }
         } else {
             if (request.optionIds().size() > 1) throw new BadRequestException("Multiple options not allowed for this poll");
             PollOption option = optionRepository.findById(request.optionIds().iterator().next()).orElseThrow(() -> new ResourceNotFoundException("Option not found"));
             if (!option.getPoll().getId().equals(pollId)) throw new BadRequestException("Option does not belong to this poll");
-            voteRepository.save(Vote.builder().option(option).user(voter).build());
+            voteRepository.save(Vote.builder().poll(poll).option(option).user(voter).build());
         }
     }
     // TODO: Implement closePoll method
