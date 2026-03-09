@@ -40,6 +40,37 @@ resource "aws_cloudwatch_log_group" "frontend" {
   })
 }
 
+# SSM Parameters for secrets (Terraform-managed to stay in sync with RDS)
+resource "aws_ssm_parameter" "db_password" {
+  name        = "/${var.project_name}/${var.environment}/db-password"
+  description = "Database password for ${var.environment}"
+  type        = "SecureString"
+  value       = var.db_password
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-db-password"
+  })
+
+  lifecycle {
+    ignore_changes = []
+  }
+}
+
+resource "aws_ssm_parameter" "jwt_secret" {
+  name        = "/${var.project_name}/${var.environment}/jwt-secret"
+  description = "JWT secret for ${var.environment}"
+  type        = "SecureString"
+  value       = var.jwt_secret
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-jwt-secret"
+  })
+
+  lifecycle {
+    ignore_changes = []
+  }
+}
+
 # Backend Task Definition
 resource "aws_ecs_task_definition" "backend" {
   family                   = "${var.project_name}-${var.environment}-backend"
@@ -49,6 +80,8 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = var.backend_memory
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
+
+  depends_on = [aws_ssm_parameter.db_password, aws_ssm_parameter.jwt_secret]
 
   container_definitions = jsonencode([
     {

@@ -24,8 +24,8 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy built Angular app
 COPY --from=build /app/dist/quickpoll-frontend/browser /usr/share/nginx/html
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy ECS-optimized nginx config (no /api/ proxy — ALB routes by path)
+COPY nginx.ecs.conf /etc/nginx/conf.d/default.conf
 
 # Security: non-root user
 RUN chown -R nginx:nginx /usr/share/nginx/html && \

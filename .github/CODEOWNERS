@@ -5,16 +5,18 @@
 # Viateur owns all DevOps and infrastructure code
 # ============================================
 
-# ── Default: DevOps lead + QA lead review everything ──
-* @Viateur-akimana @Lennox-Owusu
+# ── Default: DevOps lead + Backend lead review everything ──
+* @Viateur-akimana @mahorobonheur
 
 # ── Infrastructure & DevOps (Viateur owns exclusively) ──
 infrastructure/          @Viateur-akimana
 .github/                 @Viateur-akimana
+.github/workflows/       @Viateur-akimana
 **/Dockerfile            @Viateur-akimana
 **/.dockerignore         @Viateur-akimana
 docker-compose*.yml      @Viateur-akimana
 monitoring/              @Viateur-akimana
+scripts/                 @Viateur-akimana
 .env.example             @Viateur-akimana
 
 # ── Backend (Bonheur + Emmanuel, Viateur reviews Dockerfiles) ──
@@ -30,6 +32,7 @@ frontend/.dockerignore   @Viateur-akimana
 
 # ── QA (Lennox owns all test code) ──
 qa/                      @Lennox-Owusu
+backend/src/test/        @Lennox-Owusu
 
 # ── Data Engineering (Damas) ──
 data-engineering/        @Damas200
