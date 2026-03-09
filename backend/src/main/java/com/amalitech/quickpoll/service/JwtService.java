@@ -1,4 +1,4 @@
-package com.amalitech.quickpoll.config;
+package com.amalitech.quickpoll.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

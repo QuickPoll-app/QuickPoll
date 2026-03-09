@@ -1,6 +1,7 @@
-package com.amalitech.quickpoll.config;
+package com.amalitech.quickpoll.security;
 
 import com.amalitech.quickpoll.repository.UserRepository;
+import com.amalitech.quickpoll.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

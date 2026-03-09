@@ -8,6 +8,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,13 +19,11 @@ public class PollService {
 
     public Page<PollResponse> getAllPolls(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return pollRepository.findAllByOrderByCreatedAtDesc(pageable)
-                .map(this::toResponse);
+        return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
     }
 
-    public PollResponse getPollById(Long id) {
-        Poll poll = pollRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Poll not found"));
+    public PollResponse getPollById(UUID id) {
+        Poll poll = pollRepository.findById(id).orElseThrow(() -> new RuntimeException("Poll not found"));
         return toResponse(poll);
     }
 

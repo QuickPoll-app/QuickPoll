@@ -1,9 +1,7 @@
 package com.amalitech.quickpoll.service;
 
-import com.amalitech.quickpoll.config.JwtService;
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.User;
-import com.amalitech.quickpoll.model.enums.Role;
 import com.amalitech.quickpoll.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
