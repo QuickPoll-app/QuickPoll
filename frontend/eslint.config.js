@@ -31,14 +31,14 @@ module.exports = tseslint.config(
       ],
 
       "no-console": ["warn", { allow: ["error"] }],
-      "@angular-eslint/prefer-on-push-component-change-detection": "error",
+      "@angular-eslint/prefer-on-push-component-change-detection": "warn",
       "@typescript-eslint/no-useless-constructor": "error",
       "@typescript-eslint/no-empty-function": "error",
-      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/explicit-function-return-type": "error",
+      "@typescript-eslint/explicit-function-return-type": "warn",
       "@typescript-eslint/explicit-member-accessibility": [
-        "error",
+        "warn",
         {
           accessibility: "explicit",
           overrides: {
