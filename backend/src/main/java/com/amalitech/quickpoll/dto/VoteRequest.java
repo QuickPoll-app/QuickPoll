@@ -1,11 +1,10 @@
 package com.amalitech.quickpoll.dto;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import java.util.List;
+import jakarta.validation.constraints.NotEmpty;
+import java.util.Set;
+import java.util.UUID;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class VoteRequest {
-    @NotNull
-    private List<Long> optionIds;
-}
+public record VoteRequest (
+        @NotEmpty(message = "Expected at least one Option ID")
+        Set<UUID> optionIds
+) {}

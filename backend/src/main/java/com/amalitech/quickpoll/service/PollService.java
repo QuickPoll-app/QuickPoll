@@ -2,12 +2,15 @@ package com.amalitech.quickpoll.service;
 
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.*;
+import com.amalitech.quickpoll.model.enums.PollStatus;
 import com.amalitech.quickpoll.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -16,30 +19,27 @@ public class PollService {
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
 
-    public Page<PollResponse> getAllPolls(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return pollRepository.findAllByOrderByCreatedAtDesc(pageable)
-                .map(this::toResponse);
+    public Page<PollResponse> getAllPolls(Pageable pageable) {
+        return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
     }
 
-    public PollResponse getPollById(Long id) {
-        Poll poll = pollRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Poll not found"));
+    public PollResponse getPollById(UUID id) {
+        Poll poll = pollRepository.findById(id).orElseThrow(() -> new RuntimeException("Poll not found"));
         return toResponse(poll);
     }
 
     public PollResponse createPoll(PollRequest request, User creator) {
         Poll poll = Poll.builder()
-                .title(request.getQuestion())
-                .description(request.getDescription())
+                .title(request.question())
+                .description(request.description())
                 .creator(creator)
-                .multiSelect(request.isMultipleChoice())
-                .active(true)
-                .createdAt(LocalDateTime.now())
+                .multiSelect(request.multipleChoice())
+                .status(PollStatus.ACTIVE)
+                .createdAt(Instant.now())
                 .build();
         poll = pollRepository.save(poll);
 
-        for (String optionText : request.getOptions()) {
+        for (String optionText : request.options()) {
             PollOption option = PollOption.builder()
                     .optionText(optionText)
                     .poll(poll)
@@ -59,10 +59,7 @@ public class PollService {
 
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());
-        int totalVotes = options.stream()
-                .mapToInt(o -> voteRepository.countByOption_Id(o.getId()))
-                .sum();
-
+        int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();
         List<OptionResponse> optionResponses = options.stream().map(o -> {
             int count = voteRepository.countByOption_Id(o.getId());
             return OptionResponse.builder()
@@ -78,7 +75,7 @@ public class PollService {
                 .question(poll.getTitle())
                 .description(poll.getDescription())
                 .creatorName(poll.getCreator().getFullName())
-                .status(poll.isActive() ? "ACTIVE" : "INACTIVE")
+                .status(poll.getStatus())
                 .multipleChoice(poll.isMultiSelect())
                 .createdAt(poll.getCreatedAt())
                 .totalVotes(totalVotes)
