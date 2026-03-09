@@ -4,10 +4,11 @@ import com.amalitech.quickpoll.model.Vote;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface VoteRepository extends JpaRepository<Vote, Long> {
-    List<Vote> findByPoll_Id(Long pollId);
-    Optional<Vote> findByUserIdAndPoll_Id(Long userId, Long pollId);
-    boolean existsByUserIdAndPoll_Id(Long userId, Long pollId);
-    int countByOption_Id(Long optionId);
+public interface VoteRepository extends JpaRepository<Vote, UUID> {
+    List<Vote> findByPoll_Id(UUID pollId);
+    Optional<Vote> findByUserIdAndPoll_Id(UUID userId, UUID pollId);
+    boolean existsByUserIdAndPoll_Id(UUID userId, UUID pollId);
+    int countByOption_Id(UUID optionId);
 }

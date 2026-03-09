@@ -1,6 +1,5 @@
 package com.amalitech.quickpoll.service;
 
-import com.amalitech.quickpoll.config.JwtService;
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.User;
 import com.amalitech.quickpoll.model.enums.Role;
@@ -17,14 +16,14 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new RuntimeException("Email already registered");
         }
         User user = User.builder()
-                .fullName(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role("USER")
+                .fullName(request.name())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(Role.USER)
                 .build();
         userRepository.save(user);
         String token = jwtService.generateToken(user.getEmail(), user.getRole());
@@ -34,9 +33,9 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
         String token = jwtService.generateToken(user.getEmail(), user.getRole());
