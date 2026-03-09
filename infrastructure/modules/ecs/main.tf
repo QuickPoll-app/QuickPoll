@@ -46,13 +46,14 @@ resource "aws_ssm_parameter" "db_password" {
   description = "Database password for ${var.environment}"
   type        = "SecureString"
   value       = var.db_password
+  overwrite   = true
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-db-password"
   })
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes = [value]
   }
 }
 
@@ -61,13 +62,14 @@ resource "aws_ssm_parameter" "jwt_secret" {
   description = "JWT secret for ${var.environment}"
   type        = "SecureString"
   value       = var.jwt_secret
+  overwrite   = true
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-jwt-secret"
   })
 
   lifecycle {
-    ignore_changes = []
+    ignore_changes = [value]
   }
 }
 
