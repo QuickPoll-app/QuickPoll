@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Results Response Schema",
+  "type": "object",
+  "required": ["pollId", "title", "totalVotes", "totalParticipants", "options"],
+  "properties": {
+    "pollId": {
+      "type": "integer",
+      "description": "Unique poll identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Poll title"
+    },
+    "totalVotes": {
+      "type": "integer",
+      "description": "Total number of votes cast"
+    },
+    "totalParticipants": {
+      "type": "integer",
+      "description": "Total number of unique voters"
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["optionId", "optionText", "voteCount", "percentage"],
+        "properties": {
+          "optionId": {
+            "type": "integer"
+          },
+          "optionText": {
+            "type": "string"
+          },
+          "voteCount": {
+            "type": "integer"
+          },
+          "percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
