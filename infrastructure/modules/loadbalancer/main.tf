@@ -45,7 +45,7 @@ resource "aws_lb_target_group" "backend" {
 # Frontend Target Group
 resource "aws_lb_target_group" "frontend" {
   name        = trimsuffix(substr("${var.project_name}-${var.environment}-fe-tg", 0, 32), "-")
-  port        = 80
+  port        = 8080
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
