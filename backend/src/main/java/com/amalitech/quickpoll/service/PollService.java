@@ -19,8 +19,7 @@ public class PollService {
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
 
-    public Page<PollResponse> getAllPolls(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<PollResponse> getAllPolls(Pageable pageable) {
         return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
     }
 

@@ -5,6 +5,8 @@ import com.amalitech.quickpoll.model.User;
 import com.amalitech.quickpoll.service.PollService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,17 +21,17 @@ public class PollController {
     private final PollService pollService;
 
     @GetMapping
-    public ResponseEntity<ResponseWrapper> getAllPolls(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getAllPolls(page, size)));
+    public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getAllPolls(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseWrapper> getPollById(@PathVariable UUID id) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getPollById(id)))   ;
+    public ResponseEntity<ResponseWrapper<PollResponse>> getPollById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getPollById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseWrapper> createPoll(@Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
+    public ResponseEntity<ResponseWrapper<PollResponse>> createPoll(@Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.createPoll(request, creator)));
     }
 

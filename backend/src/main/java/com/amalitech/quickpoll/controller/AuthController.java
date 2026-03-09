@@ -15,12 +15,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseWrapper> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<ResponseWrapper<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", authService.register(request)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseWrapper> login(@Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<ResponseWrapper<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", authService.login(request)));
     }
 }
