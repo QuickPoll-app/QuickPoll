@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Update user name and email")
     public ResponseEntity<UserResponse> update(
             @PathVariable UUID userId,
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/password")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Change user password")
     public ResponseEntity<Void> changePassword(
             @PathVariable UUID userId,
