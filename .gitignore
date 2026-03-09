@@ -84,3 +84,4 @@ temp/
 monitoring/prometheus/data/
 monitoring/grafana/data/*.secrets-backup.env
 .secrets-backup.env
+.claude/
