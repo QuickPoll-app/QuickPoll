@@ -9,19 +9,27 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { email, password })
-      .pipe(tap((res: any) => {
+    return this.http.post(`${this.apiUrl}/login`, { email, password }).pipe(
+      tap((res: any) => {
         localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify({ name: res.name, email: res.email, role: res.role }));
-      }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
+        );
+      }),
+    );
   }
 
   register(name: string, email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, { name, email, password })
-      .pipe(tap((res: any) => {
+    return this.http.post(`${this.apiUrl}/register`, { name, email, password }).pipe(
+      tap((res: any) => {
         localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify({ name: res.name, email: res.email, role: res.role }));
-      }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
+        );
+      }),
+    );
   }
 
   logout(): void {
