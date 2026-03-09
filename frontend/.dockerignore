@@ -5,6 +5,7 @@ dist/
 .gitignore
 .idea/
 .vscode/
+.claude/
 *.md
 *.log
 .env*
@@ -17,3 +18,5 @@ Dockerfile
 proxy.conf.json
 tsconfig.spec.json
 karma.conf.js
+.browserslistrc
+.editorconfig
