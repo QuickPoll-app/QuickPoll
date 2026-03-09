@@ -6,7 +6,9 @@ import com.amalitech.quickpoll.model.User;
 import com.amalitech.quickpoll.model.enums.Role;
 import com.amalitech.quickpoll.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional(rollbackFor = Exception.class)
     public AuthResponse register(RegisterRequest request) {
@@ -33,19 +36,22 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
-        String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole());
+        String token = jwtService.generateToken(savedUser);
         return buildAuthResponse(savedUser, token);
     }
 
     public AuthResponse login(AuthRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
+
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid credentials");
-        }
-
-        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+        String token = jwtService.generateToken(user);
         return buildAuthResponse(user, token);
     }
 
