@@ -2,7 +2,7 @@
   @if (label()) {
     <span class="form-label">{{ label() }}</span>
   }
-  <div 
+  <div
     [class]="'toggle' + (checked() ? ' on' : '')"
     (click)="handleToggle()"
     (keydown.enter)="handleToggle()"
@@ -10,7 +10,8 @@
     tabindex="0"
     role="switch"
     [attr.aria-checked]="checked()"
-    [attr.aria-label]="label() || 'Toggle'">
+    [attr.aria-label]="label() || 'Toggle'"
+  >
     <div class="toggle-thumb"></div>
   </div>
 </div>

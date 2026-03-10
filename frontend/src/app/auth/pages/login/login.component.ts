@@ -38,18 +38,18 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
       this.showError.set(false);
-      
+
       const { email, password } = this.loginForm.value;
-      
+
       this.authService.login(email, password).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.router.navigate(["/"]);
+          this.router.navigate(["/dashboard"]);
         },
         error: () => {
           this.isLoading.set(false);
           this.showError.set(true);
-        }
+        },
       });
     }
   }
