@@ -1,0 +1,11 @@
+﻿{
+  "": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": ["token", "email", "name", "role"],
+  "properties": {
+    "token": { "type": "string" },
+    "email": { "type": "string" },
+    "name":  { "type": "string" },
+    "role":  { "type": "string" }
+  }
+}
