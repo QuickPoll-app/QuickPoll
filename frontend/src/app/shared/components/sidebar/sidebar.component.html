@@ -1,0 +1,31 @@
+<aside class="sidebar">
+  <header class="sidebar-header">
+    <div class="logo">
+      <iconify-icon icon="lucide:vote" class="logo-icon"></iconify-icon>
+      <span class="logo-text">QuickPoll</span>
+    </div>
+  </header>
+
+  <nav class="sidebar-nav">
+    <ul>
+      @for (item of navItems(); track item.route) {
+        <li>
+          <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+            <iconify-icon [icon]="item.icon"></iconify-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <footer class="sidebar-footer">
+    <div class="user-profile">
+      <img [src]="userProfile().avatar" [alt]="userProfile().name" class="user-avatar" />
+      <div class="user-info">
+        <div class="user-name">{{ userProfile().name }}</div>
+        <div class="user-role">{{ userProfile().role }}</div>
+      </div>
+    </div>
+  </footer>
+</aside>

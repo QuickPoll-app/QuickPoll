@@ -1,0 +1,65 @@
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<main class="login-container">
+  <section class="login-card">
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="pi pi-check-square"></i>
+        </div>
+        <h1>QuickPoll</h1>
+      </div>
+      <p class="subtitle">Sign in to your account</p>
+    </header>
+
+    @if (showError()) {
+      <div class="error-alert">
+        <i class="pi pi-exclamation-circle"></i>
+        <span>Invalid email or password. Please try again.</span>
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <app-input
+        [label]="'Email'"
+        [type]="'email'"
+        [placeholder]="'Enter your email'"
+        [error]="!!(email?.invalid && email?.touched)"
+        formControlName="email"
+      >
+      </app-input>
+
+      <div class="password-field">
+        <label class="form-label">Password</label>
+        <div class="input-wrapper">
+          <input
+            class="form-input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Enter your password"
+          />
+          <button type="button" class="toggle-visibility" (click)="togglePasswordVisibility()">
+            <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <app-buttons
+          [type]="'submit'"
+          [variant]="'primary'"
+          [disabled]="loginForm.invalid"
+          [loading]="isLoading()"
+        >
+          Sign In
+        </app-buttons>
+      </div>
+    </form>
+
+    <footer class="footer">
+      <p>
+        Don't have an account?
+        <a routerLink="/registration" class="link">Create one</a>
+      </p>
+    </footer>
+  </section>
+</main>

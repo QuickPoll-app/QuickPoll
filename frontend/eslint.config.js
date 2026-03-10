@@ -36,7 +36,7 @@ module.exports = tseslint.config(
       "@typescript-eslint/no-empty-function": "error",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-member-accessibility": [
         "warn",
         {

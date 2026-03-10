@@ -1,0 +1,13 @@
+<article [class]="'card' + (voted() ? ' voted' : '') + (expired() ? ' expired' : '')">
+  @if (hasHeader()) {
+    <header class="card-header">
+      <ng-content select="[header]"></ng-content>
+    </header>
+  }
+  <ng-content></ng-content>
+  @if (hasFooter()) {
+    <footer class="card-footer">
+      <ng-content select="[footer]"></ng-content>
+    </footer>
+  }
+</article>
