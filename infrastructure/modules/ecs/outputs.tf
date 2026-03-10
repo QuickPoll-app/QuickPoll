@@ -41,3 +41,13 @@ output "frontend_log_group" {
   description = "CloudWatch log group for frontend"
   value       = aws_cloudwatch_log_group.frontend.name
 }
+
+output "backend_autoscaling_target_id" {
+  description = "Backend autoscaling target ID"
+  value       = aws_appautoscaling_target.backend.resource_id
+}
+
+output "frontend_autoscaling_target_id" {
+  description = "Frontend autoscaling target ID"
+  value       = aws_appautoscaling_target.frontend.resource_id
+}
