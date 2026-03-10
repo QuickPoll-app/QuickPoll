@@ -42,6 +42,11 @@ output "frontend_log_group" {
   value       = module.ecs.frontend_log_group
 }
 
+output "redis_host" {
+  description = "Production Redis endpoint"
+  value       = module.redis.redis_host
+}
+
 output "rds_events_sns_topic" {
   description = "SNS topic for RDS event notifications"
   value       = module.database.rds_events_sns_topic_arn

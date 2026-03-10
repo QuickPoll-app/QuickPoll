@@ -104,6 +104,8 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "SPRING_JPA_HIBERNATE_DDL_AUTO", value = "update" },
         { name = "SPRING_PROFILES_ACTIVE", value = var.environment },
         { name = "SERVER_PORT", value = "8081" },
+        { name = "SPRING_DATA_REDIS_HOST", value = var.redis_host },
+        { name = "SPRING_DATA_REDIS_PORT", value = var.redis_port },
       ]
 
       secrets = [

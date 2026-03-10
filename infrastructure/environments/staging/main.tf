@@ -72,6 +72,18 @@ module "database" {
   tags                  = local.tags
 }
 
+# Redis
+module "redis" {
+  source = "../../modules/redis"
+
+  project_name            = var.project_name
+  environment             = local.environment
+  private_subnet_ids      = module.networking.private_subnet_ids
+  redis_security_group_id = module.security.redis_security_group_id
+  redis_node_type         = "cache.t3.micro"
+  tags                    = local.tags
+}
+
 # Load Balancer
 module "loadbalancer" {
   source = "../../modules/loadbalancer"
@@ -129,6 +141,8 @@ module "ecs" {
   db_name     = module.database.db_name
   db_password = var.db_password
   jwt_secret  = var.jwt_secret
+  redis_host  = module.redis.redis_host
+  redis_port  = module.redis.redis_port
   tags        = local.tags
 }
 
