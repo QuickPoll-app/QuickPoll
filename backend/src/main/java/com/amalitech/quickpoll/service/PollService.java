@@ -81,10 +81,23 @@ public class PollService {
             voteRepository.save(Vote.builder().poll(poll).option(option).user(voter).build());
         }
     }
-    // TODO: Implement closePoll method
-    // public PollResponse closePoll(Long pollId, User creator) { ... }
 
-    // TODO: Implement deletePoll method
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "polls", allEntries = true)
+    public PollResponse closePoll(@NonNull UUID pollId, User creator) {
+        Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
+        if (!poll.getCreator().getId().equals(creator.getId())) throw new IllegalStateException("You are not the creator of this poll");
+        poll.setStatus(PollStatus.CLOSED);
+        return toResponse(pollRepository.save(poll));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "polls", allEntries = true)
+    public void deletePoll(@NonNull UUID pollId, User creator) {
+        Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
+        if (!poll.getCreator().getId().equals(creator.getId())) throw new IllegalStateException("You are not the creator of this poll");
+        pollRepository.delete(poll);
+    }
 
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());

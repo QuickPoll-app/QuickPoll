@@ -49,8 +49,16 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "Vote recorded successfully"));
     }
 
-    // TODO: Add vote endpoint - POST /api/polls/{id}/vote
-    // TODO: Add close poll endpoint - PUT /api/polls/{id}/close
-    // TODO: Add delete poll endpoint - DELETE /api/polls/{id}
-    // TODO: Add get results endpoint - GET /api/polls/{id}/results
+    @PutMapping("/{id}/close")
+    @Operation(summary = "Close a poll")
+    public ResponseEntity<ResponseWrapper<PollResponse>> closePoll(@PathVariable @NonNull UUID id, @AuthenticationPrincipal User creator) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.closePoll(id, creator)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a poll")
+    public ResponseEntity<ResponseWrapper<Void>> deletePoll(@PathVariable @NonNull UUID id, @AuthenticationPrincipal User creator) {
+        pollService.deletePoll(id, creator);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ResponseWrapper.success(HttpStatus.NO_CONTENT, "Poll deleted successfully"));
+    }
 }
