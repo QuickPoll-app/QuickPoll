@@ -32,4 +32,12 @@ public class AuthController {
                 ResponseWrapper.success(HttpStatus.OK, "Login successful",
                         authService.login(request)));
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout and revoke JWT token")
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String authHeader) {
+        authService.logout(authHeader);
+        return ResponseEntity.noContent().build();
+    }
 }
