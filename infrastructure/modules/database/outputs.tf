@@ -31,3 +31,8 @@ output "db_arn" {
   description = "RDS instance ARN"
   value       = aws_db_instance.main.arn
 }
+
+output "rds_events_sns_topic_arn" {
+  description = "SNS topic ARN for RDS event notifications"
+  value       = aws_sns_topic.rds_events.arn
+}
