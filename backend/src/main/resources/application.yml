@@ -8,12 +8,20 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop # ${JPA_DDL_AUTO:update}
+      ddl-auto: create # ${JPA_DDL_AUTO:update}
     show-sql: ${JPA_SHOW_SQL:false}
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${REDIS_HOST:quickpoll-redis}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
   sql:
     init:
       mode: always
@@ -22,7 +30,6 @@ spring:
 server:
   port: ${SERVER_PORT:8081}
 
-# --- Actuator & Metrics ---
 management:
   endpoints:
     web:
@@ -48,12 +55,3 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000
