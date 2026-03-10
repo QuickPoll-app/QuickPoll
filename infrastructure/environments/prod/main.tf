@@ -60,18 +60,18 @@ module "security" {
 module "database" {
   source = "../../modules/database"
 
-  project_name            = var.project_name
-  environment             = local.environment
-  vpc_id                  = module.networking.vpc_id
-  private_subnet_ids      = module.networking.private_subnet_ids
-  rds_security_group_id   = module.security.rds_security_group_id
-  db_password             = var.db_password
-  db_instance_class       = var.db_instance_class
-  multi_az                = true
-  deletion_protection     = true
-  backup_retention_period = 14
+  project_name             = var.project_name
+  environment              = local.environment
+  vpc_id                   = module.networking.vpc_id
+  private_subnet_ids       = module.networking.private_subnet_ids
+  rds_security_group_id    = module.security.rds_security_group_id
+  db_password              = var.db_password
+  db_instance_class        = var.db_instance_class
+  multi_az                 = true
+  deletion_protection      = true
+  backup_retention_period  = 14
   db_max_connections_alarm = 100
-  tags                    = local.tags
+  tags                     = local.tags
 }
 
 # Load Balancer
@@ -127,11 +127,11 @@ module "ecs" {
   frontend_cpu_target    = 65
   frontend_memory_target = 80
 
-  db_endpoint                 = module.database.db_address
-  db_name                     = module.database.db_name
-  db_password                 = var.db_password
-  jwt_secret                  = var.jwt_secret
-  tags                        = local.tags
+  db_endpoint = module.database.db_address
+  db_name     = module.database.db_name
+  db_password = var.db_password
+  jwt_secret  = var.jwt_secret
+  tags        = local.tags
 }
 
 # Storage
