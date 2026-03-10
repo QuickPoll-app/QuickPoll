@@ -61,7 +61,7 @@ public class PollService {
         return toResponse(pollRepository.findById(poll.getId()).orElseThrow(() -> new ResourceNotFoundException("Poll not found")));
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "polls", allEntries = true)
     public void vote(@NonNull UUID pollId, VoteRequest request, User voter) {
         Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
