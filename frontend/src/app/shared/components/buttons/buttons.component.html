@@ -1,0 +1,11 @@
+<button
+  [class]="'btn btn-' + variant()"
+  [disabled]="disabled() || loading()"
+  [type]="type()"
+  (click)="clicked.emit()"
+>
+  @if (loading()) {
+    <div class="spinner"></div>
+  }
+  <ng-content></ng-content>
+</button>

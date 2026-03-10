@@ -1,12 +1,31 @@
 import { Routes } from "@angular/router";
-import { PollListComponent } from "./pages/poll-list.component";
-import { LoginComponent } from "./pages/login.component";
-import { RegisterComponent } from "./pages/register.component";
-import { CreatePollComponent } from "./pages/create-poll.component";
+import { LoginComponent } from "./auth/pages/login/login.component";
+import { RegisterComponent } from "./auth/pages/register/register.component";
+import { MainLayoutComponent } from "./layouts/main-layout/main-layout.component";
+import { DashboardComponent } from "./pages/dashboard/dashboard.component";
 
 export const routes: Routes = [
-  { path: "", component: PollListComponent },
-  { path: "login", component: LoginComponent },
-  { path: "register", component: RegisterComponent },
-  { path: "create", component: CreatePollComponent },
+  {
+    path: "",
+    redirectTo: "login",
+    pathMatch: "full",
+  },
+  {
+    path: "login",
+    component: LoginComponent,
+  },
+  {
+    path: "registration",
+    component: RegisterComponent,
+  },
+  {
+    path: "",
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: "dashboard",
+        component: DashboardComponent,
+      },
+    ],
+  },
 ];
