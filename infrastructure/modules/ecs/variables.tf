@@ -176,6 +176,17 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "redis_host" {
+  description = "Redis primary endpoint address"
+  type        = string
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = string
+  default     = "6379"
+}
+
 variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)

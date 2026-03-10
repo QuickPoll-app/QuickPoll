@@ -99,6 +99,32 @@ resource "aws_vpc_security_group_egress_rule" "rds_all_traffic" {
   ip_protocol       = "-1"
 }
 
+# Redis Security Group
+resource "aws_security_group" "redis" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-redis-sg", 0, 255), "-")
+  description = "Security group for ElastiCache Redis - only accessible from ECS tasks"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-redis-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "redis_from_ecs" {
+  security_group_id            = aws_security_group.redis.id
+  description                  = "Redis from ECS tasks"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+  from_port                    = 6379
+  ip_protocol                  = "tcp"
+  to_port                      = 6379
+}
+
+resource "aws_vpc_security_group_egress_rule" "redis_all_traffic" {
+  security_group_id = aws_security_group.redis.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
 # ECS Task Execution Role
 resource "aws_iam_role" "ecs_task_execution" {
   name = trimsuffix(substr("${var.project_name}-${var.environment}-ecs-exec", 0, 64), "-")
