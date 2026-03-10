@@ -1,6 +1,7 @@
 import { Component, input, output, ChangeDetectionStrategy } from "@angular/core";
 
 @Component({
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-buttons",
   imports: [],
