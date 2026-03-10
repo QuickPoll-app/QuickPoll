@@ -19,6 +19,13 @@
       <p class="subtitle">Create your account</p>
     </header>
 
+    @if (errorMessage()) {
+      <div class="error-alert">
+        <i class="pi pi-exclamation-circle"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
     <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
       <app-input
         [label]="'Full Name'"

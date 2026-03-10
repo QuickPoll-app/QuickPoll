@@ -11,11 +11,11 @@ export class ToggleComponent {
   public disabled = input(false);
   public label = input<string>('');
   
-  public change = output<boolean>();
+  public toggleChange = output<boolean>();
 
   public handleToggle() {
     if (!this.disabled()) {
-      this.change.emit(!this.checked());
+      this.toggleChange.emit(!this.checked());
     }
   }
 }

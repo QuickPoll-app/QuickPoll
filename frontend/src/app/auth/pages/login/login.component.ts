@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
 import { ButtonsComponent } from "../../../shared/components/buttons/buttons.component";
 import { InputComponent } from "../../../shared/components/input/input.component";
-// import { AuthService } from "../../../services/auth.service";
+import { AuthService } from "../../../services/auth.service";
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +22,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private authService: AuthService,
   ) {
     this.loginForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
@@ -38,12 +38,19 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
       this.showError.set(false);
-      console.log("Login data:", this.loginForm.value);
-
-      setTimeout(() => {
-        this.isLoading.set(false);
-        this.router.navigate(["/dashboard"]);
-      }, 2000);
+      
+      const { email, password } = this.loginForm.value;
+      
+      this.authService.login(email, password).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.router.navigate(["/"]);
+        },
+        error: () => {
+          this.isLoading.set(false);
+          this.showError.set(true);
+        }
+      });
     }
   }
 

@@ -29,6 +29,7 @@ export class InputComponent implements ControlValueAccessor {
   public inputId = signal(`input-${nextId++}`);
 
   public value = signal("");
+  public isDisabled = signal(false);
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public onChange: (value: any) => void = () => {};
@@ -58,5 +59,7 @@ export class InputComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
-  // public setDisabledState(isDisabled: boolean): void {}
+  public setDisabledState(isDisabled: boolean): void {
+    this.isDisabled.set(isDisabled);
+  }
 }

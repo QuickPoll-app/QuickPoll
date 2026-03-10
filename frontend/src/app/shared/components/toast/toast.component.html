@@ -9,8 +9,7 @@
     <i class="pi pi-info-circle"></i>
   }
   <span>{{ message() }}</span>
-  // eslint-disable-next-line @angular-eslint/template/button-has-type
-  <button class="btn-icon" (click)="close.emit()">
+  <button type="button" class="btn-icon" (click)="closeToast.emit()">
     <i class="pi pi-times"></i>
   </button>
   @if (autoClose()) {

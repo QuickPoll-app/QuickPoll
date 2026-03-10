@@ -7,7 +7,7 @@
     [class]="'form-input' + (error() ? ' error' : '') + (success() ? ' success' : '')"
     [type]="type()"
     [placeholder]="placeholder()"
-    [disabled]="disabled()"
+    [disabled]="disabled() || isDisabled()"
     [value]="value()"
     (input)="onInput($event)"
     (blur)="onBlur()"

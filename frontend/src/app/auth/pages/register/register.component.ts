@@ -1,9 +1,17 @@
 import { Component, ChangeDetectionStrategy, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
-import { RouterLink } from "@angular/router";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
 import { InputComponent } from "../../../shared/components/input/input.component";
 import { ButtonsComponent } from "../../../shared/components/buttons/buttons.component";
+import { AuthService } from "../../../services/auth.service";
+
+function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+  
+  return password && confirmPassword && password !== confirmPassword ? { passwordMismatch: true } : null;
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,14 +28,15 @@ export class RegisterComponent {
   public isLoading = signal(false);
   public passwordStrength = signal<"weak" | "medium" | "strong">("weak");
   public passwordsMatch = signal(false);
+  public errorMessage = signal<string | null>(null);
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
     this.registrationForm = this.fb.group({
       fullName: ["", [Validators.required]],
       email: ["", [Validators.required, Validators.email]],
       password: ["", [Validators.required, Validators.minLength(8)]],
       confirmPassword: ["", [Validators.required]],
-    });
+    }, { validators: passwordMatchValidator });
 
     this.registrationForm.get("password")?.valueChanges.subscribe((value) => {
       this.calculatePasswordStrength(value);
@@ -73,10 +82,22 @@ export class RegisterComponent {
   }
 
   public onSubmit() {
-    if (this.registrationForm.valid) {
+    if (this.registrationForm.valid && !this.registrationForm.hasError('passwordMismatch')) {
       this.isLoading.set(true);
-      console.log("Registration data:", this.registrationForm.value);
-      setTimeout(() => this.isLoading.set(false), 2000);
+      this.errorMessage.set(null);
+      
+      const { fullName, email, password } = this.registrationForm.value;
+      
+      this.authService.register(fullName, email, password).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.router.navigate(['/']);
+        },
+        error: (error) => {
+          this.isLoading.set(false);
+          this.errorMessage.set(error.error?.message || 'Registration failed. Please try again.');
+        }
+      });
     }
   }
 

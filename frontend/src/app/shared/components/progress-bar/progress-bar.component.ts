@@ -15,6 +15,7 @@ export class ProgressBarComponent {
   public percentage = computed(() => {
     const val = this.value();
     const maxVal = this.max();
-    return Math.min(100, Math.max(0, (val / maxVal) * 100));
+    
+    return maxVal <= 0 ? 0 : Math.min(100, Math.max(0, (val / maxVal) * 100));
   });
 }

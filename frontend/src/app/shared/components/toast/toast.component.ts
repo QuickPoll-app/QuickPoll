@@ -13,5 +13,5 @@ export class ToastComponent {
  public autoClose = input(true);
  public duration = input(4000);
  
- public close = output<void>();
+ public closeToast = output<void>();
 }

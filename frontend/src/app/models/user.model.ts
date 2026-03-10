@@ -11,12 +11,14 @@ export interface ILoginRequest {
 }
 
 export interface IRegisterRequest {
-  fullName: string;
+  name: string;
   email: string;
   password: string;
 }
 
 export interface IAuthResponse {
   token: string;
-  user: IUser;
+  email: string;
+  name: string;
+  role: "ADMIN" | "USER";
 }
