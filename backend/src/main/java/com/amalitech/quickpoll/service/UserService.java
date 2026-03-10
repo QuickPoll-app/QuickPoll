@@ -28,8 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -38,8 +37,7 @@ public class UserService {
     public UserResponse getById(UUID userId) {
         return UserResponse.fromEntity(
                 userRepository.findById(userId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException("User not found with id: " + userId))
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId))
         );
     }
 
@@ -47,12 +45,10 @@ public class UserService {
     public UserResponse getByEmail(String email) {
         return UserResponse.fromEntity(
                 userRepository.findByEmail(email)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException("User not found with email: " + email))
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email))
         );
     }
 
-    @Cacheable(cacheNames = "users", key = "'page_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<UserResponse> getAll(Pageable pageable) {
         return userRepository.findAll(pageable)
                 .map(UserResponse::fromEntity);
@@ -61,10 +57,8 @@ public class UserService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "users", allEntries = true)
     public UserResponse update(UUID userId, UpdateUserRequest userDetails) {
-
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         userRepository.findByEmail(userDetails.email())
                 .filter(existing -> !existing.getId().equals(userId))
@@ -81,26 +75,20 @@ public class UserService {
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "users", allEntries = true)
     public void delete(UUID userId) {
-
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found with id: " + userId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         userRepository.delete(user);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "users", allEntries = true)
     public void changePassword(UUID userId, ChangePasswordRequest request) {
-
         User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new BadCredentialsException("Current password is incorrect");
         }
-
         if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
             throw new BadRequestException("New password must be different from current password");
         }

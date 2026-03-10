@@ -40,7 +40,16 @@ public class SecurityConfig {
                         .authenticationEntryPoint(entryPoint)
                 )
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers(
+                            "/api/auth/**",
+                            "/actuator/health",
+                            "/actuator/info",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/v3/api-docs/**",
+                            "/v3/api-docs",
+                            "/webjars/**"
+                    ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/polls/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/polls/**").authenticated()
                     .anyRequest().authenticated()
