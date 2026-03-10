@@ -13,8 +13,7 @@ analytics_user_participation:
 """
 
 import logging
-from datetime import datetime
-
+from datetime import datetime, UTC
 import pandas as pd
 from sqlalchemy import create_engine, text
 
@@ -79,7 +78,8 @@ def log_pipeline_start(conn, pipeline_name):
 
     result = conn.execute(query, {
         "name": pipeline_name,
-        "start_time": datetime.utcnow()
+        "start_time": datetime.now(UTC)
+
     })
 
     return result.scalar()
@@ -99,7 +99,7 @@ def log_pipeline_finish(conn, run_id, rows_processed, status):
 
     conn.execute(query, {
         "run_id": run_id,
-        "end_time": datetime.utcnow(),
+        "end_time": datetime.now(UTC),
         "rows": rows_processed,
         "status": status
     })
@@ -161,11 +161,12 @@ def extract_polls(conn):
     query = text("""
         SELECT 
             p.id,
-            p.question,
+            p.title,
             p.status,
+            p.description,
             p.created_at,
-            p.multiple_choice,
-            u.name AS creator_name
+            p.multi_select,
+            u.full_name AS creator_name
         FROM polls p
         JOIN users u ON p.creator_id = u.id
     """)
@@ -187,11 +188,11 @@ def extract_votes(conn, last_run=None):
             SELECT 
                 v.id,
                 v.created_at,
-                po.poll_id,
-                po.text AS option_text,
-                u.name AS voter_name
+                v.poll_id,
+                po.option_text,
+                u.full_name AS voter_name
             FROM votes v
-            JOIN poll_options po ON v.poll_option_id = po.id
+            JOIN poll_options po ON v.option_id = po.id
             JOIN users u ON v.user_id = u.id
             WHERE v.created_at > :last_run
         """)
@@ -204,11 +205,11 @@ def extract_votes(conn, last_run=None):
             SELECT 
                 v.id,
                 v.created_at,
-                po.poll_id,
-                po.text AS option_text,
-                u.name AS voter_name
+                v.poll_id,
+                po.option_text,
+                u.full_name AS voter_name
             FROM votes v
-            JOIN poll_options po ON v.poll_option_id = po.id
+            JOIN poll_options po ON v.option_id = po.id
             JOIN users u ON v.user_id = u.id
         """)
 
@@ -259,16 +260,19 @@ def transform_poll_summary(polls_df, votes_df):
 
     result["total_votes"] = result["total_votes"].fillna(0).astype(int)
 
-    result["etl_run_at"] = datetime.utcnow()
+    result["etl_run_at"] = datetime.now(UTC)
 
     return result[
-        ["id", "question", "creator_name", "total_votes", "created_at", "etl_run_at"]
+        ["id", "title", "creator_name", "total_votes", "created_at", "etl_run_at"]
     ]
 
 
 def transform_vote_trends(votes_df):
 
     logger.info("Transforming vote trends")
+
+    # Ensure created_at is datetime
+    votes_df["created_at"] = pd.to_datetime(votes_df["created_at"])
 
     trends = (
         votes_df
@@ -278,10 +282,9 @@ def transform_vote_trends(votes_df):
         .reset_index(name="votes_per_day")
     )
 
-    trends["etl_run_at"] = datetime.utcnow()
+    trends["etl_run_at"] = datetime.now(UTC)
 
     return trends
-
 
 def transform_user_participation(votes_df):
 
@@ -300,7 +303,7 @@ def transform_user_participation(votes_df):
         participation["total_votes_cast"] / total_votes
     )
 
-    participation["etl_run_at"] = datetime.utcnow()
+    participation["etl_run_at"] = datetime.now(UTC)
 
     return participation
 
@@ -310,18 +313,23 @@ def transform_user_participation(votes_df):
 
 def load_table(conn, df, table_name):
 
-    if df.empty:
-        logger.warning(f"No data to load into {table_name}")
-        return
-
     logger.info(f"Loading {len(df)} rows into {table_name}")
 
-    df.to_sql(
+    # create table schema even if dataframe empty
+    df.head(0).to_sql(
         table_name,
         conn,
         if_exists="append",
         index=False
     )
+
+    if not df.empty:
+        df.to_sql(
+            table_name,
+            conn,
+            if_exists="append",
+            index=False
+        )
 
 
 # Pipeline Orchestration
