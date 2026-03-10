@@ -49,7 +49,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         String token = jwtService.generateToken(user);
         return buildAuthResponse(user, token);
