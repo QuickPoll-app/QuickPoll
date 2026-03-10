@@ -1,0 +1,6 @@
+<div class="progress-bar">
+  <div class="progress-fill" [style.width.%]="percentage()"></div>
+</div>
+@if (showLabel()) {
+  <span class="bar-value">{{ percentage() | number: "1.0-0" }}%</span>
+}
