@@ -94,7 +94,7 @@ resource "aws_lb_listener_rule" "api" {
 
   condition {
     path_pattern {
-      values = ["/api/*", "/actuator/*", "/swagger-ui/*", "/api-docs*"]
+      values = ["/api/*", "/actuator/*", "/swagger-ui/*", "/api-docs*", "/v3/api-docs*"]
     }
   }
 
