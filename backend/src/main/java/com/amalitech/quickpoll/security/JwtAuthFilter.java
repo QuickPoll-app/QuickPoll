@@ -32,9 +32,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Skip JWT processing for public endpoints
         if (path.startsWith("/actuator/") ||
-                path.startsWith("/api-docs") ||
+                path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||
                 path.equals("/swagger-ui.html")) {
             filterChain.doFilter(request, response);
@@ -52,7 +51,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             if (jwtService.isTokenBlacklisted(token, redisTemplate)) {
-                throw new JwtException("Token has been revoked");
+                writeUnauthorized(response, "Token has been revoked");
+                return;
             }
 
             String email = jwtService.extractEmail(token);
@@ -62,30 +62,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UserDetails userDetails = customUserDetailService.loadUserByUsername(email);
 
                 if (!jwtService.isTokenValid(token, email)) {
-                    throw new JwtException("Token is invalid or expired");
+                    writeUnauthorized(response, "Token is invalid or expired");
+                    return;
                 }
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities()
                         );
-
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
 
         } catch (JwtException ex) {
-
             SecurityContextHolder.clearContext();
-            request.setAttribute("jwt.exception", ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("""
-                    {"error": "Unauthorized", "message": "%s"}
-                    """.formatted(ex.getMessage()));
+            writeUnauthorized(response, ex.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        SecurityContextHolder.clearContext();
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("""
+                {"error": "Unauthorized", "message": "%s"}
+                """.formatted(message));
     }
 }
