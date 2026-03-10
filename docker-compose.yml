@@ -1,19 +1,28 @@
-# QuickPoll - Local Development Environment
+# ============================================
+# QuickPoll — Local Development Environment
+# Docker Compose v2 (Compose Specification)
+# ============================================
+#
 # Usage:
-#   docker compose up -d              : Start all services
-#   docker compose up -d --build      : Rebuild and start
-#   docker compose logs -f backend    : Follow backend logs
-#   docker compose down -v            : Stop and remove volumes
+#   docker compose up -d                      : Start app services
+#   docker compose --profile monitoring up -d  : Start app + monitoring
+#   docker compose up -d --build               : Rebuild and start
+#   docker compose logs -f backend             : Follow backend logs
+#   docker compose down -v                     : Stop and remove volumes
+#   docker compose ps                          : Show running services
 
 services:
   # Database
   postgres:
     image: postgres:16.2-alpine
     container_name: quickpoll-db
+    restart: unless-stopped
+    shm_size: 256mb
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5435:5432"
     volumes:
@@ -23,6 +32,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -32,27 +54,39 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: quickpoll-backend
+    restart: unless-stopped
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${SERVER_PORT:-8081}:${SERVER_PORT:-8081}"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-postgres}:${DB_PORT:-5432}/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${JPA_DDL_AUTO}
-      SPRING_JPA_SHOW_SQL: "${JPA_SHOW_SQL}"
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+      SPRING_JPA_SHOW_SQL: "${JPA_SHOW_SQL:-false}"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       JWT_SECRET: ${JWT_SECRET}
-      SERVER_PORT: "${SERVER_PORT}"
+      SERVER_PORT: "${SERVER_PORT:-8081}"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test:
-        ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT}/actuator/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:${SERVER_PORT:-8081}/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 768M
+        reservations:
+          memory: 384M
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     networks:
       - quickpoll-network
 
@@ -62,6 +96,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: quickpoll-frontend
+    restart: unless-stopped
     ports:
       - "4200:8080"
     volumes:
@@ -69,6 +104,24 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -78,20 +131,33 @@ services:
       context: ./data-engineering
       dockerfile: Dockerfile
     container_name: quickpoll-data-engineering
+    restart: on-failure:3
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: "${DB_PORT}"
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: "${DB_PORT:-5432}"
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      BACKEND_API_URL: ${BACKEND_API_URL}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://backend:8081/api}
     depends_on:
       postgres:
         condition: service_healthy
       backend:
         condition: service_healthy
     volumes:
-      - ./data-engineering/data:/app/data
+      - etl-data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -99,8 +165,10 @@ services:
   redis:
     image: redis:7.2-alpine
     container_name: quickpoll-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - redis-data:/data
     healthcheck:
@@ -108,6 +176,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 192M
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -115,6 +196,8 @@ services:
   prometheus:
     image: prom/prometheus:v2.50.1
     container_name: quickpoll-prometheus
+    restart: unless-stopped
+    profiles: ["monitoring"]
     ports:
       - "9090:9090"
     volumes:
@@ -125,10 +208,24 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.size=5GB"
       - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
     depends_on:
       backend:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -136,18 +233,34 @@ services:
   grafana:
     image: grafana/grafana:10.3.3
     container_name: quickpoll-grafana
+    restart: unless-stopped
+    profiles: ["monitoring"]
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
-      GF_USERS_ALLOW_SIGN_UP: "${GF_ALLOW_SIGN_UP}"
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "${GF_ALLOW_SIGN_UP:-false}"
+      GF_SERVER_ROOT_URL: "http://localhost:3000"
+      GF_INSTALL_PLUGINS: ""
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
@@ -155,21 +268,43 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.27.0
     container_name: quickpoll-alertmanager
+    restart: unless-stopped
+    profiles: ["monitoring"]
     ports:
       - "9093:9093"
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
     networks:
       - quickpoll-network
 
 volumes:
   pgdata:
+    driver: local
   redis-data:
+    driver: local
+  etl-data:
+    driver: local
   prometheus-data:
+    driver: local
   grafana-data:
+    driver: local
 
 networks:
   quickpoll-network:
     driver: bridge
+    name: quickpoll-net
