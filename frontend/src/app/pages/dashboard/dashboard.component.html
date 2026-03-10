@@ -1,1 +1,84 @@
-<p>dashboard works!</p>
+<div class="dashboard-main">
+  <div class="dashboard-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Overview of all your polling activity</p>
+    </div>
+    <app-buttons variant="primary" (clicked)="onCreatePoll()">
+      <iconify-icon icon="lucide:plus"></iconify-icon>
+      <span>Create Poll</span>
+    </app-buttons>
+  </div>
+
+  <div class="stats-grid">
+    @for (stat of stats(); track stat.label) {
+      <app-stat-card
+        [value]="stat.value"
+        [label]="stat.label"
+        [trend]="stat.trend === 'up' ? 'positive' : 'negative'"
+        [trendValue]="stat.trendValue"
+        [icon]="stat.icon"
+      >
+      </app-stat-card>
+    }
+  </div>
+
+  <div class="content-grid">
+    <div class="card-section">
+      <app-card>
+        <div class="section-header">
+          <h3 class="section-title">Active Polls</h3>
+        </div>
+        <div class="section-content">
+          @for (poll of activePolls(); track poll.title) {
+            <div class="poll-item">
+              <div class="poll-item-header">
+                <h4 class="poll-title">{{ poll.title }}</h4>
+                <app-badge variant="active">{{ poll.votes }} votes</app-badge>
+              </div>
+              <div class="poll-participation">
+                <div class="participation-info">
+                  <span class="participation-label">Participation</span>
+                  <span class="participation-value">{{ poll.participation }}%</span>
+                </div>
+                <app-progress-bar [value]="poll.participation"></app-progress-bar>
+              </div>
+              <div class="poll-footer">
+                <app-badge [variant]="poll.timeLeftColor === '#D97706' ? 'expired' : 'active'">
+                  {{ poll.timeLeft }}
+                </app-badge>
+              </div>
+            </div>
+          }
+        </div>
+      </app-card>
+    </div>
+
+    <div class="card-section">
+      <app-card>
+        <div class="section-header">
+          <h3 class="section-title">Recent Results</h3>
+        </div>
+        <div class="section-content">
+          @for (result of recentResults(); track result.title) {
+            <div class="poll-item">
+              <div class="poll-item-header">
+                <h4 class="poll-title">{{ result.title }}</h4>
+                <app-badge variant="expired">Expired</app-badge>
+              </div>
+              <div class="result-winner">
+                <div class="winner-info">
+                  <span class="winner-label">🏆 {{ result.winner }}</span>
+                  <span class="winner-percentage">{{ result.winnerPercentage }}%</span>
+                </div>
+              </div>
+              <div class="result-stats">
+                {{ result.totalVotes }} total votes • {{ result.participation }}% participation
+              </div>
+            </div>
+          }
+        </div>
+      </app-card>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { PollService } from "../services/poll.service";
+import { PollService } from "../../services/poll.service";
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
