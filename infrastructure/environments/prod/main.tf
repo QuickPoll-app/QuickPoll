@@ -70,6 +70,7 @@ module "database" {
   multi_az                = true
   deletion_protection     = true
   backup_retention_period = 14
+  db_max_connections_alarm = 100
   tags                    = local.tags
 }
 
@@ -115,6 +116,17 @@ module "ecs" {
   frontend_memory             = var.frontend_memory
   backend_desired_count       = var.backend_desired_count
   frontend_desired_count      = var.frontend_desired_count
+
+  # Autoscaling — prod runs higher capacity
+  backend_min_count      = 2
+  backend_max_count      = 6
+  frontend_min_count     = 2
+  frontend_max_count     = 4
+  backend_cpu_target     = 60
+  backend_memory_target  = 75
+  frontend_cpu_target    = 65
+  frontend_memory_target = 80
+
   db_endpoint                 = module.database.db_address
   db_name                     = module.database.db_name
   db_password                 = var.db_password

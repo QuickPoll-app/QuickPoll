@@ -114,6 +114,17 @@ module "ecs" {
   frontend_memory             = var.frontend_memory
   backend_desired_count       = var.backend_desired_count
   frontend_desired_count      = var.frontend_desired_count
+
+  # Autoscaling — staging runs conservative
+  backend_min_count     = 1
+  backend_max_count     = 2
+  frontend_min_count    = 1
+  frontend_max_count    = 2
+  backend_cpu_target    = 70
+  backend_memory_target = 80
+  frontend_cpu_target   = 70
+  frontend_memory_target = 80
+
   db_endpoint                 = module.database.db_address
   db_name                     = module.database.db_name
   db_password                 = var.db_password
