@@ -2,22 +2,25 @@ package com.amalitech.quickpoll.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public record PollRequest (
         @NotBlank(message = "Expected Question")
         String question,
+        @NotBlank(message = "Expected Description")
         String description,
         @NotEmpty(message = "Expected Poll Options")
         List<String> options,
         boolean multipleChoice,
-        LocalDateTime expiresAt
+        @NotNull(message = "Expected Expiry Date")
+        Instant expiresAt
 ) {
     public PollRequest {
         question = question.trim();
         description = description.trim();
-        options = options.stream().map(String::trim).toList();
+        options = options.stream().map(String::trim).distinct().toList();
     }
 }

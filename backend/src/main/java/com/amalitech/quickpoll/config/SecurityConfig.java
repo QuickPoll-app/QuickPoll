@@ -51,7 +51,6 @@ public class SecurityConfig {
                             "/webjars/**"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/polls/**").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/polls/**").authenticated()
                     .anyRequest().authenticated()
             )
                 .authenticationProvider(authenticationProvider())
