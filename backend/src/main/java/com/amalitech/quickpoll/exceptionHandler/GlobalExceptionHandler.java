@@ -22,57 +22,57 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ResponseWrapper> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleValidation(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldErrors().stream().map(f -> f.getField() + ": " + f.getDefaultMessage()).collect(Collectors.joining("; "));
         if (msg.isEmpty()) msg = "Validation failed";
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseWrapper.error(HttpStatus.BAD_REQUEST, msg));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ResponseWrapper> handleConstraintViolation(ConstraintViolationException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleConstraintViolation(ConstraintViolationException ex) {
         String msg = ex.getConstraintViolations().stream().map(v -> v.getPropertyPath() + ": " + v.getMessage()).collect(Collectors.joining("; "));
         if (msg.isEmpty()) msg = ex.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseWrapper.error(HttpStatus.BAD_REQUEST, msg));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ResponseWrapper> handleNotFound(EntityNotFoundException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseWrapper.error(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ResponseWrapper> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseWrapper.error(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ResponseWrapper> handleIllegalState(IllegalStateException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleIllegalState(IllegalStateException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ResponseWrapper.error(HttpStatus.CONFLICT, ex.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ResponseWrapper> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseWrapper.error(HttpStatus.BAD_REQUEST, "Invalid request body"));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ResponseWrapper> handleAny(Exception ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleAny(Exception ex) {
         log.error("Unhandled exception caught: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseWrapper.error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ResponseWrapper> handleResourceNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseWrapper.error(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ResponseWrapper> handleDuplicateResource(DuplicateResourceException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleDuplicateResource(DuplicateResourceException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ResponseWrapper.error(HttpStatus.CONFLICT, ex.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ResponseWrapper> handleBadRequest(BadRequestException ex) {
+    public ResponseEntity<ResponseWrapper<Void>> handleBadRequest(BadRequestException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseWrapper.error(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
 
