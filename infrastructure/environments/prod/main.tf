@@ -60,16 +60,29 @@ module "security" {
 module "database" {
   source = "../../modules/database"
 
+  project_name             = var.project_name
+  environment              = local.environment
+  vpc_id                   = module.networking.vpc_id
+  private_subnet_ids       = module.networking.private_subnet_ids
+  rds_security_group_id    = module.security.rds_security_group_id
+  db_password              = var.db_password
+  db_instance_class        = var.db_instance_class
+  multi_az                 = true
+  deletion_protection      = true
+  backup_retention_period  = 14
+  db_max_connections_alarm = 100
+  tags                     = local.tags
+}
+
+# Redis
+module "redis" {
+  source = "../../modules/redis"
+
   project_name            = var.project_name
   environment             = local.environment
-  vpc_id                  = module.networking.vpc_id
   private_subnet_ids      = module.networking.private_subnet_ids
-  rds_security_group_id   = module.security.rds_security_group_id
-  db_password             = var.db_password
-  db_instance_class       = var.db_instance_class
-  multi_az                = true
-  deletion_protection     = true
-  backup_retention_period = 14
+  redis_security_group_id = module.security.redis_security_group_id
+  redis_node_type         = "cache.t3.small"
   tags                    = local.tags
 }
 
@@ -115,11 +128,24 @@ module "ecs" {
   frontend_memory             = var.frontend_memory
   backend_desired_count       = var.backend_desired_count
   frontend_desired_count      = var.frontend_desired_count
-  db_endpoint                 = module.database.db_address
-  db_name                     = module.database.db_name
-  db_password                 = var.db_password
-  jwt_secret                  = var.jwt_secret
-  tags                        = local.tags
+
+  # Autoscaling — prod runs higher capacity
+  backend_min_count      = 2
+  backend_max_count      = 6
+  frontend_min_count     = 2
+  frontend_max_count     = 4
+  backend_cpu_target     = 60
+  backend_memory_target  = 75
+  frontend_cpu_target    = 65
+  frontend_memory_target = 80
+
+  db_endpoint = module.database.db_address
+  db_name     = module.database.db_name
+  db_password = var.db_password
+  jwt_secret  = var.jwt_secret
+  redis_host  = module.redis.redis_host
+  redis_port  = module.redis.redis_port
+  tags        = local.tags
 }
 
 # Storage

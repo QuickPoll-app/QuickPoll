@@ -72,6 +72,18 @@ module "database" {
   tags                  = local.tags
 }
 
+# Redis
+module "redis" {
+  source = "../../modules/redis"
+
+  project_name            = var.project_name
+  environment             = local.environment
+  private_subnet_ids      = module.networking.private_subnet_ids
+  redis_security_group_id = module.security.redis_security_group_id
+  redis_node_type         = "cache.t3.micro"
+  tags                    = local.tags
+}
+
 # Load Balancer
 module "loadbalancer" {
   source = "../../modules/loadbalancer"
@@ -114,11 +126,24 @@ module "ecs" {
   frontend_memory             = var.frontend_memory
   backend_desired_count       = var.backend_desired_count
   frontend_desired_count      = var.frontend_desired_count
-  db_endpoint                 = module.database.db_address
-  db_name                     = module.database.db_name
-  db_password                 = var.db_password
-  jwt_secret                  = var.jwt_secret
-  tags                        = local.tags
+
+  # Autoscaling — staging runs conservative
+  backend_min_count      = 1
+  backend_max_count      = 2
+  frontend_min_count     = 1
+  frontend_max_count     = 2
+  backend_cpu_target     = 70
+  backend_memory_target  = 80
+  frontend_cpu_target    = 70
+  frontend_memory_target = 80
+
+  db_endpoint = module.database.db_address
+  db_name     = module.database.db_name
+  db_password = var.db_password
+  jwt_secret  = var.jwt_secret
+  redis_host  = module.redis.redis_host
+  redis_port  = module.redis.redis_port
+  tags        = local.tags
 }
 
 # Storage

@@ -83,4 +83,7 @@ public class JwtService {
     public boolean isTokenBlacklisted(String token, RedisTemplate<String, String> redisTemplate) {
         return Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + token));
     }
+    public long getExpirationMs() {
+        return jwtExpirationMs;
+    }
 }
