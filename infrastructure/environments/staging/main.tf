@@ -146,11 +146,32 @@ module "ecs" {
   tags        = local.tags
 }
 
+# Monitoring (Grafana, Loki, Jaeger)
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project_name                 = var.project_name
+  environment                  = local.environment
+  vpc_id                       = module.networking.vpc_id
+  private_subnet_ids           = module.networking.private_subnet_ids
+  monitoring_security_group_id = module.security.monitoring_security_group_id
+  ecs_task_execution_role_arn  = module.security.ecs_task_execution_role_arn
+  monitoring_target_group_arn  = module.loadbalancer.monitoring_target_group_arn
+  jaeger_target_group_arn      = module.loadbalancer.jaeger_target_group_arn
+  efs_monitoring_id            = module.storage.efs_monitoring_id
+  efs_access_point_grafana_id  = module.storage.efs_access_point_grafana_id
+  efs_access_point_loki_id     = module.storage.efs_access_point_loki_id
+  grafana_admin_password       = "admin123" # In production use a secret
+  tags                         = local.tags
+}
+
 # Storage
 module "storage" {
   source = "../../modules/storage"
 
-  project_name = var.project_name
-  environment  = local.environment
-  tags         = local.tags
+  project_name          = var.project_name
+  environment           = local.environment
+  private_subnet_ids    = module.networking.private_subnet_ids
+  efs_security_group_id = module.security.efs_security_group_id
+  tags                  = local.tags
 }

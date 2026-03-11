@@ -1,9 +1,7 @@
+# =============================================================
+# S3 for ALB Access Logs
+# =============================================================
 
-# Storage Module - Main Configuration
-# S3 bucket for ALB access logs
-
-
-# ALB Access Logs Bucket
 resource "aws_s3_bucket" "alb_logs" {
   bucket = trimsuffix(substr("${var.project_name}-${var.environment}-alb-logs", 0, 63), "-")
 
@@ -55,6 +53,62 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
     transition {
       days          = 30
       storage_class = "STANDARD_IA"
+    }
+  }
+}
+
+# =============================================================
+# EFS for Persistent Monitoring Data
+# =============================================================
+
+resource "aws_efs_file_system" "monitoring" {
+  creation_token = "${var.project_name}-${var.environment}-monitoring-efs"
+  encrypted      = true
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-monitoring-efs"
+  })
+}
+
+resource "aws_efs_mount_target" "monitoring" {
+  count           = length(var.private_subnet_ids)
+  file_system_id  = aws_efs_file_system.monitoring.id
+  subnet_id       = var.private_subnet_ids[count.index]
+  security_groups = [var.efs_security_group_id]
+}
+
+resource "aws_efs_access_point" "grafana" {
+  file_system_id = aws_efs_file_system.monitoring.id
+
+  posix_user {
+    gid = 472
+    uid = 472
+  }
+
+  root_directory {
+    path = "/grafana"
+    creation_info {
+      owner_gid   = 472
+      owner_uid   = 472
+      permissions = "755"
+    }
+  }
+}
+
+resource "aws_efs_access_point" "loki" {
+  file_system_id = aws_efs_file_system.monitoring.id
+
+  posix_user {
+    gid = 10001
+    uid = 10001
+  }
+
+  root_directory {
+    path = "/loki"
+    creation_info {
+      owner_gid   = 10001
+      owner_uid   = 10001
+      permissions = "755"
     }
   }
 }
