@@ -1,12 +1,9 @@
 
 # Storage Module - Variables
-# S3 bucket for Terraform state and logs
-
 
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
-  default     = "quickpoll"
 }
 
 variable "environment" {
@@ -18,4 +15,14 @@ variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)
   default     = {}
+}
+
+variable "private_subnet_ids" {
+  description = "IDs of private subnets for EFS mount targets"
+  type        = list(string)
+}
+
+variable "efs_security_group_id" {
+  description = "ID of security group for EFS"
+  type        = string
 }

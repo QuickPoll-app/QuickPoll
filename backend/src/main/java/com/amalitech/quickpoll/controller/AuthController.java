@@ -18,11 +18,26 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Register a new user with email, password, and full name")
     public ResponseEntity<ResponseWrapper<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", authService.register(request)));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseWrapper.success(HttpStatus.CREATED, "User registered successfully",
+                        authService.register(request)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseWrapper<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", authService.login(request)));
+    @Operation(summary = "Login user")
+    public ResponseEntity<ResponseWrapper<AuthResponse>> login(
+            @Valid @RequestBody AuthRequest request) {
+        return ResponseEntity.ok(
+                ResponseWrapper.success(HttpStatus.OK, "Login successful",
+                        authService.login(request)));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout and revoke JWT token")
+    public ResponseEntity<Void> logout(
+            @RequestHeader("Authorization") String authHeader) {
+        authService.logout(authHeader);
+        return ResponseEntity.noContent().build();
     }
 }

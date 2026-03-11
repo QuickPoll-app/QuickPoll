@@ -1,0 +1,20 @@
+.progress-bar {
+  background: var(--color-border-primary);
+  height: 0.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: var(--color-primary-700);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 300ms ease;
+}
+
+.bar-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-left: 0.5rem;
+}

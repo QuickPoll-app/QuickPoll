@@ -39,6 +39,11 @@ variable "ecs_task_role_arn" {
   type        = string
 }
 
+variable "service_discovery_namespace_id" {
+  description = "ID of the Cloud Map private DNS namespace"
+  type        = string
+}
+
 variable "backend_target_group_arn" {
   description = "ARN of the backend ALB target group"
   type        = string
@@ -97,6 +102,55 @@ variable "frontend_desired_count" {
   default     = 2
 }
 
+# Auto Scaling
+variable "backend_min_count" {
+  description = "Minimum number of backend tasks for autoscaling"
+  type        = number
+  default     = 1
+}
+
+variable "backend_max_count" {
+  description = "Maximum number of backend tasks for autoscaling"
+  type        = number
+  default     = 4
+}
+
+variable "frontend_min_count" {
+  description = "Minimum number of frontend tasks for autoscaling"
+  type        = number
+  default     = 1
+}
+
+variable "frontend_max_count" {
+  description = "Maximum number of frontend tasks for autoscaling"
+  type        = number
+  default     = 4
+}
+
+variable "backend_cpu_target" {
+  description = "Target CPU utilization (%) for backend autoscaling"
+  type        = number
+  default     = 70
+}
+
+variable "backend_memory_target" {
+  description = "Target memory utilization (%) for backend autoscaling"
+  type        = number
+  default     = 80
+}
+
+variable "frontend_cpu_target" {
+  description = "Target CPU utilization (%) for frontend autoscaling"
+  type        = number
+  default     = 70
+}
+
+variable "frontend_memory_target" {
+  description = "Target memory utilization (%) for frontend autoscaling"
+  type        = number
+  default     = 80
+}
+
 # Application Config
 variable "db_endpoint" {
   description = "Database endpoint for backend configuration"
@@ -125,6 +179,17 @@ variable "jwt_secret" {
   description = "JWT secret for authentication"
   type        = string
   sensitive   = true
+}
+
+variable "redis_host" {
+  description = "Redis primary endpoint address"
+  type        = string
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = string
+  default     = "6379"
 }
 
 variable "tags" {

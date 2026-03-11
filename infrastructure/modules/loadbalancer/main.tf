@@ -66,6 +66,54 @@ resource "aws_lb_target_group" "frontend" {
   })
 }
 
+# Grafana Target Group
+resource "aws_lb_target_group" "monitoring" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-mon-tg", 0, 32), "-")
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/api/health"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-mon-tg"
+  })
+}
+
+# Jaeger Target Group
+resource "aws_lb_target_group" "jaeger" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-jae-tg", 0, 32), "-")
+  port        = 16686
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-jae-tg"
+  })
+}
+
 # HTTP Listener (default → frontend)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
@@ -94,11 +142,53 @@ resource "aws_lb_listener_rule" "api" {
 
   condition {
     path_pattern {
-      values = ["/api/*", "/actuator/*", "/swagger-ui/*", "/api-docs*"]
+      values = ["/api/*", "/actuator/*", "/swagger-ui/*", "/api-docs*", "/v3/api-docs*"]
     }
   }
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-api-rule"
+  })
+}
+
+# Grafana Path Rule → Monitoring
+resource "aws_lb_listener_rule" "monitoring" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 110
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.monitoring.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/grafana/*"]
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-mon-rule"
+  })
+}
+
+# Jaeger Path Rule → Jaeger UI
+resource "aws_lb_listener_rule" "jaeger" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 120
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.jaeger.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/jaeger/*"]
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-jaeger-rule"
   })
 }

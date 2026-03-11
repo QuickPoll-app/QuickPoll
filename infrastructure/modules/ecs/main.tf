@@ -101,9 +101,12 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${var.db_endpoint}/${var.db_name}" },
         { name = "SPRING_DATASOURCE_USERNAME", value = var.db_username },
-        { name = "SPRING_JPA_HIBERNATE_DDL_AUTO", value = "update" },
+        { name = "SPRING_JPA_HIBERNATE_DDL_AUTO", value = "validate" },
         { name = "SPRING_PROFILES_ACTIVE", value = var.environment },
         { name = "SERVER_PORT", value = "8081" },
+        { name = "SPRING_DATA_REDIS_HOST", value = var.redis_host },
+        { name = "SPRING_DATA_REDIS_PORT", value = var.redis_port },
+        { name = "MANAGEMENT_OTLP_TRACING_ENDPOINT", value = "http://jaeger.monitoring.local:4318/v1/traces" }
       ]
 
       secrets = [
@@ -112,11 +115,14 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       logConfiguration = {
-        logDriver = "awslogs"
+        logDriver = "awsfirelens"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "backend"
+          "Name"       = "loki"
+          "Url"        = "http://loki.monitoring.local:3100/loki/api/v1/push"
+          "Labels"     = "{job=\"backend\", env=\"${var.environment}\"}"
+          "RemoveKeys" = "container_id,container_name"
+          "LabelKeys"  = "container_name"
+          "LineFormat" = "key_value"
         }
       }
 
@@ -126,6 +132,26 @@ resource "aws_ecs_task_definition" "backend" {
         timeout     = 10
         retries     = 3
         startPeriod = 60
+      }
+    },
+    {
+      name      = "log_router"
+      image     = "amazon/aws-for-fluent-bit:latest"
+      essential = true
+      firelensConfiguration = {
+        type = "fluentbit"
+        options = {
+          "enable-ecs-log-metadata" = "true"
+        }
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-firelens"
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "firelens"
+          "awslogs-create-group"  = "true"
+        }
       }
     }
   ])
@@ -182,6 +208,22 @@ resource "aws_ecs_task_definition" "frontend" {
   })
 }
 
+# Service Discovery for Backend
+resource "aws_service_discovery_service" "backend" {
+  name = "backend"
+
+  dns_config {
+    namespace_id = var.service_discovery_namespace_id
+    dns_records {
+      ttl  = 60
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+  }
+}
+
 # Backend Service
 resource "aws_ecs_service" "backend" {
   name            = trimsuffix(substr("${var.project_name}-${var.environment}-backend", 0, 255), "-")
@@ -202,6 +244,10 @@ resource "aws_ecs_service" "backend" {
     container_port   = 8081
   }
 
+  service_registries {
+    registry_arn = aws_service_discovery_service.backend.arn
+  }
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
@@ -209,6 +255,10 @@ resource "aws_ecs_service" "backend" {
 
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-backend-service"
@@ -243,7 +293,101 @@ resource "aws_ecs_service" "frontend" {
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
 
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
+
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-frontend-service"
   })
+}
+
+# =============================================================
+# ECS Auto Scaling
+# =============================================================
+
+# Backend Auto Scaling
+resource "aws_appautoscaling_target" "backend" {
+  max_capacity       = var.backend_max_count
+  min_capacity       = var.backend_min_count
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.backend.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "backend_cpu" {
+  name               = "${var.project_name}-${var.environment}-backend-cpu-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.backend.resource_id
+  scalable_dimension = aws_appautoscaling_target.backend.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.backend.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = var.backend_cpu_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
+}
+
+resource "aws_appautoscaling_policy" "backend_memory" {
+  name               = "${var.project_name}-${var.environment}-backend-mem-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.backend.resource_id
+  scalable_dimension = aws_appautoscaling_target.backend.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.backend.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value       = var.backend_memory_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
+}
+
+# Frontend Auto Scaling
+resource "aws_appautoscaling_target" "frontend" {
+  max_capacity       = var.frontend_max_count
+  min_capacity       = var.frontend_min_count
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.frontend.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "frontend_cpu" {
+  name               = "${var.project_name}-${var.environment}-frontend-cpu-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.frontend.resource_id
+  scalable_dimension = aws_appautoscaling_target.frontend.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.frontend.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = var.frontend_cpu_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
+}
+
+resource "aws_appautoscaling_policy" "frontend_memory" {
+  name               = "${var.project_name}-${var.environment}-frontend-mem-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.frontend.resource_id
+  scalable_dimension = aws_appautoscaling_target.frontend.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.frontend.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value       = var.frontend_memory_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+  }
 }

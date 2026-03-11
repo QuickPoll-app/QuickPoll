@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable, tap } from "rxjs";
+import { ILoginRequest, IRegisterRequest, IAuthResponse } from "../models";
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
@@ -8,36 +9,48 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { email, password })
-      .pipe(tap((res: any) => {
+  public login(email: string, password: string): Observable<IAuthResponse> {
+    const request: ILoginRequest = { email, password };
+
+    return this.http.post<IAuthResponse>(`${this.apiUrl}/login`, request).pipe(
+      tap((res) => {
         localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify({ name: res.name, email: res.email, role: res.role }));
-      }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
+        );
+      }),
+    );
   }
 
-  register(name: string, email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, { name, email, password })
-      .pipe(tap((res: any) => {
+  public register(name: string, email: string, password: string): Observable<IAuthResponse> {
+    const request: IRegisterRequest = { name, email, password };
+
+    return this.http.post<IAuthResponse>(`${this.apiUrl}/register`, request).pipe(
+      tap((res) => {
         localStorage.setItem("token", res.token);
-        localStorage.setItem("user", JSON.stringify({ name: res.name, email: res.email, role: res.role }));
-      }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
+        );
+      }),
+    );
   }
 
-  logout(): void {
+  public logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   }
 
-  isLoggedIn(): boolean {
+  public isLoggedIn(): boolean {
     return !!localStorage.getItem("token");
   }
 
-  getToken(): string | null {
+  public getToken(): string | null {
     return localStorage.getItem("token");
   }
 
-  getUser(): any {
+  public getUser(): { name: string; email: string; role: string } | null {
     const u = localStorage.getItem("user");
 
     return u ? JSON.parse(u) : null;

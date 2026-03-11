@@ -1,0 +1,18 @@
+<div class="form-group">
+  @if (label()) {
+    <label class="form-label" [attr.for]="inputId()">{{ label() }}</label>
+  }
+  <input
+    [id]="inputId()"
+    [class]="'form-input' + (error() ? ' error' : '') + (success() ? ' success' : '')"
+    [type]="type()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled() || isDisabled()"
+    [value]="value()"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+  />
+  @if (error()) {
+    <span class="form-error">{{ errorMessage() }}</span>
+  }
+</div>

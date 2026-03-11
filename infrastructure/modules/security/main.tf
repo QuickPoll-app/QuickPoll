@@ -99,6 +99,138 @@ resource "aws_vpc_security_group_egress_rule" "rds_all_traffic" {
   ip_protocol       = "-1"
 }
 
+# Redis Security Group
+resource "aws_security_group" "redis" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-redis-sg", 0, 255), "-")
+  description = "Security group for ElastiCache Redis - only accessible from ECS tasks"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-redis-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "redis_from_ecs" {
+  security_group_id            = aws_security_group.redis.id
+  description                  = "Redis from ECS tasks"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+  from_port                    = 6379
+  ip_protocol                  = "tcp"
+  to_port                      = 6379
+}
+
+resource "aws_vpc_security_group_egress_rule" "redis_all_traffic" {
+  security_group_id = aws_security_group.redis.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+# Monitoring Security Group
+resource "aws_security_group" "monitoring" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-monitor-sg", 0, 255), "-")
+  description = "Security group for Monitoring (Grafana, Loki, Jaeger)"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-monitor-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "grafana_from_alb" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Grafana from ALB"
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 3000
+  ip_protocol                  = "tcp"
+  to_port                      = 3000
+}
+
+resource "aws_vpc_security_group_ingress_rule" "loki_from_ecs" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Loki from ECS tasks"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+  from_port                    = 3100
+  ip_protocol                  = "tcp"
+  to_port                      = 3100
+}
+
+resource "aws_vpc_security_group_ingress_rule" "prometheus_from_grafana" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Prometheus from Grafana"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 9090
+  ip_protocol                  = "tcp"
+  to_port                      = 9090
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alertmanager_from_prometheus" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Alertmanager from Prometheus"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 9093
+  ip_protocol                  = "tcp"
+  to_port                      = 9093
+}
+
+resource "aws_vpc_security_group_ingress_rule" "backend_from_prometheus" {
+  security_group_id            = aws_security_group.ecs_tasks.id
+  description                  = "Backend from Prometheus Scraper"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 8081
+  ip_protocol                  = "tcp"
+  to_port                      = 8081
+}
+
+resource "aws_vpc_security_group_ingress_rule" "jaeger_ui_from_alb" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Jaeger UI from ALB"
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 16686
+  ip_protocol                  = "tcp"
+  to_port                      = 16686
+}
+
+resource "aws_vpc_security_group_ingress_rule" "jaeger_otlp_from_ecs" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Jaeger OTLP from ECS tasks"
+  referenced_security_group_id = aws_security_group.ecs_tasks.id
+  from_port                    = 4317
+  ip_protocol                  = "tcp"
+  to_port                      = 4318
+}
+
+resource "aws_vpc_security_group_egress_rule" "monitoring_all_traffic" {
+  security_group_id = aws_security_group.monitoring.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+# EFS Security Group
+resource "aws_security_group" "efs" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-efs-sg", 0, 255), "-")
+  description = "Security group for EFS mount targets"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-efs-sg"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "efs_from_monitoring" {
+  security_group_id            = aws_security_group.efs.id
+  description                  = "NFS from Monitoring tasks"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 2049
+  ip_protocol                  = "tcp"
+  to_port                      = 2049
+}
+
+resource "aws_vpc_security_group_egress_rule" "efs_all_traffic" {
+  security_group_id = aws_security_group.efs.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
 # ECS Task Execution Role
 resource "aws_iam_role" "ecs_task_execution" {
   name = trimsuffix(substr("${var.project_name}-${var.environment}-ecs-exec", 0, 64), "-")

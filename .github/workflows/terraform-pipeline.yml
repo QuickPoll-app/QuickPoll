@@ -89,6 +89,7 @@ jobs:
           TF_VAR_frontend_image: "placeholder:latest"
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
         continue-on-error: true
 
       - name: Post plan to PR comment
@@ -175,6 +176,7 @@ jobs:
           TF_VAR_frontend_image: "placeholder:latest"
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
@@ -190,3 +192,4 @@ jobs:
           TF_VAR_frontend_image: "placeholder:latest"
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}

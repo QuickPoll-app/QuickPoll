@@ -26,7 +26,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or @userService.getById(#userId).email() == authentication.principal.username")
     @Operation(summary = "Get user by ID")
     public ResponseEntity<UserResponse> getById(@PathVariable UUID userId) {
         return ResponseEntity.ok(userService.getById(userId));
@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or @userService.getById(#userId).email() == authentication.principal.username")
     @Operation(summary = "Update user name and email")
     public ResponseEntity<UserResponse> update(
             @PathVariable UUID userId,
@@ -57,7 +57,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/password")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or @userService.getById(#userId).email() == authentication.principal.username")
     @Operation(summary = "Change user password")
     public ResponseEntity<Void> changePassword(
             @PathVariable UUID userId,

@@ -44,6 +44,12 @@ variable "jwt_secret" {
   sensitive   = true
 }
 
+variable "slack_webhook_url" {
+  description = "Slack webhook URL for Grafana alerts - passed via TF_VAR_slack_webhook_url from GitHub Secrets"
+  type        = string
+  sensitive   = true
+}
+
 # Sizing (prod runs larger)
 variable "db_instance_class" {
   description = "RDS instance class"
