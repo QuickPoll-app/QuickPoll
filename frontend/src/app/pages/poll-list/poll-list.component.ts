@@ -1,17 +1,20 @@
 import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { PollService } from "../../services/poll.service";
+import { SkeletonPollCardComponent } from "../../shared/components";
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-poll-list",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SkeletonPollCardComponent],
   template: `
     <main style="margin-top:30px">
       <h1>Active Polls</h1>
       @if (loading) {
-        <p>Loading polls...</p>
+        @for (i of [1,2,3]; track i) {
+          <app-skeleton-poll-card></app-skeleton-poll-card>
+        }
       } @else if (polls.length === 0) {
         <p>No polls yet. Be the first to create one!</p>
       } @else {

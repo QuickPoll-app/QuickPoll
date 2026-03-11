@@ -1,4 +1,11 @@
 <div class="dashboard-main">
+  @if (error()) {
+    <div class="error-banner">
+      <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+      <span>{{ error() }}</span>
+    </div>
+  }
+  
   <div class="dashboard-header">
     <div>
       <h1 class="page-title">Dashboard</h1>
@@ -11,15 +18,21 @@
   </div>
 
   <div class="stats-grid">
-    @for (stat of stats(); track stat.label) {
-      <app-stat-card
-        [value]="stat.value"
-        [label]="stat.label"
-        [trend]="stat.trend === 'up' ? 'positive' : 'negative'"
-        [trendValue]="stat.trendValue"
-        [icon]="stat.icon"
-      >
-      </app-stat-card>
+    @if (statsLoading()) {
+      @for (i of [1,2,3,4]; track i) {
+        <app-skeleton-stat-card></app-skeleton-stat-card>
+      }
+    } @else {
+      @for (stat of stats(); track stat.id) {
+        <app-stat-card
+          [value]="stat.value"
+          [label]="stat.label"
+          [trend]="stat.trend === 'up' ? 'positive' : 'negative'"
+          [trendValue]="stat.trendValue"
+          [icon]="stat.icon"
+        >
+        </app-stat-card>
+      }
     }
   </div>
 
@@ -30,25 +43,33 @@
           <h3 class="section-title">Active Polls</h3>
         </div>
         <div class="section-content">
-          @for (poll of activePolls(); track poll.title) {
-            <div class="poll-item">
-              <div class="poll-item-header">
-                <h4 class="poll-title">{{ poll.title }}</h4>
-                <app-badge variant="active">{{ poll.votes }} votes</app-badge>
-              </div>
-              <div class="poll-participation">
-                <div class="participation-info">
-                  <span class="participation-label">Participation</span>
-                  <span class="participation-value">{{ poll.participation }}%</span>
+          @if (activePollsLoading()) {
+            @for (i of [1,2,3]; track i) {
+              <app-skeleton-poll-item></app-skeleton-poll-item>
+            }
+          } @else if (activePolls().length === 0) {
+            <p>No active polls at the moment.</p>
+          } @else {
+            @for (poll of activePolls(); track poll.id) {
+              <div class="poll-item">
+                <div class="poll-item-header">
+                  <h4 class="poll-title">{{ poll.title }}</h4>
+                  <app-badge variant="active">{{ poll.votes }} votes</app-badge>
                 </div>
-                <app-progress-bar [value]="poll.participation"></app-progress-bar>
+                <div class="poll-participation">
+                  <div class="participation-info">
+                    <span class="participation-label">Participation</span>
+                    <span class="participation-value">{{ poll.participation }}%</span>
+                  </div>
+                  <app-progress-bar [value]="poll.participation"></app-progress-bar>
+                </div>
+                <div class="poll-footer">
+                  <app-badge [variant]="poll.timeLeftStatus === 'warning' ? 'expired' : 'active'">
+                    {{ poll.timeLeft }}
+                  </app-badge>
+                </div>
               </div>
-              <div class="poll-footer">
-                <app-badge [variant]="poll.timeLeftColor === '#D97706' ? 'expired' : 'active'">
-                  {{ poll.timeLeft }}
-                </app-badge>
-              </div>
-            </div>
+            }
           }
         </div>
       </app-card>
@@ -60,22 +81,30 @@
           <h3 class="section-title">Recent Results</h3>
         </div>
         <div class="section-content">
-          @for (result of recentResults(); track result.title) {
-            <div class="poll-item">
-              <div class="poll-item-header">
-                <h4 class="poll-title">{{ result.title }}</h4>
-                <app-badge variant="expired">Expired</app-badge>
-              </div>
-              <div class="result-winner">
-                <div class="winner-info">
-                  <span class="winner-label">🏆 {{ result.winner }}</span>
-                  <span class="winner-percentage">{{ result.winnerPercentage }}%</span>
+          @if (recentResultsLoading()) {
+            @for (i of [1,2,3]; track i) {
+              <app-skeleton-poll-item></app-skeleton-poll-item>
+            }
+          } @else if (recentResults().length === 0) {
+            <p>No recent results available.</p>
+          } @else {
+            @for (result of recentResults(); track result.id) {
+              <div class="poll-item">
+                <div class="poll-item-header">
+                  <h4 class="poll-title">{{ result.title }}</h4>
+                  <app-badge variant="expired">Expired</app-badge>
+                </div>
+                <div class="result-winner">
+                  <div class="winner-info">
+                    <span class="winner-label">🏆 {{ result.winner }}</span>
+                    <span class="winner-percentage">{{ result.winnerPercentage }}%</span>
+                  </div>
+                </div>
+                <div class="result-stats">
+                  {{ result.totalVotes }} total votes • {{ result.participation }}% participation
                 </div>
               </div>
-              <div class="result-stats">
-                {{ result.totalVotes }} total votes • {{ result.participation }}% participation
-              </div>
-            </div>
+            }
           }
         </div>
       </app-card>

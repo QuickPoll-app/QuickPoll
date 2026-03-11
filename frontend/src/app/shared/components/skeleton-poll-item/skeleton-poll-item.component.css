@@ -1,0 +1,31 @@
+.skeleton-poll-item {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.skeleton-poll-item:last-child {
+  border-bottom: none;
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-body {
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-participation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.skeleton-footer {
+  display: flex;
+  justify-content: flex-start;
+}

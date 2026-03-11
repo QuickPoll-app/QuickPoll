@@ -1,21 +1,21 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { IStatCard, IActivePoll, IRecentResult } from '../models';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { IStatCard, IActivePoll, IRecentResult } from "../models";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class DashboardService {
-  private apiUrl = '/api/dashboard';
+  private apiUrl = "/api/dashboard";
 
-  private http = inject(HttpClient);
+  constructor(private http: HttpClient) {}
 
- public getStats(): Observable<IStatCard[]> {
+  public getStats(): Observable<IStatCard[]> {
     return this.http.get<IStatCard[]>(`${this.apiUrl}/stats`);
   }
 
- public getActivePolls(): Observable<IActivePoll[]> {
+  public getActivePolls(): Observable<IActivePoll[]> {
     return this.http.get<IActivePoll[]>(`${this.apiUrl}/active-polls`);
   }
 
