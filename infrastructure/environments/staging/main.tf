@@ -109,23 +109,24 @@ module "compute" {
 module "ecs" {
   source = "../../modules/ecs"
 
-  project_name                = var.project_name
-  environment                 = local.environment
-  aws_region                  = var.aws_region
-  private_subnet_ids          = module.networking.private_subnet_ids
-  ecs_tasks_security_group_id = module.security.ecs_tasks_security_group_id
-  ecs_task_execution_role_arn = module.security.ecs_task_execution_role_arn
-  ecs_task_role_arn           = module.security.ecs_task_role_arn
-  backend_target_group_arn    = module.loadbalancer.backend_target_group_arn
-  frontend_target_group_arn   = module.loadbalancer.frontend_target_group_arn
-  backend_image               = var.backend_image
-  frontend_image              = var.frontend_image
-  backend_cpu                 = var.backend_cpu
-  backend_memory              = var.backend_memory
-  frontend_cpu                = var.frontend_cpu
-  frontend_memory             = var.frontend_memory
-  backend_desired_count       = var.backend_desired_count
-  frontend_desired_count      = var.frontend_desired_count
+  project_name                   = var.project_name
+  environment                    = local.environment
+  aws_region                     = var.aws_region
+  private_subnet_ids             = module.networking.private_subnet_ids
+  ecs_tasks_security_group_id    = module.security.ecs_tasks_security_group_id
+  ecs_task_execution_role_arn    = module.security.ecs_task_execution_role_arn
+  ecs_task_role_arn              = module.security.ecs_task_role_arn
+  backend_target_group_arn       = module.loadbalancer.backend_target_group_arn
+  frontend_target_group_arn      = module.loadbalancer.frontend_target_group_arn
+  backend_image                  = var.backend_image
+  frontend_image                 = var.frontend_image
+  backend_cpu                    = var.backend_cpu
+  backend_memory                 = var.backend_memory
+  frontend_cpu                   = var.frontend_cpu
+  frontend_memory                = var.frontend_memory
+  backend_desired_count          = var.backend_desired_count
+  frontend_desired_count         = var.frontend_desired_count
+  service_discovery_namespace_id = module.networking.service_discovery_namespace_id
 
   # Autoscaling — staging runs conservative
   backend_min_count      = 1
@@ -150,19 +151,21 @@ module "ecs" {
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  project_name                 = var.project_name
-  environment                  = local.environment
-  vpc_id                       = module.networking.vpc_id
-  private_subnet_ids           = module.networking.private_subnet_ids
-  monitoring_security_group_id = module.security.monitoring_security_group_id
-  ecs_task_execution_role_arn  = module.security.ecs_task_execution_role_arn
-  monitoring_target_group_arn  = module.loadbalancer.monitoring_target_group_arn
-  jaeger_target_group_arn      = module.loadbalancer.jaeger_target_group_arn
-  efs_monitoring_id            = module.storage.efs_monitoring_id
-  efs_access_point_grafana_id  = module.storage.efs_access_point_grafana_id
-  efs_access_point_loki_id     = module.storage.efs_access_point_loki_id
-  grafana_admin_password       = "admin123" # In production use a secret
-  tags                         = local.tags
+  project_name                   = var.project_name
+  environment                    = local.environment
+  vpc_id                         = module.networking.vpc_id
+  private_subnet_ids             = module.networking.private_subnet_ids
+  service_discovery_namespace_id = module.networking.service_discovery_namespace_id
+  monitoring_security_group_id   = module.security.monitoring_security_group_id
+  ecs_task_execution_role_arn    = module.security.ecs_task_execution_role_arn
+  monitoring_target_group_arn    = module.loadbalancer.monitoring_target_group_arn
+  jaeger_target_group_arn        = module.loadbalancer.jaeger_target_group_arn
+  efs_monitoring_id              = module.storage.efs_monitoring_id
+  efs_access_point_grafana_id    = module.storage.efs_access_point_grafana_id
+  efs_access_point_loki_id       = module.storage.efs_access_point_loki_id
+  grafana_admin_password         = "admin123" # In production use a secret
+  slack_webhook_url              = var.slack_webhook_url
+  tags                           = local.tags
 }
 
 # Storage

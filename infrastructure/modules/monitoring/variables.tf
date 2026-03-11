@@ -15,6 +15,10 @@ variable "private_subnet_ids" {
   type = list(string)
 }
 
+variable "service_discovery_namespace_id" {
+  type = string
+}
+
 variable "monitoring_security_group_id" {
   type = string
 }
@@ -51,4 +55,10 @@ variable "tags" {
 variable "grafana_admin_password" {
   type    = string
   default = "admin"
+}
+
+variable "slack_webhook_url" {
+  description = "Slack webhook URL for Grafana alerts"
+  type        = string
+  sensitive   = true
 }

@@ -208,6 +208,22 @@ resource "aws_ecs_task_definition" "frontend" {
   })
 }
 
+# Service Discovery for Backend
+resource "aws_service_discovery_service" "backend" {
+  name = "backend"
+
+  dns_config {
+    namespace_id = var.service_discovery_namespace_id
+    dns_records {
+      ttl  = 60
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+  }
+}
+
 # Backend Service
 resource "aws_ecs_service" "backend" {
   name            = trimsuffix(substr("${var.project_name}-${var.environment}-backend", 0, 255), "-")
@@ -226,6 +242,10 @@ resource "aws_ecs_service" "backend" {
     target_group_arn = var.backend_target_group_arn
     container_name   = "backend"
     container_port   = 8081
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.backend.arn
   }
 
   deployment_circuit_breaker {

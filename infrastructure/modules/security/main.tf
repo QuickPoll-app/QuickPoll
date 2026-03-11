@@ -154,6 +154,33 @@ resource "aws_vpc_security_group_ingress_rule" "loki_from_ecs" {
   to_port                      = 3100
 }
 
+resource "aws_vpc_security_group_ingress_rule" "prometheus_from_grafana" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Prometheus from Grafana"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 9090
+  ip_protocol                  = "tcp"
+  to_port                      = 9090
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alertmanager_from_prometheus" {
+  security_group_id            = aws_security_group.monitoring.id
+  description                  = "Alertmanager from Prometheus"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 9093
+  ip_protocol                  = "tcp"
+  to_port                      = 9093
+}
+
+resource "aws_vpc_security_group_ingress_rule" "backend_from_prometheus" {
+  security_group_id            = aws_security_group.ecs_tasks.id
+  description                  = "Backend from Prometheus Scraper"
+  referenced_security_group_id = aws_security_group.monitoring.id
+  from_port                    = 8081
+  ip_protocol                  = "tcp"
+  to_port                      = 8081
+}
+
 resource "aws_vpc_security_group_ingress_rule" "jaeger_ui_from_alb" {
   security_group_id            = aws_security_group.monitoring.id
   description                  = "Jaeger UI from ALB"

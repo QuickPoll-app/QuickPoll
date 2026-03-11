@@ -1,12 +1,5 @@
-
 # Monitoring Module - Main Configuration
 # Grafana, Loki, Jaeger on ECS Fargate
-
-resource "aws_service_discovery_private_dns_namespace" "monitoring" {
-  name        = "monitoring.local"
-  description = "Private DNS for monitoring services"
-  vpc         = var.vpc_id
-}
 
 # Jaeger
 
@@ -14,7 +7,7 @@ resource "aws_service_discovery_service" "jaeger" {
   name = "jaeger"
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.monitoring.id
+    namespace_id = var.service_discovery_namespace_id
     dns_records {
       ttl  = 60
       type = "A"
@@ -88,7 +81,7 @@ resource "aws_service_discovery_service" "loki" {
   name = "loki"
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.monitoring.id
+    namespace_id = var.service_discovery_namespace_id
     dns_records {
       ttl  = 60
       type = "A"
@@ -183,7 +176,8 @@ resource "aws_ecs_task_definition" "grafana" {
       environment = [
         { name = "GF_SECURITY_ADMIN_PASSWORD", value = var.grafana_admin_password },
         { name = "GF_SERVER_ROOT_URL", value = "/grafana/" },
-        { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" }
+        { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" },
+        { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url }
       ]
       mountPoints = [
         {
@@ -232,5 +226,137 @@ resource "aws_ecs_service" "grafana" {
     target_group_arn = var.monitoring_target_group_arn
     container_name   = "grafana"
     container_port   = 3000
+  }
+}
+
+# Prometheus
+resource "aws_service_discovery_service" "prometheus" {
+  name = "prometheus"
+
+  dns_config {
+    namespace_id = var.service_discovery_namespace_id
+    dns_records {
+      ttl  = 60
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+  }
+}
+
+resource "aws_ecs_task_definition" "prometheus" {
+  family                   = "${var.project_name}-${var.environment}-prometheus"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 512
+  memory                   = 1024
+  execution_role_arn       = var.ecs_task_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "prometheus"
+      image = "prom/prometheus:v2.50.1"
+      command = [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--storage.tsdb.path=/prometheus"
+      ]
+      portMappings = [
+        { containerPort = 9090, protocol = "tcp" }
+      ]
+      environment = [
+        { name = "BACKEND_HOST", value = "backend.${var.project_name}-${var.environment}.local" }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-prometheus"
+          "awslogs-region"        = "eu-north-1"
+          "awslogs-stream-prefix" = "prometheus"
+          "awslogs-create-group"  = "true"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_service" "prometheus" {
+  name            = "${var.project_name}-${var.environment}-prometheus"
+  cluster         = "${var.project_name}-${var.environment}-cluster"
+  task_definition = aws_ecs_task_definition.prometheus.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = var.private_subnet_ids
+    security_groups = [var.monitoring_security_group_id]
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.prometheus.arn
+  }
+}
+
+# Alertmanager
+resource "aws_service_discovery_service" "alertmanager" {
+  name = "alertmanager"
+
+  dns_config {
+    namespace_id = var.service_discovery_namespace_id
+    dns_records {
+      ttl  = 60
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+  }
+}
+
+resource "aws_ecs_task_definition" "alertmanager" {
+  family                   = "${var.project_name}-${var.environment}-alertmanager"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = var.ecs_task_execution_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "alertmanager"
+      image = "prom/alertmanager:v0.27.0"
+      portMappings = [
+        { containerPort = 9093, protocol = "tcp" }
+      ]
+      environment = [
+        { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-alertmanager"
+          "awslogs-region"        = "eu-north-1"
+          "awslogs-stream-prefix" = "alertmanager"
+          "awslogs-create-group"  = "true"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_service" "alertmanager" {
+  name            = "${var.project_name}-${var.environment}-alertmanager"
+  cluster         = "${var.project_name}-${var.environment}-cluster"
+  task_definition = aws_ecs_task_definition.alertmanager.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = var.private_subnet_ids
+    security_groups = [var.monitoring_security_group_id]
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.alertmanager.arn
   }
 }
