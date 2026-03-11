@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://${var.db_endpoint}/${var.db_name}" },
         { name = "SPRING_DATASOURCE_USERNAME", value = var.db_username },
-        { name = "SPRING_JPA_HIBERNATE_DDL_AUTO", value = "create" },
+        { name = "SPRING_JPA_HIBERNATE_DDL_AUTO", value = "validate" },
         { name = "SPRING_PROFILES_ACTIVE", value = var.environment },
         { name = "SERVER_PORT", value = "8081" },
         { name = "SPRING_DATA_REDIS_HOST", value = var.redis_host },
