@@ -9,9 +9,9 @@ import { Component, output, input, ChangeDetectionStrategy } from "@angular/core
 })
 export class OptionRowComponent {
   public label = input.required<string>();
-  selected = input(false);
-  disabled = input(false);
-  type = input<"radio" | "checkbox">("radio");
+  public selected = input(false);
+  public disabled = input(false);
+  public type = input<"radio" | "checkbox">("radio");
 
   selectionChange = output<void>();
 }
