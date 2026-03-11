@@ -104,6 +104,7 @@ jobs:
           TF_VAR_frontend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-frontend:${{ env.IMAGE_TAG }}
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
 
       - name: Terraform Apply
         working-directory: ./infrastructure/environments/staging
@@ -142,14 +143,14 @@ jobs:
 
       - name: Health check backend
         run: |
-          for i in {1..10}; do
+          for i in {1..20}; do
             status=$(curl -s -o /dev/null -w "%{http_code}" \
               "${ALB_URL}/actuator/health" || true)
             if [ "$status" = "200" ]; then
               echo "Backend health check passed"
               exit 0
             fi
-            echo "Attempt $i/10 - Status: $status"
+            echo "Attempt $i/20 - Status: $status"
             sleep 15
           done
           echo "Backend health check failed"

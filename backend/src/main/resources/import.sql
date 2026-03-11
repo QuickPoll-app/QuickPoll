@@ -1,19 +1,3 @@
-ALTER TABLE users
-ADD COLUMN IF NOT EXISTS status VARCHAR(50);
-
-ALTER TABLE polls
-ADD COLUMN IF NOT EXISTS status VARCHAR(50);
-
-ALTER TABLE users
-ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
-
-UPDATE users
-SET
-    updated_at = created_at
-WHERE
-    updated_at IS NULL;
-
--- Seed data
 INSERT INTO
     users (
         id,

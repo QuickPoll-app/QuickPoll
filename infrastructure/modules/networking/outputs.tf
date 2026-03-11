@@ -31,3 +31,8 @@ output "nat_gateway_ids" {
   description = "IDs of the NAT Gateways"
   value       = aws_nat_gateway.main[*].id
 }
+
+output "service_discovery_namespace_id" {
+  description = "ID of the Cloud Map private DNS namespace"
+  value       = aws_service_discovery_private_dns_namespace.main.id
+}

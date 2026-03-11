@@ -13,10 +13,10 @@ Tag your assigned review partner based on your role area
 | Role | Reviewers |
 |------|-----------|
 | **Backend** | @mahorobonheur @GargoilXD |
-| **Frontend** | @Bentil4 |
-| **DevOps/Infra** | @Viateur-akimana |
-| **QA** | @Lennox-Owusu |
-| **Data Engineering** | @Damas200 |
+| **Frontend** |  @nabbi007 |
+| **DevOps/Infra** | @nabbi007 |
+| **QA** | @Samuel1796 |
+| **Data Engineering** | @henryantwi |
 
 > PRs to `main` **require** @Lennox-Owusu approval
 

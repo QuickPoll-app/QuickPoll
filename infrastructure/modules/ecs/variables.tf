@@ -39,6 +39,11 @@ variable "ecs_task_role_arn" {
   type        = string
 }
 
+variable "service_discovery_namespace_id" {
+  description = "ID of the Cloud Map private DNS namespace"
+  type        = string
+}
+
 variable "backend_target_group_arn" {
   description = "ARN of the backend ALB target group"
   type        = string

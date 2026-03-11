@@ -1,12 +1,12 @@
-import { Component } from "@angular/core";
+import { Component, ChangeDetectionStrategy } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
-import { PollService } from "../services/poll.service";
+import { PollService } from "../../services/poll.service";
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-create-poll",
-  standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
     <main style="max-width:600px;margin:60px auto">
