@@ -1,6 +1,7 @@
 package com.amalitech.quickpoll.security;
 
 import com.amalitech.quickpoll.model.User;
+import com.amalitech.quickpoll.repository.UserRepository;
 import com.amalitech.quickpoll.service.CustomUserDetailService;
 import com.amalitech.quickpoll.service.JwtService;
 import io.jsonwebtoken.JwtException;
