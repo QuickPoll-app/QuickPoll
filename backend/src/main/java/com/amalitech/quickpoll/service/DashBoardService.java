@@ -20,6 +20,7 @@ import com.amalitech.quickpoll.repository.UserRepository;
 import com.amalitech.quickpoll.repository.VoteRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +30,12 @@ public class DashBoardService {
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
 
+    @Transactional(readOnly = true)
     public Page<PollResponse> getMyDashboard(Pageable pageable, User user) {
         return pollRepository.findByCreatorIdOrderByCreatedAtDesc(pageable, user.getId()).map(this::toResponse);
     }
+
+    @Transactional(readOnly = true)
     public AdminStats getAdminStats() {
         long totalPolls = pollRepository.count();
         long totalVotes = voteRepository.count();
@@ -45,14 +49,17 @@ public class DashBoardService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public Page<PollResponse> getTrendingPolls(Pageable pageable) {
         return pollRepository.getTrendingPolls(pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public Page<PollResponse> getActivePolls(Pageable pageable) {
         return pollRepository.getActivePolls(PollStatus.ACTIVE, Instant.now(), pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());
         int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();
