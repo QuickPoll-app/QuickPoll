@@ -6,6 +6,7 @@ import com.amalitech.quickpoll.exceptionHandler.DuplicateResourceException;
 import com.amalitech.quickpoll.exceptionHandler.ResourceNotFoundException;
 import com.amalitech.quickpoll.model.*;
 import com.amalitech.quickpoll.model.enums.PollStatus;
+import com.amalitech.quickpoll.model.enums.Role;
 import com.amalitech.quickpoll.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -64,6 +65,28 @@ public class PollService {
 
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "polls", allEntries = true)
+    public PollResponse editPoll(@NonNull UUID pollId, PollRequest request, User creator) {
+        Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
+        if (creator.getRole() == Role.USER) {
+            if (!poll.getCreator().getId().equals(creator.getId())) throw new IllegalStateException("You are not the creator of this poll");
+            if (voteRepository.existsByPollId(pollId)) throw new IllegalStateException("Cannot edit poll with votes");
+        }
+        poll.setTitle(request.question());
+        poll.setDescription(request.description());
+        poll.setMultiSelect(request.multipleChoice());
+        poll.setExpiresAt(request.expiresAt());
+        pollRepository.save(poll);
+        optionRepository.deleteAllByPollId(pollId);
+        for (String optionText : request.options()) {
+            PollOption pollOption = PollOption.builder().optionText(optionText).poll(poll).build();
+            if (pollOption == null) throw new IllegalStateException("Failed to create poll option");
+            optionRepository.save(pollOption);
+        }
+        return toResponse(pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found")));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "polls", allEntries = true)
     public void vote(@NonNull UUID pollId, VoteRequest request, User voter) {
         Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
         if (!poll.getStatus().equals(PollStatus.ACTIVE)) throw new IllegalStateException("Poll is closed");
@@ -96,8 +119,12 @@ public class PollService {
     @CacheEvict(cacheNames = "polls", allEntries = true)
     public void deletePoll(@NonNull UUID pollId, User creator) {
         Poll poll = pollRepository.findById(pollId).orElseThrow(() -> new ResourceNotFoundException("Poll not found"));
-        if (!poll.getCreator().getId().equals(creator.getId())) throw new IllegalStateException("You are not the creator of this poll");
+        if (creator.getRole() == Role.USER) {
+            if (!poll.getCreator().getId().equals(creator.getId())) throw new IllegalStateException("You are not the creator of this poll");
+        }
         pollRepository.delete(poll);
+        optionRepository.deleteAllByPollId(pollId);
+        voteRepository.deleteAllByPollId(pollId);
     }
 
     private PollResponse toResponse(Poll poll) {
@@ -112,8 +139,8 @@ public class PollService {
                     .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
                     .build();
         }).collect(java.util.stream.Collectors.toList());
-        int uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
-        int participationRate = (uniqueVoters / userRepository.count()) * 100;
+        long uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
+        float participationRate = (uniqueVoters > 0) ? (uniqueVoters / (float) userRepository.count()) * 100.0f : 0;
         return PollResponse.builder()
                 .id(poll.getId())
                 .question(poll.getTitle())

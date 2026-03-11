@@ -13,4 +13,6 @@ public interface VoteRepository extends JpaRepository<Vote, UUID> {
     boolean existsByUserIdAndOptionPollId(UUID userId, UUID pollId);
     long countDistinctVotersByPollId(UUID pollId);
     int countByOption_Id(UUID optionId);
+    boolean existsByPollId(UUID pollId);
+    void deleteAllByPollId(UUID pollId);
 }
