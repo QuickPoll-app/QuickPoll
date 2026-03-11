@@ -5,7 +5,6 @@ import com.amalitech.quickpoll.dto.PollResponse;
 import com.amalitech.quickpoll.dto.ResponseWrapper;
 import com.amalitech.quickpoll.service.DashBoardService;
 import com.amalitech.quickpoll.service.PollService;
-import com.amalitech.quickpoll.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/dashboard/admin")
 @RequiredArgsConstructor
-@Tag(name = "Admin", description = "Admin management endpoints")
+@Tag(name = "Admin", description = "Admin dashboard management endpoints")
 public class AdminController {
-    private final UserService userService;
     private final PollService pollService;
     private final DashBoardService dashBoardService;
 
@@ -40,9 +38,6 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
         Page<PollResponse> polls = pollService.getAllPolls(pageable); // TODO add email
-        if (polls.isEmpty()) {
-            return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "No polls found", polls));
-        }
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Retrieved all polls", polls));
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, polls.isEmpty()? "No polls found" : "Retrieved all polls", polls));
     }
 }

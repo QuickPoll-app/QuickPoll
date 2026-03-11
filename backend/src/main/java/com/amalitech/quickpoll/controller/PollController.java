@@ -48,13 +48,6 @@ public class PollController {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll edited successfully", pollService.editPoll(id, request, creator)));
     }
 
-    @PostMapping("/{id}/vote")
-    @Operation(summary = "Record a vote for a poll")
-    public ResponseEntity<ResponseWrapper<Void>> vote(@PathVariable @NonNull UUID id, @Valid @RequestBody VoteRequest request, @AuthenticationPrincipal User voter) {
-        pollService.vote(id, request, voter);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "Vote recorded successfully"));
-    }
-
     @PutMapping("/{id}/close")
     @Operation(summary = "Close a poll")
     public ResponseEntity<ResponseWrapper<PollResponse>> closePoll(@PathVariable @NonNull UUID id, @AuthenticationPrincipal User creator) {
