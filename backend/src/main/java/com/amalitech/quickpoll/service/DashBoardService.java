@@ -1,7 +1,10 @@
 package com.amalitech.quickpoll.service;
 
+import java.time.Instant;
 import java.util.List;
 
+import com.amalitech.quickpoll.dto.AdminStats;
+import com.amalitech.quickpoll.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,8 +29,28 @@ public class DashBoardService {
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
 
+    public Page<PollResponse> getMyDashboard(Pageable pageable, User user) {
+        return pollRepository.findByCreatorIdOrderByCreatedAtDesc(pageable, user.getId()).map(this::toResponse);
+    }
+    public AdminStats getAdminStats() {
+        long totalPolls = pollRepository.count();
+        long totalVotes = voteRepository.count();
+        long totalUsers = userRepository.count();
+        float participationRate = (totalUsers > 0) ? (totalVotes / (float) totalUsers) * 100.0f : 0;
+        return AdminStats.builder()
+                .totalPolls(totalPolls)
+                .totalVotes(totalVotes)
+                .totalUsers(totalUsers)
+                .participationRate(participationRate)
+                .build();
+    }
+
+    public Page<PollResponse> getTrendingPolls(Pageable pageable) {
+        return pollRepository.getTrendingPolls(pageable).map(this::toResponse);
+    }
+
     public Page<PollResponse> getActivePolls(Pageable pageable) {
-        return pollRepository.findByStatusOrderByCreatedAtDesc(PollStatus.ACTIVE, pageable).map(this::toResponse);
+        return pollRepository.getActivePolls(PollStatus.ACTIVE, Instant.now(), pageable).map(this::toResponse);
     }
 
     private PollResponse toResponse(Poll poll) {
@@ -39,11 +62,12 @@ public class DashBoardService {
                     .id(o.getId())
                     .text(o.getOptionText())
                     .voteCount(count)
-                    .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
+                    .percentage(totalVotes > 0 ? (count / (double) totalVotes) * 100.0 : 0)
                     .build();
         }).collect(java.util.stream.Collectors.toList());
-        int uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
-        int participationRate = (uniqueVoters / userRepository.count()) * 100;
+        long uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
+        long users = userRepository.count();
+        float participationRate = (uniqueVoters > 0) ? (uniqueVoters / (float) users) * 100.0f : 0;
 
         return PollResponse.builder()
                 .id(poll.getId())
