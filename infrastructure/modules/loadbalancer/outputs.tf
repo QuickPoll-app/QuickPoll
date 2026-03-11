@@ -1,7 +1,6 @@
 
 # Load Balancer Module - Outputs
 
-
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
   value       = aws_lb.main.arn
@@ -25,6 +24,16 @@ output "backend_target_group_arn" {
 output "frontend_target_group_arn" {
   description = "ARN of the frontend target group"
   value       = aws_lb_target_group.frontend.arn
+}
+
+output "monitoring_target_group_arn" {
+  description = "ARN of the monitoring (Grafana) target group"
+  value       = aws_lb_target_group.monitoring.arn
+}
+
+output "jaeger_target_group_arn" {
+  description = "ARN of the Jaeger target group"
+  value       = aws_lb_target_group.jaeger.arn
 }
 
 output "http_listener_arn" {

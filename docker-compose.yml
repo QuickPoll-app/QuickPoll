@@ -70,7 +70,13 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:${SERVER_PORT:-8081}/actuator/health"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sf",
+          "http://localhost:${SERVER_PORT:-8081}/actuator/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -168,7 +174,14 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    command:
+      [
+        "redis-server",
+        "--maxmemory",
+        "128mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
     volumes:
       - redis-data:/data
     healthcheck:
@@ -292,6 +305,76 @@ services:
     networks:
       - quickpoll-network
 
+  # Loki
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: quickpoll-loki
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    networks:
+      - quickpoll-network
+
+  # Promtail
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: quickpoll-promtail
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    networks:
+      - quickpoll-network
+
+  # Jaeger
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: quickpoll-jaeger
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:16686/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - quickpoll-network
+
 volumes:
   pgdata:
     driver: local
@@ -302,6 +385,8 @@ volumes:
   prometheus-data:
     driver: local
   grafana-data:
+    driver: local
+  loki-data:
     driver: local
 
 networks:

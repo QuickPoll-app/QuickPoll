@@ -106,6 +106,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "SERVER_PORT", value = "8081" },
         { name = "SPRING_DATA_REDIS_HOST", value = var.redis_host },
         { name = "SPRING_DATA_REDIS_PORT", value = var.redis_port },
+        { name = "MANAGEMENT_OTLP_TRACING_ENDPOINT", value = "http://jaeger.monitoring.local:4318/v1/traces" }
       ]
 
       secrets = [
@@ -114,11 +115,14 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       logConfiguration = {
-        logDriver = "awslogs"
+        logDriver = "awsfirelens"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "backend"
+          "Name"       = "loki"
+          "Url"        = "http://loki.monitoring.local:3100/loki/api/v1/push"
+          "Labels"     = "{job=\"backend\", env=\"${var.environment}\"}"
+          "RemoveKeys" = "container_id,container_name"
+          "LabelKeys"  = "container_name"
+          "LineFormat" = "key_value"
         }
       }
 
@@ -128,6 +132,26 @@ resource "aws_ecs_task_definition" "backend" {
         timeout     = 10
         retries     = 3
         startPeriod = 60
+      }
+    },
+    {
+      name      = "log_router"
+      image     = "amazon/aws-for-fluent-bit:latest"
+      essential = true
+      firelensConfiguration = {
+        type = "fluentbit"
+        options = {
+          "enable-ecs-log-metadata" = "true"
+        }
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-firelens"
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "firelens"
+          "awslogs-create-group"  = "true"
+        }
       }
     }
   ])
@@ -184,6 +208,22 @@ resource "aws_ecs_task_definition" "frontend" {
   })
 }
 
+# Service Discovery for Backend
+resource "aws_service_discovery_service" "backend" {
+  name = "backend"
+
+  dns_config {
+    namespace_id = var.service_discovery_namespace_id
+    dns_records {
+      ttl  = 60
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+  }
+}
+
 # Backend Service
 resource "aws_ecs_service" "backend" {
   name            = trimsuffix(substr("${var.project_name}-${var.environment}-backend", 0, 255), "-")
@@ -202,6 +242,10 @@ resource "aws_ecs_service" "backend" {
     target_group_arn = var.backend_target_group_arn
     container_name   = "backend"
     container_port   = 8081
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.backend.arn
   }
 
   deployment_circuit_breaker {

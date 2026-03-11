@@ -1,5 +1,10 @@
 <article class="stat-card">
-  <div class="stat-value">{{ value() }}</div>
+  <div class="stat-header">
+    @if (icon()) {
+      <iconify-icon [icon]="icon()"></iconify-icon>
+    }
+    <div class="stat-value">{{ value() }}</div>
+  </div>
   <div class="stat-label">{{ label() }}</div>
   @if (trend()) {
     <div [class]="'trend-indicator ' + trend()">

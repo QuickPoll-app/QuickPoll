@@ -4,7 +4,6 @@
 
 global:
   resolve_timeout: 5m
-  slack_api_url: "https://hooks.slack.com/services/REPLACE_WITH_WEBHOOK"
 
 route:
   group_by: ["alertname", "severity", "service"]
@@ -32,6 +31,7 @@ receivers:
     slack_configs:
       - channel: "#quickpoll-alerts"
         send_resolved: true
+        api_url: "${SLACK_WEBHOOK_URL}"
         title: '{{ if eq .Status "firing" }}🔔{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
         text: >-
           *Alert:* {{ .CommonLabels.alertname }}
@@ -47,6 +47,7 @@ receivers:
     slack_configs:
       - channel: "#quickpoll-alerts"
         send_resolved: true
+        api_url: "${SLACK_WEBHOOK_URL}"
         title: '{{ if eq .Status "firing" }}🚨 CRITICAL{{ else }}✅ RESOLVED{{ end }} {{ .CommonLabels.alertname }}'
         text: >-
           🚨 *CRITICAL ALERT*
