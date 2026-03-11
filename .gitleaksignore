@@ -1,0 +1,5 @@
+# .gitleaksignore
+# These files are ignored by gitleaks local scans
+
+# Local secrets backups (already in .gitignore)
+.secrets-backup.env
