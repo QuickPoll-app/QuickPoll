@@ -1,0 +1,41 @@
+# Checkov Configuration
+# Suppress overly strict checks for staging environment
+
+skip-check:
+  # Security Groups - These are attached via modules, Checkov can't detect cross-module references
+  - CKV2_AWS_5  # Security groups are attached to resources
+
+  # Staging-specific exceptions
+  - CKV_AWS_150  # Deletion protection only required in prod (already conditional)
+  - CKV_AWS_130  # Public subnets need auto-assign public IP for ALB
+  - CKV_AWS_260  # Port 80 open for HTTP->HTTPS redirect
+
+  # HTTP/HTTPS - Acceptable for internal communication behind ALB
+  - CKV_AWS_2    # HTTP listener (will redirect to HTTPS in production)
+  - CKV_AWS_103  # TLS 1.2 on HTTP listener (not applicable)
+  - CKV_AWS_378  # Target groups use HTTP for internal communication
+  - CKV2_AWS_20  # HTTP to HTTPS redirect (staging uses HTTP)
+
+  # Logging - Cost optimization for staging
+  - CKV_AWS_18   # S3 access logging on log bucket (recursive)
+  - CKV2_AWS_62  # S3 event notifications not needed for ALB logs
+
+  # Advanced features - Not needed for staging
+  - CKV_AWS_144  # Cross-region replication not needed
+  - CKV2_AWS_28  # WAF protection (add in production)
+  - CKV2_AWS_30  # Postgres query logging (performance impact)
+
+  # VPC - Acceptable for staging
+  - CKV2_AWS_11  # VPC flow logging (cost optimization)
+  - CKV2_AWS_12  # Default SG restrictions (not used)
+
+  # ECS - Read-only root filesystem breaks monitoring tools
+  - CKV_AWS_336  # Jaeger, Loki, Grafana, Prometheus need writable filesystem
+
+  # S3 Lifecycle - Not critical for staging
+  - CKV_AWS_300  # Abort incomplete multipart uploads
+
+framework:
+  - terraform
+
+download-external-modules: true

@@ -23,6 +23,11 @@ variable "monitoring_security_group_id" {
   type = string
 }
 
+variable "ecs_cluster_id" {
+  description = "The ID or ARN of the ECS cluster"
+  type        = string
+}
+
 variable "ecs_task_execution_role_arn" {
   type = string
 }

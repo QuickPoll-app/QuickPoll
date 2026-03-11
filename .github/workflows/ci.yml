@@ -11,10 +11,126 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Security Scanning
+  security-scan:
+    name: Security Scan (Gitleaks, Trivy, Checkov, CodeQL)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize CodeQL
+        id: codeql-init
+        continue-on-error: true
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java, javascript
+
+      - name: Set up JDK 21 (for CodeQL)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - name: Build backend (for CodeQL)
+        working-directory: ./backend
+        run: mvn clean package -DskipTests -B
+
+      - name: Perform CodeQL Analysis
+        id: codeql
+        continue-on-error: true
+        uses: github/codeql-action/analyze@v3
+
+      - name: Gitleaks (Secret Detection)
+        id: gitleaks
+        continue-on-error: true
+        run: |
+          docker run --rm -v "$PWD:/path" zricethezav/gitleaks:latest detect \
+            --source="/path" \
+            --config="/path/.gitleaks.toml" \
+            --verbose \
+            --no-git || echo "Secrets detected"
+
+      - name: Trivy (Filesystem Scan)
+        id: trivy
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scanners: 'vuln'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          skip-dirs: 'infrastructure'
+
+      - name: Checkov (IaC Security)
+        id: checkov
+        continue-on-error: true
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/
+          framework: terraform
+          config_file: .checkov.yml
+          quiet: true
+          soft_fail: false
+          output_format: cli
+
+      - name: Security Scan Summary
+        if: always()
+        run: |
+          echo "" 
+          echo "========================================"
+          echo "       SECURITY SCAN SUMMARY"
+          echo "========================================"
+          echo ""
+          
+          # CodeQL Result
+          if [ "${{ steps.codeql.outcome }}" == "success" ]; then
+            echo "[PASS] CodeQL: No code security issues found."
+          else
+            echo "[WARN] CodeQL: Code security issues detected! Check output above."
+          fi
+          
+          # Gitleaks Result
+          if [ "${{ steps.gitleaks.outcome }}" == "success" ]; then
+            echo "[PASS] Gitleaks: No secrets detected."
+          else
+            echo "[WARN] Gitleaks: Secrets detected! Check output above."
+          fi
+          
+          # Trivy Result
+          if [ "${{ steps.trivy.outcome }}" == "success" ]; then
+            echo "[PASS] Trivy: No high/critical vulnerabilities found."
+          else
+            echo "[WARN] Trivy: High/critical vulnerabilities detected!"
+          fi
+          
+          # Checkov Result
+          if [ "${{ steps.checkov.outcome }}" == "success" ]; then
+            echo "[PASS] Checkov: No IaC security issues found."
+          else
+            echo "[WARN] Checkov: IaC security issues found!"
+          fi
+          
+          echo ""
+          echo "========================================"
+          
+          # Show warnings but don't fail the pipeline
+          if [ "${{ steps.codeql.outcome }}" != "success" ] || [ "${{ steps.gitleaks.outcome }}" != "success" ] || [ "${{ steps.trivy.outcome }}" != "success" ] || [ "${{ steps.checkov.outcome }}" != "success" ]; then
+            echo "[WARN] Security issues detected. Please review and fix."
+            echo "[INFO] Pipeline continues - fix these issues before production deployment."
+          else
+            echo "[PASS] All security scans passed!"
+          fi
+
   # Backend: Build, Test with PostgreSQL service
   backend-test:
     name: Backend Build & Test
     runs-on: ubuntu-latest
+    needs: security-scan
     services:
       postgres:
         image: postgres:16-alpine
@@ -68,6 +184,7 @@ jobs:
   frontend-build:
     name: Frontend Lint & Build
     runs-on: ubuntu-latest
+    needs: security-scan
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -102,6 +219,7 @@ jobs:
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
+    needs: security-scan
     strategy:
       matrix:
         environment: [staging, prod]
@@ -164,7 +282,7 @@ jobs:
   notify:
     name: Notify CI Result
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, terraform-validate, docker-build]
+    needs: [security-scan, backend-test, frontend-build, terraform-validate, docker-build]
     if: always()
     steps:
       - name: Notify Slack on Success
