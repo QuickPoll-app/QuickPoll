@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Builder
-public record PollResponse (
+public record AdminPollResponse(
         UUID id,
         String question,
         String description,
         String creatorName,
+        String creatorEmail,
         boolean HasVoted,
         PollStatus status,
         boolean multipleChoice,
