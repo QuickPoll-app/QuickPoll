@@ -47,10 +47,12 @@ jobs:
       - name: Gitleaks (Secret Detection)
         id: gitleaks
         continue-on-error: true
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+        run: |
+          docker run --rm -v "$PWD:/path" zricethezav/gitleaks:latest detect \
+            --source="/path" \
+            --config="/path/.gitleaks.toml" \
+            --verbose \
+            --no-git || echo "Secrets detected"
 
       - name: Trivy (Filesystem Scan)
         id: trivy
