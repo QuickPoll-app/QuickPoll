@@ -159,6 +159,7 @@ module "monitoring" {
   private_subnet_ids               = module.networking.private_subnet_ids
   service_discovery_namespace_id   = module.networking.service_discovery_namespace_id
   monitoring_security_group_id     = module.security.monitoring_security_group_id
+  ecs_cluster_id                   = module.ecs.cluster_id
   ecs_task_execution_role_arn      = module.security.ecs_task_execution_role_arn
   monitoring_target_group_arn      = module.loadbalancer.monitoring_target_group_arn
   jaeger_target_group_arn          = module.loadbalancer.jaeger_target_group_arn
