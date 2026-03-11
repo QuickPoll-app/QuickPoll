@@ -28,5 +28,6 @@ public record PollRequest (
             if (o.isBlank()) throw new BadRequestException("Poll option text cannot be empty");
         });
         if (options.size() < 2) throw new BadRequestException("Poll must have at least two options");
+        if (expiresAt.isAfter(Instant.now())) throw new BadRequestException("Poll expiry date cannot be in the future");
     }
 }
