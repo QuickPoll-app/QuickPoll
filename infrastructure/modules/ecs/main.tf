@@ -222,6 +222,8 @@ resource "aws_service_discovery_service" "backend" {
 
   health_check_custom_config {
   }
+
+  force_destroy = true
 }
 
 # Backend Service
@@ -231,6 +233,7 @@ resource "aws_ecs_service" "backend" {
   task_definition = aws_ecs_task_definition.backend.arn
   desired_count   = var.backend_desired_count
   launch_type     = "FARGATE"
+  wait_for_steady_state = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -272,6 +275,7 @@ resource "aws_ecs_service" "frontend" {
   task_definition = aws_ecs_task_definition.frontend.arn
   desired_count   = var.frontend_desired_count
   launch_type     = "FARGATE"
+  wait_for_steady_state = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
