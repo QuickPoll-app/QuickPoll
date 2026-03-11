@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class PollController {
 
     @GetMapping
     @Operation(summary = "Get all polls")
-    public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
+    public ResponseEntity<ResponseWrapper<PageResponse<PollResponse>>> getAllPolls(Pageable pageable) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Polls retrieved successfully", pollService.getAllPolls(pageable)));
     }
 

@@ -31,8 +31,9 @@ public class PollService {
 
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = "polls", key = "'page_' + #pageable.pageNumber + '_' + #pageable.pageSize")
-    public Page<PollResponse> getAllPolls(Pageable pageable) {
-        return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(this::toResponse);
+    public PageResponse<PollResponse> getAllPolls(Pageable pageable) {
+       Page<PollResponse> polls = pollRepository.findAll(pageable).map(this::toResponse);
+       return PageResponse.from(polls);
     }
 
     @Transactional(readOnly = true)

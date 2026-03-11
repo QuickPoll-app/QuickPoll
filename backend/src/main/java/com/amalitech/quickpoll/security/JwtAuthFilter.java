@@ -1,7 +1,6 @@
 package com.amalitech.quickpoll.security;
 
 import com.amalitech.quickpoll.model.User;
-import com.amalitech.quickpoll.repository.UserRepository;
 import com.amalitech.quickpoll.service.CustomUserDetailService;
 import com.amalitech.quickpoll.service.JwtService;
 import io.jsonwebtoken.JwtException;
@@ -73,7 +72,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                user, null, userDetails.getAuthorities()
+                                (User) userDetails, null, userDetails.getAuthorities()
                         );
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);

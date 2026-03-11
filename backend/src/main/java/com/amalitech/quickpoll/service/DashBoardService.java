@@ -60,6 +60,7 @@ public class DashBoardService {
         return pollRepository.getActivePolls(PollStatus.ACTIVE, Instant.now(), pageable).map(this::toResponse);
     }
 
+    @Transactional(readOnly = true)
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());
         int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();
