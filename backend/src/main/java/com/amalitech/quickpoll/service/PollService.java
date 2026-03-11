@@ -76,7 +76,7 @@ public class PollService {
         return toResponse(poll);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "polls", allEntries = true)
     public PollResponse createPoll(PollRequest request, User creator) {
         Poll poll = Poll.builder()
