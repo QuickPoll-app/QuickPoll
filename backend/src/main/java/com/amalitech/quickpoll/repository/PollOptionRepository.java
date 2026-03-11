@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface PollOptionRepository extends JpaRepository<PollOption, UUID> {
     List<PollOption> findByPollId(UUID pollId);
+    void deleteAllByPollId(UUID pollId);
 }
