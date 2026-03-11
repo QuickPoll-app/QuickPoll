@@ -15,9 +15,14 @@ resource "aws_service_discovery_service" "jaeger" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 resource "aws_ecs_task_definition" "jaeger" {
@@ -91,9 +96,14 @@ resource "aws_service_discovery_service" "loki" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 resource "aws_ecs_task_definition" "loki" {
@@ -246,9 +256,14 @@ resource "aws_service_discovery_service" "prometheus" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 resource "aws_ecs_task_definition" "prometheus" {
@@ -355,9 +370,14 @@ resource "aws_service_discovery_service" "alertmanager" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 resource "aws_ecs_task_definition" "alertmanager" {
