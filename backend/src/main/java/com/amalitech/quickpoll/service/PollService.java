@@ -22,6 +22,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PollService {
+    private final UserRepository userRepository;
     private final PollRepository pollRepository;
     private final PollOptionRepository optionRepository;
     private final VoteRepository voteRepository;
@@ -111,7 +112,8 @@ public class PollService {
                     .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
                     .build();
         }).collect(java.util.stream.Collectors.toList());
-
+        int uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
+        int participationRate = (uniqueVoters / userRepository.count()) * 100;
         return PollResponse.builder()
                 .id(poll.getId())
                 .question(poll.getTitle())
@@ -122,6 +124,7 @@ public class PollService {
                 .createdAt(poll.getCreatedAt())
                 .expiresAt(poll.getExpiresAt())
                 .totalVotes(totalVotes)
+                .participationRate(participationRate)
                 .options(optionResponses)
                 .build();
     }

@@ -59,3 +59,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+logging:
+  level:
+    root=DEBUG
+    org.springframework=DEBUG
