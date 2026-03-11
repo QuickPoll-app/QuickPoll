@@ -151,23 +151,23 @@ module "ecs" {
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  project_name                   = var.project_name
-  environment                    = local.environment
-  vpc_id                         = module.networking.vpc_id
-  private_subnet_ids             = module.networking.private_subnet_ids
-  service_discovery_namespace_id = module.networking.service_discovery_namespace_id
-  monitoring_security_group_id   = module.security.monitoring_security_group_id
-  ecs_task_execution_role_arn    = module.security.ecs_task_execution_role_arn
-  monitoring_target_group_arn    = module.loadbalancer.monitoring_target_group_arn
-  jaeger_target_group_arn        = module.loadbalancer.jaeger_target_group_arn
-  efs_monitoring_id              = module.storage.efs_monitoring_id
-  efs_access_point_grafana_id     = module.storage.efs_access_point_grafana_id
-  efs_access_point_loki_id        = module.storage.efs_access_point_loki_id
-  efs_access_point_prometheus_id  = module.storage.efs_access_point_prometheus_id
+  project_name                     = var.project_name
+  environment                      = local.environment
+  vpc_id                           = module.networking.vpc_id
+  private_subnet_ids               = module.networking.private_subnet_ids
+  service_discovery_namespace_id   = module.networking.service_discovery_namespace_id
+  monitoring_security_group_id     = module.security.monitoring_security_group_id
+  ecs_task_execution_role_arn      = module.security.ecs_task_execution_role_arn
+  monitoring_target_group_arn      = module.loadbalancer.monitoring_target_group_arn
+  jaeger_target_group_arn          = module.loadbalancer.jaeger_target_group_arn
+  efs_monitoring_id                = module.storage.efs_monitoring_id
+  efs_access_point_grafana_id      = module.storage.efs_access_point_grafana_id
+  efs_access_point_loki_id         = module.storage.efs_access_point_loki_id
+  efs_access_point_prometheus_id   = module.storage.efs_access_point_prometheus_id
   efs_access_point_alertmanager_id = module.storage.efs_access_point_alertmanager_id
-  grafana_admin_password          = "admin123" # In production use a secret
-  slack_webhook_url              = var.slack_webhook_url
-  tags                           = local.tags
+  grafana_admin_password           = "admin123" # In production use a secret
+  slack_webhook_url                = var.slack_webhook_url
+  tags                             = local.tags
 }
 
 # Storage
