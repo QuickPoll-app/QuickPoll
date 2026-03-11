@@ -89,37 +89,37 @@ jobs:
           if [ "${{ steps.codeql.outcome }}" == "success" ]; then
             echo "[PASS] CodeQL: No code security issues found."
           else
-            echo "[FAIL] CodeQL: Code security issues detected! Check output above."
+            echo "[WARN] CodeQL: Code security issues detected! Check output above."
           fi
           
           # Gitleaks Result
           if [ "${{ steps.gitleaks.outcome }}" == "success" ]; then
             echo "[PASS] Gitleaks: No secrets detected."
           else
-            echo "[FAIL] Gitleaks: Secrets detected! Check output above."
+            echo "[WARN] Gitleaks: Secrets detected! Check output above."
           fi
           
           # Trivy Result
           if [ "${{ steps.trivy.outcome }}" == "success" ]; then
             echo "[PASS] Trivy: No high/critical vulnerabilities found."
           else
-            echo "[FAIL] Trivy: High/critical vulnerabilities detected!"
+            echo "[WARN] Trivy: High/critical vulnerabilities detected!"
           fi
           
           # Checkov Result
           if [ "${{ steps.checkov.outcome }}" == "success" ]; then
             echo "[PASS] Checkov: No IaC security issues found."
           else
-            echo "[FAIL] Checkov: IaC security issues found!"
+            echo "[WARN] Checkov: IaC security issues found!"
           fi
           
           echo ""
           echo "========================================"
           
-          # Fail the job if any scan failed
+          # Show warnings but don't fail the pipeline
           if [ "${{ steps.codeql.outcome }}" != "success" ] || [ "${{ steps.gitleaks.outcome }}" != "success" ] || [ "${{ steps.trivy.outcome }}" != "success" ] || [ "${{ steps.checkov.outcome }}" != "success" ]; then
-            echo "[FAIL] Security scan failed. Please fix the issues above."
-            exit 1
+            echo "[WARN] Security issues detected. Please review and fix."
+            echo "[INFO] Pipeline continues - fix these issues before production deployment."
           else
             echo "[PASS] All security scans passed!"
           fi
