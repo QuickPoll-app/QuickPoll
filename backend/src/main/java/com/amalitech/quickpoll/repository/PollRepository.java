@@ -1,6 +1,8 @@
 package com.amalitech.quickpoll.repository;
 
 import com.amalitech.quickpoll.model.Poll;
+import com.amalitech.quickpoll.model.enums.PollStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,5 +17,7 @@ public interface PollRepository extends JpaRepository<Poll, UUID> {
     List<Poll> findByCreatorIdOrderByCreatedAtDesc(UUID creatorId);
     @Query("SELECT COUNT(v) FROM Vote v WHERE v.option.id = :id")
     long countVotesByOptionId(@Param("id") UUID id);
+    // poll that are not expired and not closed
+    Page<Poll> findByStatusOrderByCreatedAtDesc(PollStatus status, Pageable pageable);
     // TODO: Add search and filter methods
 }

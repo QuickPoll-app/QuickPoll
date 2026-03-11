@@ -19,5 +19,6 @@ public record PollResponse (
         Instant createdAt,
         Instant expiresAt,
         int totalVotes,
+        int participationRate,
         List<OptionResponse> options
 ) {}
