@@ -1,27 +1,20 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Register Response Schema",
+﻿{
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "required": ["userId", "name", "email", "role"],
+  "required": ["httpStatus", "code", "message", "data"],
   "properties": {
-    "userId": {
-      "type": "integer",
-      "description": "Unique user identifier"
-    },
-    "name": {
-      "type": "string",
-      "description": "User full name"
-    },
-    "email": {
-      "type": "string",
-      "format": "email",
-      "description": "User email address"
-    },
-    "role": {
-      "type": "string",
-      "enum": ["USER", "ADMIN"],
-      "description": "Assigned user role"
+    "httpStatus": { "type": "string" },
+    "code":       { "type": "integer" },
+    "message":    { "type": "string" },
+    "data": {
+      "type": "object",
+      "required": ["token", "email", "name", "role"],
+      "properties": {
+        "token": { "type": "string" },
+        "email": { "type": "string" },
+        "name":  { "type": "string" },
+        "role":  { "type": "string" }
+      }
     }
-  },
-  "additionalProperties": false
+  }
 }

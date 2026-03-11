@@ -1,11 +1,20 @@
 ﻿{
-  "": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "required": ["token", "email", "name", "role"],
+  "required": ["httpStatus", "code", "message", "data"],
   "properties": {
-    "token": { "type": "string" },
-    "email": { "type": "string" },
-    "name":  { "type": "string" },
-    "role":  { "type": "string" }
+    "httpStatus": { "type": "string" },
+    "code":       { "type": "integer" },
+    "message":    { "type": "string" },
+    "data": {
+      "type": "object",
+      "required": ["token", "email", "name", "role"],
+      "properties": {
+        "token": { "type": "string" },
+        "email": { "type": "string" },
+        "name":  { "type": "string" },
+        "role":  { "type": "string" }
+      }
+    }
   }
 }
