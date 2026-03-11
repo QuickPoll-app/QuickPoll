@@ -85,7 +85,7 @@ variable "deletion_protection" {
 variable "db_max_connections_alarm" {
   description = "Threshold for database connections CloudWatch alarm"
   type        = number
-  default     = 50
+  default     = 80
 }
 
 variable "tags" {

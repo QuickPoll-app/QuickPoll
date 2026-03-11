@@ -15,9 +15,14 @@ resource "aws_service_discovery_service" "jaeger" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_task_definition" "jaeger" {
@@ -75,6 +80,8 @@ resource "aws_ecs_service" "jaeger" {
   service_registries {
     registry_arn = aws_service_discovery_service.jaeger.arn
   }
+
+  depends_on = [aws_service_discovery_service.jaeger]
 }
 
 # Loki
@@ -91,9 +98,14 @@ resource "aws_service_discovery_service" "loki" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_task_definition" "loki" {
@@ -158,6 +170,8 @@ resource "aws_ecs_service" "loki" {
   service_registries {
     registry_arn = aws_service_discovery_service.loki.arn
   }
+
+  depends_on = [aws_service_discovery_service.loki]
 }
 
 # Grafana
@@ -246,9 +260,14 @@ resource "aws_service_discovery_service" "prometheus" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_task_definition" "prometheus" {
@@ -340,6 +359,8 @@ resource "aws_ecs_service" "prometheus" {
   service_registries {
     registry_arn = aws_service_discovery_service.prometheus.arn
   }
+
+  depends_on = [aws_service_discovery_service.prometheus]
 }
 
 # Alertmanager
@@ -355,9 +376,14 @@ resource "aws_service_discovery_service" "alertmanager" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
 
   force_destroy = true
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_task_definition" "alertmanager" {
@@ -424,4 +450,6 @@ resource "aws_ecs_service" "alertmanager" {
   service_registries {
     registry_arn = aws_service_discovery_service.alertmanager.arn
   }
+
+  depends_on = [aws_service_discovery_service.alertmanager]
 }
