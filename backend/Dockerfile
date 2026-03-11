@@ -45,7 +45,7 @@ COPY --from=build --chown=appuser:appgroup /build/target/app.jar app.jar
 # Drop to non-root
 USER appuser:appgroup
 
-EXPOSE 8081
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

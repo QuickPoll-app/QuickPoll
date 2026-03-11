@@ -48,6 +48,16 @@ management:
     metrics:
       export:
         enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces
+
+logging:
+  pattern:
+    level: "%5p [traceId=%X{traceId:-},spanId=%X{spanId:-}]"
 
 jwt:
   secret: ${JWT_SECRET}
@@ -59,7 +69,3 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-logging:
-  level:
-    root=DEBUG
-    org.springframework=DEBUG

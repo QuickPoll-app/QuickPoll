@@ -9,7 +9,7 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<IAuthResponse> {
+  public login(email: string, password: string): Observable<IAuthResponse> {
     const request: ILoginRequest = { email, password };
 
     return this.http.post<IAuthResponse>(`${this.apiUrl}/login`, request).pipe(

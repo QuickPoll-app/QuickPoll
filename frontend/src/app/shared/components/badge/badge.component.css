@@ -1,0 +1,27 @@
+.badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  border: 1px solid;
+}
+
+.badge-votes,
+.badge-active {
+  background: #e8f4ed;
+  color: #2d7a4f;
+  border-color: #a5d6b8;
+}
+
+.badge-expired {
+  background: #fdecea;
+  color: #c53030;
+  border-color: #f5c6c0;
+}
+
+.time-badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid;
+}

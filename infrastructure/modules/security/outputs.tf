@@ -1,7 +1,6 @@
 
 # Security Module - Outputs
 
-
 output "alb_security_group_id" {
   description = "Security group ID for the ALB"
   value       = aws_security_group.alb.id
@@ -20,6 +19,16 @@ output "rds_security_group_id" {
 output "redis_security_group_id" {
   description = "Security group ID for ElastiCache Redis"
   value       = aws_security_group.redis.id
+}
+
+output "monitoring_security_group_id" {
+  description = "Security group ID for Monitoring tasks"
+  value       = aws_security_group.monitoring.id
+}
+
+output "efs_security_group_id" {
+  description = "Security group ID for EFS mount targets"
+  value       = aws_security_group.efs.id
 }
 
 output "ecs_task_execution_role_arn" {
