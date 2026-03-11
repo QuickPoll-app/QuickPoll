@@ -1,7 +1,7 @@
 package com.amalitech.quickpoll.controller;
 
 import com.amalitech.quickpoll.dto.AdminStats;
-import com.amalitech.quickpoll.dto.PollResponse;
+import com.amalitech.quickpoll.dto.PollResponseAdmin;
 import com.amalitech.quickpoll.dto.ResponseWrapper;
 import com.amalitech.quickpoll.service.DashBoardService;
 import com.amalitech.quickpoll.service.PollService;
@@ -36,8 +36,8 @@ public class AdminController {
     @GetMapping("/polls")
     @Operation(summary = "Get all polls")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
-        Page<PollResponse> polls = pollService.getAllPolls(pageable); // TODO add email
+    public ResponseEntity<ResponseWrapper<Page<PollResponseAdmin>>> getAllPolls(Pageable pageable) {
+        Page<PollResponseAdmin> polls = pollService.getAllPollsForAdmin(pageable);
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, polls.isEmpty()? "No polls found" : "Retrieved all polls", polls));
     }
 }

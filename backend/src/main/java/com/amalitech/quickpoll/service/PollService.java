@@ -36,6 +36,40 @@ public class PollService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "polls", key = "'page_' + #pageable.pageNumber + '_' + #pageable.pageSize")
+    public Page<PollResponseAdmin> getAllPollsForAdmin(Pageable pageable) {
+        return pollRepository.findAllByOrderByCreatedAtDesc(pageable).map(poll -> {
+            List<PollOption> options = optionRepository.findByPollId(poll.getId());
+            int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();
+            List<OptionResponse> optionResponses = options.stream().map(o -> {
+                int count = voteRepository.countByOption_Id(o.getId());
+                return OptionResponse.builder()
+                        .id(o.getId())
+                        .text(o.getOptionText())
+                        .voteCount(count)
+                        .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
+                        .build();
+            }).collect(java.util.stream.Collectors.toList());
+            long uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
+            float participationRate = (uniqueVoters > 0) ? (uniqueVoters / (float) userRepository.count()) * 100.0f : 0;
+            return PollResponseAdmin.builder()
+                    .id(poll.getId())
+                    .question(poll.getTitle())
+                    .description(poll.getDescription())
+                    .creatorName(poll.getCreator().getFullName())
+                    .creatorEmail(poll.getCreator().getEmail())
+                    .status(poll.getStatus())
+                    .multipleChoice(poll.isMultiSelect())
+                    .createdAt(poll.getCreatedAt())
+                    .expiresAt(poll.getExpiresAt())
+                    .totalVotes(totalVotes)
+                    .participationRate(participationRate)
+                    .options(optionResponses)
+                    .build();
+        });
+    }
+
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = "polls", key = "'id_' + #id")
     public PollResponse getPollById(UUID id) {
         Poll poll = pollRepository.findById(id).orElseThrow(() -> new RuntimeException("Poll not found"));
