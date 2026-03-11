@@ -39,7 +39,7 @@ public class AdminController {
     @Operation(summary = "Get all polls")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
-        Page<PollResponse> polls = pollService.getAllPolls(pageable);
+        Page<PollResponse> polls = pollService.getAllPolls(pageable); // TODO add email
         if (polls.isEmpty()) {
             return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "No polls found", polls));
         }
