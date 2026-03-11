@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.lang.NonNull;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -127,6 +128,16 @@ public class PollService {
         voteRepository.deleteAllByPollId(pollId);
     }
 
+    @Scheduled(cron = "0 0 0 * * ?")
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "polls", allEntries = true)
+    public void expirePolls() {
+        List<Poll> polls = pollRepository.findAllByStatusAndExpiresAtBefore(PollStatus.ACTIVE, Instant.now());
+        for (Poll poll : polls) {
+            poll.setStatus(PollStatus.CLOSED);
+            pollRepository.save(poll);
+        }
+    }
     private PollResponse toResponse(Poll poll) {
         List<PollOption> options = optionRepository.findByPollId(poll.getId());
         int totalVotes = options.stream().mapToInt(o -> voteRepository.countByOption_Id(o.getId())).sum();

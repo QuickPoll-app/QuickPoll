@@ -18,11 +18,10 @@ public interface PollRepository extends JpaRepository<Poll, UUID> {
     Page<Poll> findByCreatorIdOrderByCreatedAtDesc(Pageable pageable, UUID creatorId);
     @Query("SELECT COUNT(v) FROM Vote v WHERE v.option.id = :id")
     long countVotesByOptionId(@Param("id") UUID id);
-    // poll that are not expired and not closed
     @Query("SELECT p FROM Poll p WHERE p.status = :status AND p.expiresAt > :now ORDER BY p.createdAt DESC")
     Page<Poll> getActivePolls(PollStatus status, Instant now, Pageable pageable);
-    // polls that have the most votes
     @Query("SELECT p FROM Poll p ORDER BY (SELECT COUNT(v) FROM Vote v WHERE v.option.poll.id = p.id) DESC")
     Page<Poll> getTrendingPolls(Pageable pageable);
+    List<Poll> findAllByStatusAndExpiresAtBefore(PollStatus status, Instant now);
     // TODO: Add search and filter methods
 }
