@@ -112,8 +112,8 @@ public class PollService {
                     .percentage(totalVotes > 0 ? (count * 100.0 / totalVotes) : 0)
                     .build();
         }).collect(java.util.stream.Collectors.toList());
-        int uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
-        int participationRate = (uniqueVoters / userRepository.count()) * 100;
+        long uniqueVoters = voteRepository.countDistinctVotersByPollId(poll.getId());
+        float participationRate = (uniqueVoters > 0) ? (uniqueVoters / (float) userRepository.count()) * 100.0f : 0;
         return PollResponse.builder()
                 .id(poll.getId())
                 .question(poll.getTitle())
