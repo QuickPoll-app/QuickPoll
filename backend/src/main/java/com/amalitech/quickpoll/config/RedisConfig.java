@@ -20,14 +20,11 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 public class RedisConfig {
-
-    @Bean
-    public ObjectMapper redisObjectMapper() {
+    private ObjectMapper redisObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-         mapper.activateDefaultTyping(
+        mapper.activateDefaultTyping(
                 mapper.getPolymorphicTypeValidator(),
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
@@ -36,7 +33,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory factory, ObjectMapper redisObjectMapper) {
+    public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
+        ObjectMapper redisObjectMapper = redisObjectMapper();
 
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer(redisObjectMapper);
