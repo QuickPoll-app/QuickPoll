@@ -104,6 +104,7 @@ jobs:
           TF_VAR_frontend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-frontend:${{ env.IMAGE_TAG }}
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
 
       - name: Terraform Apply
         working-directory: ./infrastructure/environments/staging
