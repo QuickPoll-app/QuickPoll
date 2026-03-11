@@ -7,6 +7,7 @@ import com.amalitech.quickpoll.exceptionHandler.BadRequestException;
 import com.amalitech.quickpoll.exceptionHandler.DuplicateResourceException;
 import com.amalitech.quickpoll.exceptionHandler.ResourceNotFoundException;
 import com.amalitech.quickpoll.model.User;
+import com.amalitech.quickpoll.model.enums.Role;
 import com.amalitech.quickpoll.repository.UserRepository;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -94,6 +95,21 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "users", allEntries = true)
+    public void changeRole(UUID userId, String suggestedRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        if (!suggestedRole.equals(Role.ADMIN.name()) && !suggestedRole.equals(Role.USER.name())) {
+            throw new BadRequestException("Invalid role: " + suggestedRole);
+        }
+
+        Role updatedRole = Role.valueOf(suggestedRole);
+        user.setRole(updatedRole);
         userRepository.save(user);
     }
 }
