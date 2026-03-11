@@ -161,9 +161,11 @@ module "monitoring" {
   monitoring_target_group_arn    = module.loadbalancer.monitoring_target_group_arn
   jaeger_target_group_arn        = module.loadbalancer.jaeger_target_group_arn
   efs_monitoring_id              = module.storage.efs_monitoring_id
-  efs_access_point_grafana_id    = module.storage.efs_access_point_grafana_id
-  efs_access_point_loki_id       = module.storage.efs_access_point_loki_id
-  grafana_admin_password         = "admin123" # In production use a secret
+  efs_access_point_grafana_id     = module.storage.efs_access_point_grafana_id
+  efs_access_point_loki_id        = module.storage.efs_access_point_loki_id
+  efs_access_point_prometheus_id  = module.storage.efs_access_point_prometheus_id
+  efs_access_point_alertmanager_id = module.storage.efs_access_point_alertmanager_id
+  grafana_admin_password          = "admin123" # In production use a secret
   slack_webhook_url              = var.slack_webhook_url
   tags                           = local.tags
 }

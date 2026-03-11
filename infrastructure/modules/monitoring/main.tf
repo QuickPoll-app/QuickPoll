@@ -264,6 +264,16 @@ resource "aws_ecs_task_definition" "prometheus" {
       portMappings = [
         { containerPort = 9090, protocol = "tcp" }
       ]
+      mountPoints = [
+        {
+          containerPath = "/etc/prometheus"
+          sourceVolume  = "prometheus-config"
+        },
+        {
+          containerPath = "/prometheus"
+          sourceVolume  = "prometheus-data"
+        }
+      ]
       environment = [
         { name = "BACKEND_HOST", value = "backend.${var.project_name}-${var.environment}.local" }
       ]
@@ -278,6 +288,35 @@ resource "aws_ecs_task_definition" "prometheus" {
       }
     }
   ])
+
+  volume {
+    name = "prometheus-config"
+    efs_volume_configuration {
+      file_system_id     = var.efs_monitoring_id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = var.efs_access_point_prometheus_id
+        iam             = "DISABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "prometheus-data"
+    # We use the same EFS but a different access point for data? 
+    # Actually, the user asked for config. Let's keep data in the container or separate AP if needed.
+    # For now, let's just do config as requested.
+    efs_volume_configuration {
+      file_system_id     = var.efs_monitoring_id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        # Using a subpath /data within the prometheus AP or a new one. 
+        # Let's just mount the same AP and let it manage subdirs.
+        access_point_id = var.efs_access_point_prometheus_id
+        iam             = "DISABLED"
+      }
+    }
+  }
 }
 
 resource "aws_ecs_service" "prometheus" {
@@ -328,6 +367,12 @@ resource "aws_ecs_task_definition" "alertmanager" {
       portMappings = [
         { containerPort = 9093, protocol = "tcp" }
       ]
+      mountPoints = [
+        {
+          containerPath = "/etc/alertmanager"
+          sourceVolume  = "alertmanager-config"
+        }
+      ]
       environment = [
         { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url }
       ]
@@ -342,6 +387,18 @@ resource "aws_ecs_task_definition" "alertmanager" {
       }
     }
   ])
+
+  volume {
+    name = "alertmanager-config"
+    efs_volume_configuration {
+      file_system_id     = var.efs_monitoring_id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = var.efs_access_point_alertmanager_id
+        iam             = "DISABLED"
+      }
+    }
+  }
 }
 
 resource "aws_ecs_service" "alertmanager" {

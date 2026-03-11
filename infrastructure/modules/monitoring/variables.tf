@@ -47,6 +47,14 @@ variable "efs_access_point_loki_id" {
   type = string
 }
 
+variable "efs_access_point_prometheus_id" {
+  type = string
+}
+
+variable "efs_access_point_alertmanager_id" {
+  type = string
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

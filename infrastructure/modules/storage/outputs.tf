@@ -25,3 +25,11 @@ output "efs_access_point_loki_id" {
   description = "ID of EFS access point for Loki"
   value       = aws_efs_access_point.loki.id
 }
+
+output "efs_access_point_prometheus_id" {
+  value = aws_efs_access_point.prometheus.id
+}
+
+output "efs_access_point_alertmanager_id" {
+  value = aws_efs_access_point.alertmanager.id
+}

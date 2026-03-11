@@ -95,6 +95,38 @@ resource "aws_efs_access_point" "grafana" {
   }
 }
 
+resource "aws_efs_access_point" "prometheus" {
+  file_system_id = aws_efs_file_system.monitoring.id
+  posix_user {
+    gid = 65534
+    uid = 65534
+  }
+  root_directory {
+    path = "/prometheus"
+    creation_info {
+      owner_gid   = 65534
+      owner_uid   = 65534
+      permissions = "755"
+    }
+  }
+}
+
+resource "aws_efs_access_point" "alertmanager" {
+  file_system_id = aws_efs_file_system.monitoring.id
+  posix_user {
+    gid = 65534
+    uid = 65534
+  }
+  root_directory {
+    path = "/alertmanager"
+    creation_info {
+      owner_gid   = 65534
+      owner_uid   = 65534
+      permissions = "755"
+    }
+  }
+}
+
 resource "aws_efs_access_point" "loki" {
   file_system_id = aws_efs_file_system.monitoring.id
 
