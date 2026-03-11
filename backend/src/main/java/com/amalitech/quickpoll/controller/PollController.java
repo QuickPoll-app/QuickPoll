@@ -27,19 +27,25 @@ public class PollController {
     @GetMapping
     @Operation(summary = "Get all polls")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getAllPolls(pageable)));
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Polls retrieved successfully", pollService.getAllPolls(pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get poll by ID")
     public ResponseEntity<ResponseWrapper<PollResponse>> getPollById(@PathVariable UUID id) {
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.getPollById(id)));
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll retrieved successfully", pollService.getPollById(id)));
     }
 
     @PostMapping
     @Operation(summary = "Create a new poll")
     public ResponseEntity<ResponseWrapper<PollResponse>> createPoll(@Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "", pollService.createPoll(request, creator)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "Poll created successfully", pollService.createPoll(request, creator)));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Edit a poll")
+    public ResponseEntity<ResponseWrapper<PollResponse>> editPoll(@PathVariable @NonNull UUID id, @Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll edited successfully", pollService.editPoll(id, request, creator)));
     }
 
     @PostMapping("/{id}/vote")

@@ -15,7 +15,10 @@ resource "aws_service_discovery_service" "jaeger" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
+
+  force_destroy = true
 }
 
 resource "aws_ecs_task_definition" "jaeger" {
@@ -54,7 +57,7 @@ resource "aws_ecs_task_definition" "jaeger" {
 
 resource "aws_ecs_service" "jaeger" {
   name            = "${var.project_name}-${var.environment}-jaeger"
-  cluster         = "${var.project_name}-${var.environment}-cluster"
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.jaeger.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -89,7 +92,10 @@ resource "aws_service_discovery_service" "loki" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
+
+  force_destroy = true
 }
 
 resource "aws_ecs_task_definition" "loki" {
@@ -141,7 +147,7 @@ resource "aws_ecs_task_definition" "loki" {
 
 resource "aws_ecs_service" "loki" {
   name            = "${var.project_name}-${var.environment}-loki"
-  cluster         = "${var.project_name}-${var.environment}-cluster"
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.loki.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -212,7 +218,7 @@ resource "aws_ecs_task_definition" "grafana" {
 
 resource "aws_ecs_service" "grafana" {
   name            = "${var.project_name}-${var.environment}-grafana"
-  cluster         = "${var.project_name}-${var.environment}-cluster"
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.grafana.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -242,7 +248,10 @@ resource "aws_service_discovery_service" "prometheus" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
+
+  force_destroy = true
 }
 
 resource "aws_ecs_task_definition" "prometheus" {
@@ -321,7 +330,7 @@ resource "aws_ecs_task_definition" "prometheus" {
 
 resource "aws_ecs_service" "prometheus" {
   name            = "${var.project_name}-${var.environment}-prometheus"
-  cluster         = "${var.project_name}-${var.environment}-cluster"
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.prometheus.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -349,7 +358,10 @@ resource "aws_service_discovery_service" "alertmanager" {
   }
 
   health_check_custom_config {
+    failure_threshold = 1
   }
+
+  force_destroy = true
 }
 
 resource "aws_ecs_task_definition" "alertmanager" {
@@ -403,7 +415,7 @@ resource "aws_ecs_task_definition" "alertmanager" {
 
 resource "aws_ecs_service" "alertmanager" {
   name            = "${var.project_name}-${var.environment}-alertmanager"
-  cluster         = "${var.project_name}-${var.environment}-cluster"
+  cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.alertmanager.arn
   desired_count   = 1
   launch_type     = "FARGATE"
