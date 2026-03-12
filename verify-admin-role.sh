@@ -36,13 +36,16 @@ echo ""
 echo "🔎 Checking admin user role..."
 
 # Query the admin user role
-ADMIN_ROLE=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT role FROM users WHERE email = '$ADMIN_EMAIL';")
+ADMIN_ROLE=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT role FROM users WHERE email = '$ADMIN_EMAIL';" | xargs)
 
 if [ -z "$ADMIN_ROLE" ]; then
-  echo "❌ Admin user not found in database"
+  echo "❌ Admin user ($ADMIN_EMAIL) not found in database"
   echo ""
-  echo "📋 Available users:"
-  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT email, role FROM users;"
+  echo "📋 All users currently in the database:"
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT id, email, full_name, role FROM users ORDER BY created_at;"
+  echo ""
+  echo "📋 Flyway migration history:"
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT version, description, type, success, installed_on FROM flyway_schema_history ORDER BY installed_rank;" 2>/dev/null || echo "(flyway_schema_history not accessible)"
   exit 1
 fi
 
@@ -54,10 +57,16 @@ if [ "$ADMIN_ROLE" = "ADMIN" ]; then
   echo "✅ Admin role is CORRECT"
   exit 0
 else
-  echo "❌ Admin role is INCORRECT (expected: ADMIN, got: $ADMIN_ROLE)"
+  echo "❌ Admin role is INCORRECT (expected: ADMIN, got: [$ADMIN_ROLE])"
   echo ""
-  echo "🔧 Fixing admin role..."
-  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "UPDATE users SET role = 'ADMIN' WHERE email = '$ADMIN_EMAIL';"
-  echo "✅ Admin role has been corrected"
-  exit 0
+  echo "📋 Current admin user state:"
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT id, email, full_name, role, created_at, updated_at FROM users WHERE email = '$ADMIN_EMAIL';"
+  echo ""
+  echo "📋 Flyway migration history:"
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "SELECT version, description, type, success, installed_on FROM flyway_schema_history ORDER BY installed_rank;" 2>/dev/null || echo "(flyway_schema_history not accessible)"
+  echo ""
+  # Fail hard — do NOT silently fix. V10 migration should have already corrected this.
+  # If we reach here, there is a deeper issue that needs investigation.
+  echo "⛔ Refusing to auto-fix: V10 migration should have corrected this. Check Flyway migration logs."
+  exit 1
 fi

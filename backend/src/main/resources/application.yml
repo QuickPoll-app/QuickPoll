@@ -20,7 +20,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: false
-    repair-on-migrate: true
+    out-of-order: false
   sql:
     init:
       mode: never
