@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "jaeger" {
       environment = [
         { name = "COLLECTOR_OTLP_ENABLED", value = "true" },
         { name = "QUERY_BASE_PATH", value = "/jaeger" },
-        { name = "QUERY_UI_CONFIG", value = jsonencode({ "menu": { "items": [{ "label": "About Jaeger", "url": "http://${var.alb_domain}/jaeger" }] } }) }
+        { name = "QUERY_UI_CONFIG", value = jsonencode({ "menu" : { "items" : [{ "label" : "About Jaeger", "url" : "http://${var.alb_domain}/jaeger" }] } }) }
       ]
       logConfiguration = {
         logDriver = "awslogs"
