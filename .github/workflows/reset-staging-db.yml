@@ -1,0 +1,89 @@
+name: ☢️ Reset Staging Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "nuclear-reset" to confirm'
+        required: true
+
+jobs:
+  reset-db:
+    name: Destroy and Recreate Staging RDS
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.event.inputs.confirm == 'nuclear-reset'
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/environments/staging
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=staging/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_STATE_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: nuclear-reset - Destroy Database
+        working-directory: ./infrastructure/environments/staging
+        run: terraform destroy -target=module.database -auto-approve
+        env:
+          TF_VAR_backend_image: "dummy"
+          TF_VAR_frontend_image: "dummy"
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+
+      - name: nuclear-reset - Recreate Database
+        working-directory: ./infrastructure/environments/staging
+        run: terraform apply -target=module.database -auto-approve
+        env:
+          TF_VAR_backend_image: "dummy"
+          TF_VAR_frontend_image: "dummy"
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+
+      - name: nuclear-reset - Update ECS Service
+        working-directory: ./infrastructure/environments/staging
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_backend_image: ${{ vars.STAGING_BACKEND_IMAGE || 'dummy' }}
+          TF_VAR_frontend_image: ${{ vars.STAGING_FRONTEND_IMAGE || 'dummy' }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "☢️ Staging Database has been RESET and RECREATED",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Database Reset Complete*\nStatus: ${{ job.status }}\nTriggered by: ${{ github.actor }}\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
