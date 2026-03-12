@@ -1,6 +1,56 @@
 <div class="main-layout">
-  <app-sidebar [navItems]="navItems" [userProfile]="userProfile"></app-sidebar>
+
+  <app-sidebar
+    [navItems]="navItems"
+    [userProfile]="userProfile"
+    [class.open]="isSidebarOpen()"
+  ></app-sidebar>
+
+  @if (isSidebarOpen()) {
+    <div
+      class="overlay"
+      (click)="toggleSidebar()"
+      (keydown.escape)="toggleSidebar()"
+      role="button"
+      tabindex="0"
+      aria-label="Close sidebar"
+    ></div>
+  }
+
   <div class="main-content">
     <router-outlet />
   </div>
+
+  <nav class="mobile-nav">
+    @for (item of navItems; track item.route) {
+      <div
+        (click)="navigateTo(item.route)"
+        (keydown.enter)="navigateTo(item.route)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'Navigate to ' + item.label"
+      >
+        <app-mobile-nav-button
+          [icon]="item.icon"
+          [label]="item.label"
+          [isActive]="isActiveRoute(item.route)"
+        >
+        </app-mobile-nav-button>
+      </div>
+    }
+    <div
+      (click)="onToggleTheme()"
+      (keydown.enter)="onToggleTheme()"
+      role="button"
+      tabindex="0"
+      aria-label="Toggle theme"
+    >
+      <app-mobile-nav-button
+        [icon]="isDarkMode() ? 'lucide:sun' : 'lucide:moon'"
+        [label]="'Theme'"
+        [isActive]="false"
+      >
+      </app-mobile-nav-button>
+    </div>
+  </nav>
 </div>
