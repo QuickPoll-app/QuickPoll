@@ -98,7 +98,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./infrastructure/environments/staging
-        run: terraform plan -out=tfplan
+        run: terraform plan -lock=false -out=tfplan
         env:
           TF_VAR_backend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }}
           TF_VAR_frontend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-frontend:${{ env.IMAGE_TAG }}
@@ -109,7 +109,7 @@ jobs:
       - name: Terraform Apply
         working-directory: ./infrastructure/environments/staging
         run: |
-          terraform apply -auto-approve tfplan
+          terraform apply -lock=false -auto-approve tfplan
           # If apply succeeded but state save failed, push the errored state
           if [ -f errored.tfstate ]; then
             echo "::warning::State save failed during apply. Pushing errored.tfstate..."
