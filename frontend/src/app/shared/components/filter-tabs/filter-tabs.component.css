@@ -1,0 +1,45 @@
+.filter-tabs {
+  overflow-x: auto;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+label {
+  position: relative;
+}
+
+input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.tab-button {
+  white-space: nowrap;
+  padding: 0.25rem 0.75rem;
+  line-height: 1.42857;
+  font-size: 0.875rem;
+  border: 1px solid rgba(224, 221, 217, 1);
+  border-radius: 0.25rem;
+  background-color: rgba(255, 255, 255, 1);
+  color: rgba(82, 82, 82, 1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  border-color: rgba(199, 195, 189, 1);
+}
+
+.tab-button.active {
+  background-color: rgba(13, 115, 119, 1);
+  color: rgba(255, 255, 255, 1);
+  border-color: rgba(13, 115, 119, 1);
+}
