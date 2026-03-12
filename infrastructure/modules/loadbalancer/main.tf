@@ -114,6 +114,30 @@ resource "aws_lb_target_group" "jaeger" {
   })
 }
 
+# Prometheus Target Group
+resource "aws_lb_target_group" "prometheus" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-prom-tg", 0, 32), "-")
+  port        = 9090
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/-/healthy"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-prom-tg"
+  })
+}
+
 # AlertManager Target Group
 resource "aws_lb_target_group" "alertmanager" {
   name        = trimsuffix(substr("${var.project_name}-${var.environment}-alm-tg", 0, 32), "-")
@@ -280,5 +304,26 @@ resource "aws_lb_listener_rule" "loki" {
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-loki-rule"
+  })
+}
+
+# Prometheus Path Rule
+resource "aws_lb_listener_rule" "prometheus" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 150
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.prometheus.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/prometheus", "/prometheus/*"]
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-prom-rule"
   })
 }

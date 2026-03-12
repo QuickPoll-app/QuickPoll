@@ -124,20 +124,67 @@ resource "aws_ecs_task_definition" "backend" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
-        interval    = 30
-        timeout     = 10
-        retries     = 3
-        startPeriod = 60
+        command  = ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+        interval = 30
+        timeout  = 10
+        retries  = 3
       }
-    },
-
+    }
   ])
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-backend-task"
   })
 }
+
+# Data Generator Task Definition
+resource "aws_cloudwatch_log_group" "data_generator" {
+  count             = var.enable_data_generation ? 1 : 0
+  name              = "/ecs/${var.project_name}-${var.environment}-data-generator"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+resource "aws_ecs_task_definition" "data_generator" {
+  count                    = var.enable_data_generation ? 1 : 0
+  family                   = "${var.project_name}-${var.environment}-data-generator"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = var.ecs_task_execution_role_arn
+  task_role_arn            = var.ecs_task_role_arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "data-generator"
+      image     = var.data_generator_image
+      essential = true
+
+      environment = [
+        { name = "DB_HOST", value = element(split(":", var.db_endpoint), 0) },
+        { name = "DB_PORT", value = "5432" },
+        { name = "DB_NAME", value = var.db_name },
+        { name = "DB_USER", value = var.db_username }
+      ]
+
+      secrets = [
+        { name = "DB_PASSWORD", valueFrom = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/db-password" }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.data_generator[0].name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "data-generator"
+        }
+      }
+    }
+  ])
+}
+
 
 # Frontend Task Definition
 resource "aws_ecs_task_definition" "frontend" {

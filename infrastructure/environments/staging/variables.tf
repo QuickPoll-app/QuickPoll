@@ -31,6 +31,12 @@ variable "frontend_image" {
   type        = string
 }
 
+variable "data_generator_image" {
+  description = "Sample Data Generator Docker image URI"
+  type        = string
+  default     = ""
+}
+
 # Database (secrets via TF_VAR_)
 variable "db_password" {
   description = "Database password - passed via TF_VAR_db_password from GitHub Secrets"

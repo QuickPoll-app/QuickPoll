@@ -61,3 +61,13 @@ output "rds_events_sns_topic" {
   description = "SNS topic for RDS event notifications"
   value       = module.database.rds_events_sns_topic_arn
 }
+
+output "private_subnet_ids" {
+  description = "Private Subnet IDs"
+  value       = module.networking.private_subnet_ids
+}
+
+output "ecs_tasks_security_group_id" {
+  description = "ECS Tasks Security Group ID"
+  value       = module.security.ecs_tasks_security_group_id
+}

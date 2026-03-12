@@ -139,6 +139,9 @@ module "ecs" {
   frontend_cpu_target    = 70
   frontend_memory_target = 80
 
+  data_generator_image   = var.data_generator_image
+  enable_data_generation = true
+
   db_endpoint = module.database.db_address
   db_name     = module.database.db_name
   db_password = var.db_password

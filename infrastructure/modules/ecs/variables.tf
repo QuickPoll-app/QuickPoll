@@ -66,8 +66,20 @@ variable "backend_image" {
 }
 
 variable "frontend_image" {
-  description = "Docker image for the frontend service"
+  description = "Frontend Docker image URI"
   type        = string
+}
+
+variable "data_generator_image" {
+  description = "Sample Data Generator Docker image URI"
+  type        = string
+  default     = ""
+}
+
+variable "enable_data_generation" {
+  description = "Whether to enable data generation task definition"
+  type        = bool
+  default     = false
 }
 
 # Task Sizing
