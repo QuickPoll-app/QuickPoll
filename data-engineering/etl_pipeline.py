@@ -1,4 +1,5 @@
 """Production-style ETL Pipeline for QuickPoll Analytics"""
+
 """
 Analytics Tables Generated
 
@@ -21,8 +22,6 @@ from config import DATABASE_URL
 
 
 # Logging Configuration
-# -----------------------------------
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
@@ -32,8 +31,6 @@ logger = logging.getLogger(__name__)
 
 
 # Database Engine
-# -----------------------------------
-
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True
@@ -41,8 +38,6 @@ engine = create_engine(
 
 
 # Metadata Table Creation
-# -----------------------------------
-
 def ensure_metadata_table():
 
     query = """
@@ -62,8 +57,6 @@ def ensure_metadata_table():
 
 
 # Pipeline Metadata Logging
-# -----------------------------------
-
 def log_pipeline_start(conn, pipeline_name):
 
     query = text("""
@@ -79,7 +72,6 @@ def log_pipeline_start(conn, pipeline_name):
     result = conn.execute(query, {
         "name": pipeline_name,
         "start_time": datetime.now(UTC)
-
     })
 
     return result.scalar()
@@ -106,8 +98,6 @@ def log_pipeline_finish(conn, run_id, rows_processed, status):
 
 
 # Table Dependency Check
-# -----------------------------------
-
 def table_exists(table_name):
 
     query = text("""
@@ -135,8 +125,6 @@ def check_required_tables():
 
 
 # Incremental ETL Support
-# -----------------------------------
-
 def get_last_etl_timestamp():
 
     if not table_exists("analytics_vote_trends"):
@@ -152,8 +140,6 @@ def get_last_etl_timestamp():
 
 
 # Extract Layer
-# -----------------------------------
-
 def extract_polls(conn):
 
     logger.info("Extracting polls")
@@ -179,64 +165,6 @@ def extract_polls(conn):
 
 
 def extract_votes(conn, last_run=None):
-
-    logger.info("Extracting votes")
-
-    # Attempt incremental extraction
-    if last_run:
-
-        incremental_query = text("""
-            SELECT 
-                v.id,
-                v.created_at,
-                v.poll_id,
-                po.option_text,
-                u.full_name AS voter_name
-            FROM votes v
-            JOIN poll_options po ON v.option_id = po.id
-            JOIN users u ON v.user_id = u.id
-            WHERE v.created_at > :last_run
-        """)
-
-        df = pd.read_sql(incremental_query, conn, params={"last_run": last_run})
-
-        # If incremental returns nothing, fallback to full load
-        if df.empty:
-            logger.warning("Incremental extraction returned 0 rows. Falling back to full extraction.")
-
-            full_query = text("""
-                SELECT 
-                    v.id,
-                    v.created_at,
-                    v.poll_id,
-                    po.option_text,
-                    u.full_name AS voter_name
-                FROM votes v
-                JOIN poll_options po ON v.option_id = po.id
-                JOIN users u ON v.user_id = u.id
-            """)
-
-            df = pd.read_sql(full_query, conn)
-
-    else:
-
-        full_query = text("""
-            SELECT 
-                v.id,
-                v.created_at,
-                v.poll_id,
-                po.option_text,
-                u.full_name AS voter_name
-            FROM votes v
-            JOIN poll_options po ON v.option_id = po.id
-            JOIN users u ON v.user_id = u.id
-        """)
-
-        df = pd.read_sql(full_query, conn)
-
-    logger.info(f"Extracted {len(df)} votes")
-
-    return df
 
     logger.info("Extracting votes")
 
@@ -279,8 +207,6 @@ def extract_votes(conn, last_run=None):
 
 
 # Data Quality Checks
-# -----------------------------------
-
 def validate_data(df, name):
 
     logger.info(f"Running data quality checks for {name}")
@@ -296,8 +222,6 @@ def validate_data(df, name):
 
 
 # Transform Layer
-# -----------------------------------
-
 def transform_poll_summary(polls_df, votes_df):
 
     logger.info("Transforming poll summary")
@@ -329,7 +253,6 @@ def transform_vote_trends(votes_df):
 
     logger.info("Transforming vote trends")
 
-    # Ensure created_at is datetime
     votes_df["created_at"] = pd.to_datetime(votes_df["created_at"])
 
     trends = (
@@ -343,6 +266,7 @@ def transform_vote_trends(votes_df):
     trends["etl_run_at"] = datetime.now(UTC)
 
     return trends
+
 
 def transform_user_participation(votes_df):
 
@@ -367,13 +291,10 @@ def transform_user_participation(votes_df):
 
 
 # Load Layer
-# -----------------------------------
-
 def load_table(conn, df, table_name):
 
     logger.info(f"Loading {len(df)} rows into {table_name}")
 
-    # create table schema even if dataframe empty
     df.head(0).to_sql(
         table_name,
         conn,
@@ -391,8 +312,6 @@ def load_table(conn, df, table_name):
 
 
 # Pipeline Orchestration
-# -----------------------------------
-
 def run_pipeline():
 
     logger.info("Starting QuickPoll Analytics Pipeline")
@@ -433,7 +352,7 @@ def run_pipeline():
                 conn.execute(
                     text("DELETE FROM analytics_vote_trends WHERE vote_date = :date"),
                     {"date": d}
-             )
+                )
 
             load_table(conn, poll_summary, "analytics_poll_summary")
             load_table(conn, vote_trends, "analytics_vote_trends")
@@ -453,8 +372,7 @@ def run_pipeline():
 
     logger.info("ETL pipeline completed successfully")
 
-# Entry Point
-# -----------------------------------
 
+# Entry Point
 if __name__ == "__main__":
     run_pipeline()
