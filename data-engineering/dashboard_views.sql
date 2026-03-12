@@ -18,7 +18,7 @@ Backend services can query these views directly.
 
 CREATE OR REPLACE VIEW dashboard_poll_summary AS
 SELECT
-    poll_id,
+    id AS poll_id,
     title,
     creator_name,
     total_votes,
