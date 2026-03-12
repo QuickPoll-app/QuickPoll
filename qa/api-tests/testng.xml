@@ -17,4 +17,10 @@
         </classes>
     </test>
 
+    <test name="Poll Management Tests">
+        <classes>
+            <class name="com.amalitech.qa.poll.PollApiTest"/>
+        </classes>
+    </test>
+
 </suite>
