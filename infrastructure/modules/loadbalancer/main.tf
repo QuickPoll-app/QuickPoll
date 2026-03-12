@@ -114,6 +114,54 @@ resource "aws_lb_target_group" "jaeger" {
   })
 }
 
+# AlertManager Target Group
+resource "aws_lb_target_group" "alertmanager" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-alm-tg", 0, 32), "-")
+  port        = 9093
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/-/healthy"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-alm-tg"
+  })
+}
+
+# Loki Target Group
+resource "aws_lb_target_group" "loki" {
+  name        = trimsuffix(substr("${var.project_name}-${var.environment}-loki-tg", 0, 32), "-")
+  port        = 3100
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/ready"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-loki-tg"
+  })
+}
+
 # HTTP Listener (default → frontend)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
@@ -190,5 +238,47 @@ resource "aws_lb_listener_rule" "jaeger" {
 
   tags = merge(var.tags, {
     Name = "${var.project_name}-${var.environment}-jaeger-rule"
+  })
+}
+
+# AlertManager Path Rule
+resource "aws_lb_listener_rule" "alertmanager" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 130
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.alertmanager.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/alertmanager", "/alertmanager/*"]
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-alertmanager-rule"
+  })
+}
+
+# Loki Path Rule
+resource "aws_lb_listener_rule" "loki" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 140
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.loki.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/loki", "/loki/*"]
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-loki-rule"
   })
 }
