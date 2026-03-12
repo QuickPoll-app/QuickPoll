@@ -166,10 +166,13 @@ resource "aws_ecs_service" "loki" {
     security_groups = [var.monitoring_security_group_id]
   }
 
-  load_balancer {
-    target_group_arn = var.loki_target_group_arn
-    container_name   = "loki"
-    container_port   = 3100
+  dynamic "load_balancer" {
+    for_each = var.loki_target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.loki_target_group_arn
+      container_name   = "loki"
+      container_port   = 3100
+    }
   }
 
   service_registries {
@@ -464,10 +467,13 @@ resource "aws_ecs_service" "alertmanager" {
     security_groups = [var.monitoring_security_group_id]
   }
 
-  load_balancer {
-    target_group_arn = var.alertmanager_target_group_arn
-    container_name   = "alertmanager"
-    container_port   = 9093
+  dynamic "load_balancer" {
+    for_each = var.alertmanager_target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.alertmanager_target_group_arn
+      container_name   = "alertmanager"
+      container_port   = 9093
+    }
   }
 
   service_registries {
