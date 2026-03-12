@@ -36,10 +36,11 @@ public class SecurityConfig {
     private final CustomUserDetailService customUserDetailService;
     private final JwtAuthenticationEntryPoint entryPoint;
 
+    @SuppressWarnings("java/spring-disabled-csrf-protection")
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            .csrf(AbstractHttpConfigurer::disable) // Intentional: stateless JWT, no session cookies
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(entryPoint)
@@ -63,6 +64,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
