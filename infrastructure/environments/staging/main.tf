@@ -168,10 +168,12 @@ module "monitoring" {
   efs_access_point_loki_id         = module.storage.efs_access_point_loki_id
   efs_access_point_prometheus_id   = module.storage.efs_access_point_prometheus_id
   efs_access_point_alertmanager_id = module.storage.efs_access_point_alertmanager_id
-  grafana_admin_password           = "admin123" # In production use a secret
+  grafana_admin_password           = "admin123"
   slack_webhook_url                = var.slack_webhook_url
-  alb_domain                       = module.loadbalancer.alb_dns_name
+  alb_domain                       = "${var.project_name}-${local.environment}-alb.${var.aws_region}.elb.amazonaws.com"
   tags                             = local.tags
+
+  depends_on = [module.loadbalancer]
 }
 
 # Storage
