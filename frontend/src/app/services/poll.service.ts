@@ -1,23 +1,25 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
+import { ICreatePollRequest, IResponseWrapper, IPollResponse, IPage } from "../models/poll.model";
+import { environment } from "../../environments/environment";
 
 @Injectable({ providedIn: "root" })
 export class PollService {
-  private apiUrl = "/api/polls";
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${environment.apiUrl}/polls`;
 
-  getAll(page = 0, size = 10): Observable<any> {
-    return this.http.get(`${this.apiUrl}?page=${page}&size=${size}`);
+  public getAllPolls(page = 0, size = 10): Observable<IPage<IPollResponse>> {
+    return this.http.get<IPage<IPollResponse>>(`${this.apiUrl}?page=${page}&size=${size}`);
   }
 
-  getById(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}`);
+  public getPollById(id: number): Observable<IResponseWrapper<IPollResponse>> {
+    return this.http.get<IResponseWrapper<IPollResponse>>(`${this.apiUrl}/${id}`);
   }
 
-  create(poll: any): Observable<any> {
-    return this.http.post(this.apiUrl, poll);
+  public createPoll(poll: ICreatePollRequest): Observable<IResponseWrapper<IPollResponse>> {
+    return this.http.post<IResponseWrapper<IPollResponse>>(this.apiUrl, poll);
   }
 
   // TODO: Implement vote method
