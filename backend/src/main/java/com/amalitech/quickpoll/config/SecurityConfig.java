@@ -39,7 +39,14 @@ public class SecurityConfig {
     @SuppressWarnings("java/spring-disabled-csrf-protection")
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
+        http.cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration configuration = new CorsConfiguration();
+            configuration.setAllowedOrigins(List.of("https://k7mnnbfm-8081.uks1.devtunnels.ms/", "http://localhost:8080", "http://localhost:4200", "http://localhost:8088", "http://localhost:8081"));
+            configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
+            configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+            configuration.setAllowCredentials(true);
+            return configuration;
+            }))
             .csrf(AbstractHttpConfigurer::disable) // Intentional: stateless JWT, no session cookies
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
