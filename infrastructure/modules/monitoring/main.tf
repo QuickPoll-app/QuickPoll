@@ -208,6 +208,10 @@ resource "aws_ecs_task_definition" "grafana" {
         {
           containerPath = "/var/lib/grafana"
           sourceVolume  = "grafana-data"
+        },
+        {
+          containerPath = "/etc/grafana/provisioning"
+          sourceVolume  = "grafana-provisioning"
         }
       ]
       logConfiguration = {
@@ -224,7 +228,10 @@ resource "aws_ecs_task_definition" "grafana" {
       name      = "grafana-provisioner"
       image     = "curlimages/curl:latest"
       essential = false
-      command   = ["sh", "-c", "sleep 15 && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://prometheus.${var.service_discovery_namespace_name}:9090\",\"access\":\"proxy\",\"isDefault\":true}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.${var.service_discovery_namespace_name}:3100\",\"access\":\"proxy\"}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Jaeger\",\"type\":\"jaeger\",\"uid\":\"jaeger\",\"url\":\"http://jaeger.${var.service_discovery_namespace_name}:16686\",\"access\":\"proxy\"}' || true"]
+      command = [
+        "sh", "-c",
+        "sleep 30 && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://${var.alb_domain}/prometheus\",\"access\":\"proxy\",\"isDefault\":true,\"jsonData\":{\"timeInterval\":\"15s\"}}' && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://${var.alb_domain}/loki\",\"access\":\"proxy\"}' && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Jaeger\",\"type\":\"jaeger\",\"uid\":\"jaeger\",\"url\":\"http://${var.alb_domain}/jaeger\",\"access\":\"proxy\"}' || echo 'Datasources already exist'"
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -239,6 +246,18 @@ resource "aws_ecs_task_definition" "grafana" {
 
   volume {
     name = "grafana-data"
+    efs_volume_configuration {
+      file_system_id     = var.efs_monitoring_id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = var.efs_access_point_grafana_id
+        iam             = "DISABLED"
+      }
+    }
+  }
+
+  volume {
+    name = "grafana-provisioning"
     efs_volume_configuration {
       file_system_id     = var.efs_monitoring_id
       transit_encryption = "ENABLED"
@@ -270,6 +289,7 @@ resource "aws_ecs_service" "grafana" {
 }
 
 # Prometheus
+
 resource "aws_service_discovery_service" "prometheus" {
   name = "prometheus"
 
@@ -350,15 +370,10 @@ resource "aws_ecs_task_definition" "prometheus" {
 
   volume {
     name = "prometheus-data"
-    # We use the same EFS but a different access point for data? 
-    # Actually, the user asked for config. Let's keep data in the container or separate AP if needed.
-    # For now, let's just do config as requested.
     efs_volume_configuration {
       file_system_id     = var.efs_monitoring_id
       transit_encryption = "ENABLED"
       authorization_config {
-        # Using a subpath /data within the prometheus AP or a new one. 
-        # Let's just mount the same AP and let it manage subdirs.
         access_point_id = var.efs_access_point_prometheus_id
         iam             = "DISABLED"
       }
@@ -378,12 +393,19 @@ resource "aws_ecs_service" "prometheus" {
     security_groups = [var.monitoring_security_group_id]
   }
 
+  load_balancer {
+    target_group_arn = var.prometheus_target_group_arn
+    container_name   = "prometheus"
+    container_port   = 9090
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.prometheus.arn
   }
 }
 
 # Alertmanager
+
 resource "aws_service_discovery_service" "alertmanager" {
   name = "alertmanager"
 

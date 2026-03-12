@@ -228,16 +228,14 @@ def generate_votes(conn, user_ids, option_ids):
                 poll_id,
                 option_id,
                 user_id,
-                created_at,
-                updated_at
+                created_at
             )
             VALUES (
                 :id,
                 :poll_id,
                 :option_id,
                 :user_id,
-                :created_at,
-                :updated_at
+                :created_at
             )
             """),
             {
@@ -245,8 +243,7 @@ def generate_votes(conn, user_ids, option_ids):
                 "poll_id": poll_id,
                 "option_id": option_id,
                 "user_id": user_id,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
+                "created_at": datetime.utcnow()
             }
         )
 

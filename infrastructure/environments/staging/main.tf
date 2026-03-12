@@ -168,6 +168,7 @@ module "monitoring" {
   jaeger_target_group_arn          = module.loadbalancer.jaeger_target_group_arn
   alertmanager_target_group_arn    = module.loadbalancer.alertmanager_target_group_arn
   loki_target_group_arn            = module.loadbalancer.loki_target_group_arn
+  prometheus_target_group_arn      = module.loadbalancer.prometheus_target_group_arn
   efs_monitoring_id                = module.storage.efs_monitoring_id
   efs_access_point_grafana_id      = module.storage.efs_access_point_grafana_id
   efs_access_point_loki_id         = module.storage.efs_access_point_loki_id

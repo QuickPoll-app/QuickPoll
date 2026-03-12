@@ -54,6 +54,11 @@ variable "loki_target_group_arn" {
   default = ""
 }
 
+variable "prometheus_target_group_arn" {
+  type    = string
+  default = ""
+}
+
 variable "efs_monitoring_id" {
   type = string
 }

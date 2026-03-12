@@ -46,6 +46,11 @@ output "loki_target_group_arn" {
   value       = aws_lb_target_group.loki.arn
 }
 
+output "prometheus_target_group_arn" {
+  description = "ARN of the Prometheus target group"
+  value       = aws_lb_target_group.prometheus.arn
+}
+
 output "http_listener_arn" {
   description = "ARN of the HTTP listener"
   value       = aws_lb_listener.http.arn
