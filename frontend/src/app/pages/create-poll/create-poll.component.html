@@ -1,0 +1,187 @@
+<div class="container">
+  <div class="content">
+    <main class="main">
+      <div class="header">
+        <div>
+          <h1 class="title">Create Poll</h1>
+          <p class="subtitle">Set up a new poll for your team</p>
+        </div>
+      </div>
+
+      <form [formGroup]="pollForm" (ngSubmit)="onSubmit()" class="form">
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">1. Poll Details</h2>
+          </div>
+
+          <div class="field">
+            <label for="poll-question" class="form-label">Poll Question *</label>
+            <textarea
+              id="poll-question"
+              formControlName="question"
+              class="form-textarea"
+              placeholder="Enter your poll question..."
+              rows="3"
+              maxlength="200"
+            ></textarea>
+            <div class="field-info">
+              <span class="hint">Make your question clear and specific</span>
+              <span class="hint">{{ questionCharCount() }}/200</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="poll-description" class="form-label">Description (Optional)</label>
+            <textarea
+              id="poll-description"
+              formControlName="description"
+              class="form-textarea"
+              placeholder="Add context or additional information..."
+              rows="4"
+              maxlength="500"
+            ></textarea>
+            <div class="field-info">
+              <span class="hint">Provide additional context if needed</span>
+              <span class="hint">{{ descriptionCharCount() }}/500</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Poll Configuration Section -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">2. Poll Configuration</h2>
+          </div>
+
+          <div class="field">
+            <div class="poll-type-grid">
+              <label class="poll-type-label">
+                <input
+                  type="radio"
+                  formControlName="pollType"
+                  value="single"
+                  class="radio-hidden"
+                />
+                <div class="poll-type-card">
+                  <div class="poll-type-content">
+                    <div class="poll-type-icon blue">
+                      <iconify-icon icon="lucide:circle-dot"></iconify-icon>
+                    </div>
+                    <div>
+                      <div class="poll-type-title">Single Choice</div>
+                      <div class="poll-type-desc">Voters can select one option</div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+              <label class="poll-type-label">
+                <input
+                  type="radio"
+                  formControlName="pollType"
+                  value="multiple"
+                  class="radio-hidden"
+                />
+                <div class="poll-type-card">
+                  <div class="poll-type-content">
+                    <div class="poll-type-icon purple">
+                      <iconify-icon icon="lucide:check-square"></iconify-icon>
+                    </div>
+                    <div>
+                      <div class="poll-type-title">Multiple Choice</div>
+                      <div class="poll-type-desc">Voters can select multiple options</div>
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label for="poll-expiry" class="form-label">Poll Expiry Date *</label>
+            <div class="date-input-wrapper">
+              <input id="poll-expiry" type="date" formControlName="expiryDate" class="form-input" />
+              <div class="date-icon">
+                <iconify-icon icon="lucide:calendar"></iconify-icon>
+              </div>
+            </div>
+            <p class="hint">Select when this poll should close</p>
+          </div>
+        </section>
+
+        <!-- Poll Options Section -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">3. Poll Options</h2>
+          </div>
+
+          <div formArrayName="options">
+            @for (option of options.controls; track $index) {
+              <div class="option-row">
+                <div class="option-number">
+                  {{ $index + 1 }}
+                </div>
+                <input
+                  [formControlName]="$index"
+                  type="text"
+                  class="form-input option-input"
+                  [placeholder]="'Enter option ' + ($index + 1) + '...'"
+                />
+                <button
+                  type="button"
+                  (click)="removeOption($index)"
+                  [disabled]="options.length <= 2"
+                  class="remove-btn"
+                >
+                  <iconify-icon icon="lucide:x"></iconify-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <button type="button" (click)="addOption()" class="add-option-btn">
+            <div class="icon-wrapper">
+              <iconify-icon icon="lucide:plus"></iconify-icon>
+            </div>
+            <span>Add Option</span>
+          </button>
+        </section>
+
+        <!-- Settings Section -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">4. Settings</h2>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-info">
+              <div class="settings-title">Anonymous Voting</div>
+              <p class="settings-desc">
+                When enabled, voter identities will not be tracked or displayed
+              </p>
+            </div>
+            <div class="settings-toggle">
+              <app-toggle
+                [checked]="anonymousVoting()"
+                [label]="anonymousVoting() ? 'On' : 'Off'"
+                (change)="onToggleAnonymous($event)"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+          <app-buttons [variant]="'secondary'" [type]="'button'" (clicked)="onCancel()">
+            Cancel
+          </app-buttons>
+          <app-buttons [variant]="'primary'" [type]="'submit'" [disabled]="!pollForm.valid">
+            <div class="button-content">
+              <iconify-icon icon="lucide:plus-circle"></iconify-icon>
+              <span>Create Poll</span>
+            </div>
+          </app-buttons>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
