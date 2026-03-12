@@ -29,9 +29,9 @@ export interface IVoteRequest {
 }
 
 export enum PollStatus {
-  ACTIVE = 'ACTIVE',
-  CLOSED = 'CLOSED',
-  DRAFT = 'DRAFT'
+  ACTIVE = "ACTIVE",
+  CLOSED = "CLOSED",
+  DRAFT = "DRAFT",
 }
 
 export interface IPollResponse {

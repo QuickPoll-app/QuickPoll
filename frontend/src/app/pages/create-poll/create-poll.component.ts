@@ -1,4 +1,10 @@
-import { Component, signal, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, inject } from "@angular/core";
+import {
+  Component,
+  signal,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ChangeDetectionStrategy,
+  inject,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
