@@ -9,6 +9,7 @@ import {
   ValidationErrors,
 } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { inject } from "@angular/core";
 import { InputComponent } from "../../../shared/components/input/input.component";
 import { ButtonsComponent } from "../../../shared/components/buttons/buttons.component";
 import { AuthService } from "../../../services/auth.service";
@@ -31,6 +32,10 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   styleUrl: "./register.component.css",
 })
 export class RegisterComponent {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   public registrationForm: FormGroup;
   public showPassword = signal(false);
   public showConfirmPassword = signal(false);
@@ -39,11 +44,7 @@ export class RegisterComponent {
   public passwordsMatch = signal(false);
   public errorMessage = signal<string | null>(null);
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-  ) {
+  constructor() {
     this.registrationForm = this.fb.group(
       {
         fullName: ["", [Validators.required]],
