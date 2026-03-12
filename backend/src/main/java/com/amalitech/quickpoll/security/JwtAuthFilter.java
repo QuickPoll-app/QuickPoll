@@ -1,7 +1,5 @@
 package com.amalitech.quickpoll.security;
 
-import com.amalitech.quickpoll.model.User;
-import com.amalitech.quickpoll.repository.UserRepository;
 import com.amalitech.quickpoll.service.CustomUserDetailService;
 import com.amalitech.quickpoll.service.JwtService;
 import io.jsonwebtoken.JwtException;
@@ -22,22 +20,22 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-    private final UserRepository userRepository;
+
     private final JwtService jwtService;
     private final CustomUserDetailService customUserDetailService;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
-        if (path.startsWith("/actuator/") ||
+        if (path.startsWith("/api/auth/") ||
+                path.startsWith("/actuator/") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||
-                path.startsWith("/api/auth/") ||
                 path.equals("/swagger-ui.html")) {
             filterChain.doFilter(request, response);
             return;
@@ -68,10 +66,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     writeUnauthorized(response, "Token is invalid or expired");
                     return;
                 }
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                (User) userDetails, null, userDetails.getAuthorities()
-                        );
+
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

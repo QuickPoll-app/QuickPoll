@@ -1,8 +1,12 @@
 name: Deploy to Production
 
 on:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'deploy-production' to confirm"
+        required: true
+        type: string
 
 concurrency:
   group: deploy-prod
@@ -18,7 +22,6 @@ permissions:
   statuses: write
 
 jobs:
-  # Build and push Docker images to ECR
   build-and-push:
     name: Build & Push Images
     runs-on: ubuntu-latest
@@ -30,6 +33,13 @@ jobs:
           - service: frontend
             context: ./frontend
     steps:
+      - name: Confirm production deploy
+        run: |
+          if [ "${{ inputs.confirm }}" != "deploy-production" ]; then
+            echo "Type 'deploy-production' to confirm."
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -57,7 +67,6 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}-prod
           cache-to: type=gha,scope=${{ matrix.service }}-prod,mode=max
 
-  # Deploy infrastructure — requires approval
   terraform-apply:
     name: Terraform Apply (Production)
     runs-on: ubuntu-latest
@@ -70,8 +79,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: main
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -110,12 +117,11 @@ jobs:
         run: |
           terraform apply -auto-approve tfplan
           if [ -f errored.tfstate ]; then
-            echo "::warning::State save failed during apply. Pushing errored.tfstate..."
             terraform state push errored.tfstate
             rm -f errored.tfstate
           fi
 
-      - name: Capture ALB URL and set GitHub Variable
+      - name: Capture ALB URL
         id: capture-alb
         working-directory: ./infrastructure/environments/prod
         continue-on-error: true
@@ -123,12 +129,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ALB_DNS=$(terraform output -raw alb_dns_name)
-          echo "ALB DNS: $ALB_DNS"
           echo "alb_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
-          gh variable set PROD_ALB_URL --env prod --body "http://$ALB_DNS" || echo "::warning::Could not set PROD_ALB_URL variable. Set it manually to http://$ALB_DNS"
-          echo "PROD_ALB_URL set to http://$ALB_DNS"
+          gh variable set PROD_ALB_URL --env prod --body "http://$ALB_DNS" || true
 
-  # Health check after deploy
   health-check:
     name: Post-Deploy Health Check
     runs-on: ubuntu-latest
@@ -142,30 +145,18 @@ jobs:
       - name: Health check backend
         run: |
           for i in {1..15}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" \
-              "${ALB_URL}/actuator/health" || true)
-            if [ "$status" = "200" ]; then
-              echo "Backend health check passed"
-              exit 0
-            fi
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${ALB_URL}/actuator/health" || true)
+            if [ "$status" = "200" ]; then echo "Backend health check passed"; exit 0; fi
             echo "Attempt $i/15 - Status: $status"
             sleep 20
           done
-          echo "Backend health check failed"
-          exit 1
+          echo "Backend health check failed"; exit 1
 
       - name: Health check frontend
         run: |
-          status=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${ALB_URL}/" || true)
-          if [ "$status" = "200" ]; then
-            echo "Frontend health check passed"
-          else
-            echo "Frontend health check failed with status: $status"
-            exit 1
-          fi
+          status=$(curl -s -o /dev/null -w "%{http_code}" "${ALB_URL}/" || true)
+          [ "$status" = "200" ] && echo "Frontend OK" || { echo "Frontend failed: $status"; exit 1; }
 
-  # Tag release after successful production deploy
   tag-release:
     name: Tag Release
     runs-on: ubuntu-latest
@@ -178,17 +169,15 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const sha = context.sha;
-            const tag = `release-${sha.substring(0, 7)}`;
+            const tag = `release-${context.sha.substring(0, 7)}`;
             await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/tags/${tag}`,
-              sha: sha
+              sha: context.sha
             });
             console.log(`Created tag: ${tag}`);
 
-  # Slack notifications
   notify:
     name: Notify Deployment
     runs-on: ubuntu-latest
@@ -204,35 +193,13 @@ jobs:
           webhook: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
-            {
-              "text": "Production Deploy Successful",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*QuickPoll Production Deployed*\n*Commit:* `${{ github.sha }}`\n*Tag:* `release-${{ github.sha }}`\n*By:* ${{ github.actor }}\n*URL:* ${{ needs.terraform-apply.outputs.alb_url }}"
-                  }
-                }
-              ]
-            }
+            {"text": "*QuickPoll Production Deployed*\n*By:* ${{ github.actor }}\n*URL:* ${{ needs.terraform-apply.outputs.alb_url }}"}
 
       - name: Notify Slack on failure
-        if: needs.health-check.result == 'failure' || needs.terraform-apply.result == 'failure' || needs.build-and-push.result == 'failure'
+        if: needs.health-check.result == 'failure' || needs.terraform-apply.result == 'failure'
         uses: slackapi/slack-github-action@v2.0.0
         with:
           webhook: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
-            {
-              "text": "PRODUCTION Deploy Failed",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*QuickPoll PRODUCTION Deploy Failed*\n*Commit:* `${{ github.sha }}`\n*By:* ${{ github.actor }}\n*Run:* `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`\n\nImmediate attention required!"
-                  }
-                }
-              ]
-            }
+            {"text": "*QuickPoll PRODUCTION Deploy Failed*\n*By:* ${{ github.actor }}\n*Run:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}
