@@ -63,14 +63,18 @@ def generate_users(conn):
                 email,
                 password,
                 full_name,
-                role
+                role,
+                created_at,
+                updated_at
             )
             VALUES (
                 :id,
                 :email,
                 :password,
                 :full_name,
-                :role
+                :role,
+                :created_at,
+                :updated_at
             )
             """),
             {
@@ -78,7 +82,9 @@ def generate_users(conn):
                 "email": fake.email(),
                 "password": "password123",
                 "full_name": fake.name(),
-                "role": "USER"
+                "role": "USER",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
             }
         )
 
@@ -114,7 +120,9 @@ def generate_polls(conn, user_ids):
                 status,
                 creator_id,
                 multi_select,
-                expires_at
+                expires_at,
+                created_at,
+                updated_at
             )
             VALUES (
                 :id,
@@ -123,7 +131,9 @@ def generate_polls(conn, user_ids):
                 :status,
                 :creator_id,
                 :multi_select,
-                :expires_at
+                :expires_at,
+                :created_at,
+                :updated_at
             )
             """),
             {
@@ -133,7 +143,9 @@ def generate_polls(conn, user_ids):
                 "status": "ACTIVE",
                 "creator_id": creator,
                 "multi_select": random.choice([True, False]),
-                "expires_at": datetime.utcnow() + timedelta(days=7)
+                "expires_at": datetime.utcnow() + timedelta(days=7),
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
             }
         )
 
@@ -164,18 +176,24 @@ def generate_options(conn, poll_ids):
                 INSERT INTO poll_options (
                     id,
                     poll_id,
-                    option_text
+                    option_text,
+                    created_at,
+                    updated_at
                 )
                 VALUES (
                     :id,
                     :poll_id,
-                    :option_text
+                    :option_text,
+                    :created_at,
+                    :updated_at
                 )
                 """),
                 {
                     "id": option_id,
                     "poll_id": poll_id,
-                    "option_text": fake.word()
+                    "option_text": fake.word(),
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
                 }
             )
 
@@ -215,20 +233,26 @@ def generate_votes(conn, user_ids, option_ids):
                 id,
                 poll_id,
                 option_id,
-                user_id
+                user_id,
+                created_at,
+                updated_at
             )
             VALUES (
                 :id,
                 :poll_id,
                 :option_id,
-                :user_id
+                :user_id,
+                :created_at,
+                :updated_at
             )
             """),
             {
                 "id": str(uuid.uuid4()),
                 "poll_id": poll_id,
                 "option_id": option_id,
-                "user_id": user_id
+                "user_id": user_id,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
             }
         )
 
