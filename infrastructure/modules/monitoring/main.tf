@@ -44,7 +44,8 @@ resource "aws_ecs_task_definition" "jaeger" {
       ]
       environment = [
         { name = "COLLECTOR_OTLP_ENABLED", value = "true" },
-        { name = "QUERY_BASE_PATH", value = "/jaeger" }
+        { name = "QUERY_BASE_PATH", value = "/jaeger" },
+        { name = "QUERY_UI_CONFIG", value = jsonencode({ "menu": { "items": [{ "label": "About Jaeger", "url": "http://${var.alb_domain}/jaeger" }] } }) }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -165,6 +166,12 @@ resource "aws_ecs_service" "loki" {
     security_groups = [var.monitoring_security_group_id]
   }
 
+  load_balancer {
+    target_group_arn = var.loki_target_group_arn
+    container_name   = "loki"
+    container_port   = 3100
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.loki.arn
   }
@@ -189,9 +196,10 @@ resource "aws_ecs_task_definition" "grafana" {
       ]
       environment = [
         { name = "GF_SECURITY_ADMIN_PASSWORD", value = var.grafana_admin_password },
-        { name = "GF_SERVER_ROOT_URL", value = "/grafana/" },
+        { name = "GF_SERVER_ROOT_URL", value = "http://${var.alb_domain}/grafana/" },
         { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" },
-        { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url }
+        { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url },
+        { name = "GF_INSTALL_PLUGINS", value = "grafana-piechart-panel" }
       ]
       mountPoints = [
         {
@@ -205,6 +213,21 @@ resource "aws_ecs_task_definition" "grafana" {
           "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-grafana"
           "awslogs-region"        = "eu-north-1"
           "awslogs-stream-prefix" = "grafana"
+          "awslogs-create-group"  = "true"
+        }
+      }
+    },
+    {
+      name      = "grafana-provisioner"
+      image     = "curlimages/curl:latest"
+      essential = false
+      command   = ["sh", "-c", "sleep 15 && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://prometheus.monitoring.local:9090\",\"access\":\"proxy\",\"isDefault\":true}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.monitoring.local:3100\",\"access\":\"proxy\"}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Jaeger\",\"type\":\"jaeger\",\"uid\":\"jaeger\",\"url\":\"http://jaeger.monitoring.local:16686\",\"access\":\"proxy\"}' || true"]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-grafana"
+          "awslogs-region"        = "eu-north-1"
+          "awslogs-stream-prefix" = "grafana-provisioner"
           "awslogs-create-group"  = "true"
         }
       }
@@ -439,6 +462,12 @@ resource "aws_ecs_service" "alertmanager" {
   network_configuration {
     subnets         = var.private_subnet_ids
     security_groups = [var.monitoring_security_group_id]
+  }
+
+  load_balancer {
+    target_group_arn = var.alertmanager_target_group_arn
+    container_name   = "alertmanager"
+    container_port   = 9093
   }
 
   service_registries {

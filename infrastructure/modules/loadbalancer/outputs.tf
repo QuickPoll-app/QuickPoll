@@ -36,6 +36,16 @@ output "jaeger_target_group_arn" {
   value       = aws_lb_target_group.jaeger.arn
 }
 
+output "alertmanager_target_group_arn" {
+  description = "ARN of the AlertManager target group"
+  value       = aws_lb_target_group.alertmanager.arn
+}
+
+output "loki_target_group_arn" {
+  description = "ARN of the Loki target group"
+  value       = aws_lb_target_group.loki.arn
+}
+
 output "http_listener_arn" {
   description = "ARN of the HTTP listener"
   value       = aws_lb_listener.http.arn

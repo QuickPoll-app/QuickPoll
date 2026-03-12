@@ -40,6 +40,14 @@ variable "jaeger_target_group_arn" {
   type = string
 }
 
+variable "alertmanager_target_group_arn" {
+  type = string
+}
+
+variable "loki_target_group_arn" {
+  type = string
+}
+
 variable "efs_monitoring_id" {
   type = string
 }
@@ -74,4 +82,9 @@ variable "slack_webhook_url" {
   description = "Slack webhook URL for Grafana alerts"
   type        = string
   sensitive   = true
+}
+
+variable "alb_domain" {
+  description = "ALB domain name for Grafana and Jaeger root URLs"
+  type        = string
 }
