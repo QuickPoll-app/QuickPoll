@@ -32,31 +32,41 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.0"
-
-      - name: Get RDS endpoint from Terraform state
-        id: terraform
-        working-directory: ./infrastructure/environments/staging
+      - name: Get RDS endpoint from AWS (Direct)
+        id: rds
         run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=staging/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ secrets.TF_STATE_TABLE }}" \
-            -backend-config="encrypt=true"
-          DB_HOST=$(terraform output -raw db_address)
-          DB_PORT=$(terraform output -raw db_port)
+          # Find the staging RDS instance directly via AWS CLI endpoint search
+          DB_HOST=$(aws rds describe-db-instances \
+            --query "DBInstances[?contains(DBInstanceIdentifier, 'staging')].Endpoint.Address" \
+            --output text)
+          DB_PORT=$(aws rds describe-db-instances \
+            --query "DBInstances[?contains(DBInstanceIdentifier, 'staging')].Endpoint.Port" \
+            --output text)
+
+          if [ -z "$DB_HOST" ] || [ "$DB_HOST" = "None" ]; then
+            echo "❌ Could not find staging RDS instance automatically"
+            echo "Listing all instances to help debug:"
+            aws rds describe-db-instances --query "DBInstances[*].{ID:DBInstanceIdentifier,Status:DBInstanceStatus}" --output table
+            
+            # Fallback: just take the first one if there is only one
+            DB_HOST=$(aws rds describe-db-instances --query "DBInstances[0].Endpoint.Address" --output text)
+            DB_PORT=$(aws rds describe-db-instances --query "DBInstances[0].Endpoint.Port" --output text)
+            
+            if [ -z "$DB_HOST" ] || [ "$DB_HOST" = "None" ]; then
+                exit 1
+            fi
+            echo "⚠️ Using fallback (first available instance): $DB_HOST"
+          fi
+
+          echo "✅ Found RDS: $DB_HOST:$DB_PORT"
           echo "db_host=$DB_HOST" >> $GITHUB_OUTPUT
           echo "db_port=$DB_PORT" >> $GITHUB_OUTPUT
 
       - name: Show current admin user state (before fix)
         env:
           PGPASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-          DB_HOST: ${{ steps.terraform.outputs.db_host }}
-          DB_PORT: ${{ steps.terraform.outputs.db_port }}
+          DB_HOST: ${{ steps.rds.outputs.db_host }}
+          DB_PORT: ${{ steps.rds.outputs.db_port }}
         run: |
           echo "=== BEFORE FIX ==="
           psql -h "$DB_HOST" -p "$DB_PORT" -U quickpoll -d quickpoll \
@@ -70,16 +80,15 @@ jobs:
       - name: Apply admin fix directly to RDS
         env:
           PGPASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-          DB_HOST: ${{ steps.terraform.outputs.db_host }}
-          DB_PORT: ${{ steps.terraform.outputs.db_port }}
+          DB_HOST: ${{ steps.rds.outputs.db_host }}
+          DB_PORT: ${{ steps.rds.outputs.db_port }}
         run: |
           psql -h "$DB_HOST" -p "$DB_PORT" -U quickpoll -d quickpoll << 'SQL'
-          -- Step 1: Remove any votes/polls owned by the corrupted admin (wrong role)
+          -- Step 1: Remove votes/polls owned by the corrupted admin
           DELETE FROM votes
             WHERE user_id IN (
               SELECT id FROM users WHERE email = 'admin@amalitech.com' AND role != 'ADMIN'
             );
-
           DELETE FROM polls
             WHERE creator_id IN (
               SELECT id FROM users WHERE email = 'admin@amalitech.com' AND role != 'ADMIN'
@@ -113,15 +122,13 @@ jobs:
 
           echo "✅ SQL patch applied successfully"
 
-      - name: Mark V10 as applied in Flyway history (so it won't re-run on deploy)
+      - name: Mark V10 as applied in Flyway history
         env:
           PGPASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-          DB_HOST: ${{ steps.terraform.outputs.db_host }}
-          DB_PORT: ${{ steps.terraform.outputs.db_port }}
+          DB_HOST: ${{ steps.rds.outputs.db_host }}
+          DB_PORT: ${{ steps.rds.outputs.db_port }}
         run: |
           psql -h "$DB_HOST" -p "$DB_PORT" -U quickpoll -d quickpoll << 'SQL'
-          -- Insert V10 into flyway_schema_history so Flyway won't try to run it again
-          -- (it already applied the same changes above)
           INSERT INTO flyway_schema_history
             (installed_rank, version, description, type, script, checksum, installed_by, installed_on, execution_time, success)
           SELECT
@@ -139,14 +146,13 @@ jobs:
             SELECT 1 FROM flyway_schema_history WHERE version = '10'
           );
           SQL
-
           echo "✅ Flyway V10 entry ensured"
 
-      - name: Show admin user state (after fix)
+      - name: Verify fix worked
         env:
           PGPASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-          DB_HOST: ${{ steps.terraform.outputs.db_host }}
-          DB_PORT: ${{ steps.terraform.outputs.db_port }}
+          DB_HOST: ${{ steps.rds.outputs.db_host }}
+          DB_PORT: ${{ steps.rds.outputs.db_port }}
         run: |
           echo "=== AFTER FIX ==="
           ROLE=$(psql -h "$DB_HOST" -p "$DB_PORT" -U quickpoll -d quickpoll \
@@ -154,13 +160,13 @@ jobs:
           NAME=$(psql -h "$DB_HOST" -p "$DB_PORT" -U quickpoll -d quickpoll \
             -t -c "SELECT full_name FROM users WHERE email = 'admin@amalitech.com';" | xargs)
 
-          echo "Name: $NAME"
-          echo "Role: $ROLE"
+          echo "Name : $NAME"
+          echo "Role : $ROLE"
 
           if [ "$ROLE" = "ADMIN" ]; then
-            echo "✅ Admin user is CORRECT — role=ADMIN, name=$NAME"
+            echo "✅ SUCCESS — admin@amalitech.com is now ADMIN"
           else
-            echo "❌ Fix did not work — role=$ROLE"
+            echo "❌ FAILED — role is still: $ROLE"
             exit 1
           fi
 
