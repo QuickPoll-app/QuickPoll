@@ -176,24 +176,18 @@ def generate_options(conn, poll_ids):
                 INSERT INTO poll_options (
                     id,
                     poll_id,
-                    option_text,
-                    created_at,
-                    updated_at
+                    option_text
                 )
                 VALUES (
                     :id,
                     :poll_id,
-                    :option_text,
-                    :created_at,
-                    :updated_at
+                    :option_text
                 )
                 """),
                 {
                     "id": option_id,
                     "poll_id": poll_id,
-                    "option_text": fake.word(),
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "option_text": fake.word()
                 }
             )
 
