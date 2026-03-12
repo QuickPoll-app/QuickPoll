@@ -17,4 +17,10 @@
         </classes>
     </test>
 
+    <test name="Vote Tests">
+        <classes>
+            <class name="com.amalitech.qa.vote.VoteApiTest"/>
+        </classes>
+    </test>
+
 </suite>
