@@ -172,7 +172,7 @@ module "monitoring" {
   efs_access_point_alertmanager_id = module.storage.efs_access_point_alertmanager_id
   grafana_admin_password           = "admin123"
   slack_webhook_url                = var.slack_webhook_url
-  alb_domain                       = "${var.project_name}-${local.environment}-alb.${var.aws_region}.elb.amazonaws.com"
+  alb_domain                       = module.loadbalancer.alb_dns_name
   tags                             = local.tags
 
   depends_on = [module.loadbalancer]
