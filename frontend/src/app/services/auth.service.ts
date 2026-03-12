@@ -1,7 +1,9 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable, tap } from "rxjs";
+import { Observable, tap, map } from "rxjs";
 import { ILoginRequest, IRegisterRequest, IAuthResponse } from "../models";
+
+type StoredUser = Omit<IAuthResponse, "token">;
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
@@ -12,13 +14,28 @@ export class AuthService {
   public login(email: string, password: string): Observable<IAuthResponse> {
     const request: ILoginRequest = { email, password };
 
-    return this.http.post<IAuthResponse>(`${this.apiUrl}/login`, request).pipe(
+    return this.http.post<{ data: IAuthResponse }>(`${this.apiUrl}/login`, request).pipe(
       tap((res) => {
-        localStorage.setItem("token", res.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
-        );
+        if (!res.data) {
+          throw new Error("Invalid response: missing data field");
+        }
+
+        localStorage.setItem("token", res.data.token);
+
+        const userData: StoredUser = {
+          name: res.data.name,
+          email: res.data.email,
+          role: res.data.role,
+        };
+
+        localStorage.setItem("user", JSON.stringify(userData));
+      }),
+      map((res) => {
+        if (!res.data) {
+          throw new Error("Invalid response: missing data field");
+        }
+
+        return res.data;
       }),
     );
   }
@@ -26,13 +43,28 @@ export class AuthService {
   public register(name: string, email: string, password: string): Observable<IAuthResponse> {
     const request: IRegisterRequest = { name, email, password };
 
-    return this.http.post<IAuthResponse>(`${this.apiUrl}/register`, request).pipe(
+    return this.http.post<{ data: IAuthResponse }>(`${this.apiUrl}/register`, request).pipe(
       tap((res) => {
-        localStorage.setItem("token", res.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ name: res.name, email: res.email, role: res.role }),
-        );
+        if (!res.data) {
+          throw new Error("Invalid response: missing data field");
+        }
+
+        localStorage.setItem("token", res.data.token);
+
+        const userData: StoredUser = {
+          name: res.data.name,
+          email: res.data.email,
+          role: res.data.role,
+        };
+
+        localStorage.setItem("user", JSON.stringify(userData));
+      }),
+      map((res) => {
+        if (!res.data) {
+          throw new Error("Invalid response: missing data field");
+        }
+
+        return res.data;
       }),
     );
   }
@@ -50,9 +82,9 @@ export class AuthService {
     return localStorage.getItem("token");
   }
 
-  public getUser(): { name: string; email: string; role: string } | null {
-    const u = localStorage.getItem("user");
+  public getUser(): StoredUser | null {
+    const user = localStorage.getItem("user");
 
-    return u ? JSON.parse(u) : null;
+    return user ? JSON.parse(user) : null;
   }
 }

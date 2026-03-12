@@ -135,11 +135,13 @@ public class AuthApiTest extends BaseTest {
 
         // Save user token for use in JWT tests
         if (expectedRole.equals("USER")) {
-            userToken = response.jsonPath().getString("data.token");        }
+            userToken = response.jsonPath().getString("data.token");
+        }
 
         // Save admin token for use in role management tests
         if (expectedRole.equals("ADMIN")) {
-            adminToken = response.jsonPath().getString("data.token");        }
+            adminToken = response.jsonPath().getString("data.token");
+        }
     }
 
     @Test(priority = 5,
