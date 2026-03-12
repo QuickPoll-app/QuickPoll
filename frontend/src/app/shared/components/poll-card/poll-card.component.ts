@@ -3,6 +3,7 @@ import { BadgeComponent } from "../badge/badge.component";
 
 @Component({
   selector: "app-poll-card",
+  standalone: true,
   imports: [BadgeComponent],
   templateUrl: "./poll-card.component.html",
   styleUrl: "./poll-card.component.css",
