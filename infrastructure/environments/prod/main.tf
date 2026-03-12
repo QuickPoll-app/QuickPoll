@@ -165,6 +165,9 @@ module "monitoring" {
   ecs_task_execution_role_arn      = module.security.ecs_task_execution_role_arn
   monitoring_target_group_arn      = module.loadbalancer.monitoring_target_group_arn
   jaeger_target_group_arn          = module.loadbalancer.jaeger_target_group_arn
+  alertmanager_target_group_arn    = module.loadbalancer.alertmanager_target_group_arn
+  loki_target_group_arn            = module.loadbalancer.loki_target_group_arn
+  prometheus_target_group_arn      = module.loadbalancer.prometheus_target_group_arn
   efs_monitoring_id                = module.storage.efs_monitoring_id
   efs_access_point_grafana_id      = module.storage.efs_access_point_grafana_id
   efs_access_point_loki_id         = module.storage.efs_access_point_loki_id
