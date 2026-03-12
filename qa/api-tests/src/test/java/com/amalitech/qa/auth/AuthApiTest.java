@@ -42,8 +42,8 @@ public class AuthApiTest extends BaseTest {
                 .statusCode(expectedStatus)
                 .body(matchesJsonSchemaInClasspath(
                         "schemas/auth/register-response.json"))
-                .body("email", equalTo(email))
-                .body("role", equalTo("USER"));
+                .body("data.email", equalTo(email))
+                .body("data.role", equalTo("USER"));
     }
 
     @Test(priority = 2,
@@ -129,18 +129,18 @@ public class AuthApiTest extends BaseTest {
                 .statusCode(expectedStatus)
                 .body(matchesJsonSchemaInClasspath(
                         "schemas/auth/login-response.json"))
-                .body("token", notNullValue())
-                .body("role", equalTo(expectedRole))
+                .body("data.token", notNullValue())
+                .body("data.role", equalTo(expectedRole))
                 .extract().response();
 
         // Save user token for use in JWT tests
         if (expectedRole.equals("USER")) {
-            userToken = response.jsonPath().getString("token");
+            userToken = response.jsonPath().getString("data.token");
         }
 
         // Save admin token for use in role management tests
         if (expectedRole.equals("ADMIN")) {
-            adminToken = response.jsonPath().getString("token");
+            adminToken = response.jsonPath().getString("data.token");
         }
     }
 
