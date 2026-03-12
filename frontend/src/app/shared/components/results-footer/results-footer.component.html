@@ -1,0 +1,31 @@
+<section class="footer-container">
+  <div class="stats-group">
+    <div class="stat-item">
+      <div class="stat-value">{{ totalVotes() }}</div>
+      <div class="stat-label">Total Votes</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" [style.color]="getParticipationColor()">{{ participation() }}%</div>
+      <div class="stat-label">Participation</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" [ngClass]="{ 'expired-date': isExpired() }">
+        {{ isExpired() ? closedDate() : lastUpdated() }}
+      </div>
+      <div class="stat-label">{{ isExpired() ? "Closed Date" : "Last Updated" }}</div>
+    </div>
+  </div>
+
+  @if (!isExpired()) {
+    <div class="actions-group">
+      <div class="auto-refresh">
+        <div class="pulse-dot"></div>
+        <span>Auto-refresh in {{ autoRefreshCountdown() }}s</span>
+      </div>
+      <button type="button" class="refresh-btn" (click)="onRefresh()">
+        <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  }
+</section>
