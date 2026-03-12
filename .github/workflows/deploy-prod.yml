@@ -136,6 +136,10 @@ jobs:
     name: Post-Deploy Health Check
     runs-on: ubuntu-latest
     needs: terraform-apply
+    outputs:
+      cluster_name: ${{ steps.capture-cluster.outputs.cluster_name }}
+      subnet_ids: ${{ steps.capture-cluster.outputs.subnet_ids }}
+      sg_id: ${{ steps.capture-cluster.outputs.sg_id }}
     env:
       ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
     steps:
@@ -157,10 +161,46 @@ jobs:
           status=$(curl -s -o /dev/null -w "%{http_code}" "${ALB_URL}/" || true)
           [ "$status" = "200" ] && echo "Frontend OK" || { echo "Frontend failed: $status"; exit 1; }
 
+      - name: Capture cluster info
+        id: capture-cluster
+        working-directory: ./infrastructure/environments/prod
+        continue-on-error: true
+        run: |
+          CLUSTER=$(terraform output -raw ecs_cluster_name)
+          echo "cluster_name=$CLUSTER" >> "$GITHUB_OUTPUT"
+          
+          SUBNETS=$(terraform output -json private_subnet_ids | jq -r 'join(",")')
+          echo "subnet_ids=$SUBNETS" >> "$GITHUB_OUTPUT"
+          
+          SG=$(terraform output -raw ecs_tasks_security_group_id)
+          echo "sg_id=$SG" >> "$GITHUB_OUTPUT"
+
+  seed-data:
+    name: Run Data Generator Task
+    runs-on: ubuntu-latest
+    needs: health-check
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run ECS Task
+        run: |
+          SUBNETS_FMT=$(echo "${{ needs.health-check.outputs.subnet_ids }}" | sed 's/,/","/g')
+          
+          aws ecs run-task \
+            --cluster "${{ needs.health-check.outputs.cluster_name }}" \
+            --task-definition "${{ vars.PROJECT_NAME }}-prod-data-generator" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[\"${SUBNETS_FMT}\"],securityGroups=[${{ needs.health-check.outputs.sg_id }}],assignPublicIp=DISABLED}"
+
   tag-release:
     name: Tag Release
     runs-on: ubuntu-latest
-    needs: health-check
+    needs: [health-check, seed-data]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -181,7 +221,7 @@ jobs:
   notify:
     name: Notify Deployment
     runs-on: ubuntu-latest
-    needs: [build-and-push, terraform-apply, health-check, tag-release]
+    needs: [build-and-push, terraform-apply, health-check, seed-data, tag-release]
     if: always()
     env:
       ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
