@@ -47,6 +47,9 @@ INSERT INTO users (id, email, password, full_name, role, created_at, updated_at)
 ('550e8400-e29b-41d4-a716-446655440000', 'admin@amalitech.com', '$2a$10$Pbjy8rZd5CnfNlmMtx6sSOdksvM7VnaVX7sSFNuzz8S14MczE/UuS', 'Admin User', 'ADMIN', NOW(), NOW()),
 ('550e8400-e29b-41d4-a716-446655440001', 'user@amalitech.com', '$2a$10$Pbjy8rZd5CnfNlmMtx6sSOdksvM7VnaVX7sSFNuzz8S14MczE/UuS', 'Regular User', 'USER', NOW(), NOW());
 
+-- Final safety check to override any accidental test data
+UPDATE users SET full_name = 'Admin User', role = 'ADMIN' WHERE email = 'admin@amalitech.com';
+
 -- Seed polls
 INSERT INTO polls (id, title, description, status, creator_id, multi_select, created_at, updated_at, expires_at) VALUES
 ('660e8400-e29b-41d4-a716-446655440001', 'Best Programming Language', 'Vote for your favorite', 'ACTIVE', '550e8400-e29b-41d4-a716-446655440000', true, NOW(), NOW(), NOW() + INTERVAL '30 days'),

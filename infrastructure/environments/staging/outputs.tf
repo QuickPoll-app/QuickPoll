@@ -18,8 +18,18 @@ output "ecs_cluster_name" {
 }
 
 output "db_endpoint" {
-  description = "Staging RDS endpoint"
+  description = "Staging RDS endpoint (host:port)"
   value       = module.database.db_endpoint
+}
+
+output "db_address" {
+  description = "Staging RDS address"
+  value       = module.database.db_address
+}
+
+output "db_port" {
+  description = "Staging RDS port"
+  value       = module.database.db_port
 }
 
 output "backend_ecr_url" {

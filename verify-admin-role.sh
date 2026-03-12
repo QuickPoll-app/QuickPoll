@@ -56,8 +56,8 @@ if [ "$ADMIN_ROLE" = "ADMIN" ]; then
 else
   echo "❌ Admin role is INCORRECT (expected: ADMIN, got: $ADMIN_ROLE)"
   echo ""
-  echo "🔧 Fixing admin role..."
-  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "UPDATE users SET role = 'ADMIN' WHERE email = '$ADMIN_EMAIL';"
-  echo "✅ Admin role has been corrected"
+  echo "🔧 Fixing admin user (role and name)..."
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "UPDATE users SET role = 'ADMIN', full_name = 'Admin User' WHERE email = '$ADMIN_EMAIL';"
+  echo "✅ Admin user has been corrected"
   exit 0
 fi
