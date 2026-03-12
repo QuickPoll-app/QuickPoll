@@ -45,7 +45,7 @@ resource "aws_ecs_task_definition" "jaeger" {
       environment = [
         { name = "COLLECTOR_OTLP_ENABLED", value = "true" },
         { name = "QUERY_BASE_PATH", value = "/jaeger" },
-        { name = "QUERY_UI_CONFIG", value = jsonencode({ "menu": { "items": [{ "label": "About Jaeger", "url": "http://${var.alb_domain}/jaeger" }] } }) }
+        { name = "QUERY_UI_CONFIG", value = jsonencode({ "menu" : { "items" : [{ "label" : "About Jaeger", "url" : "http://${var.alb_domain}/jaeger" }] } }) }
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -224,7 +224,7 @@ resource "aws_ecs_task_definition" "grafana" {
       name      = "grafana-provisioner"
       image     = "curlimages/curl:latest"
       essential = false
-      command   = ["sh", "-c", "sleep 15 && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://prometheus.monitoring.local:9090\",\"access\":\"proxy\",\"isDefault\":true}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.monitoring.local:3100\",\"access\":\"proxy\"}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Jaeger\",\"type\":\"jaeger\",\"uid\":\"jaeger\",\"url\":\"http://jaeger.monitoring.local:16686\",\"access\":\"proxy\"}' || true"]
+      command   = ["sh", "-c", "sleep 15 && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Prometheus\",\"type\":\"prometheus\",\"url\":\"http://prometheus.${var.service_discovery_namespace_name}:9090\",\"access\":\"proxy\",\"isDefault\":true}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Loki\",\"type\":\"loki\",\"url\":\"http://loki.${var.service_discovery_namespace_name}:3100\",\"access\":\"proxy\"}' || true && curl -X POST http://grafana:3000/api/datasources -H 'Content-Type: application/json' -u admin:${var.grafana_admin_password} -d '{\"name\":\"Jaeger\",\"type\":\"jaeger\",\"uid\":\"jaeger\",\"url\":\"http://jaeger.${var.service_discovery_namespace_name}:16686\",\"access\":\"proxy\"}' || true"]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -322,7 +322,7 @@ resource "aws_ecs_task_definition" "prometheus" {
         }
       ]
       environment = [
-        { name = "BACKEND_HOST", value = "backend.${var.project_name}-${var.environment}.local" }
+        { name = "BACKEND_HOST", value = "backend.${var.service_discovery_namespace_name}" }
       ]
       logConfiguration = {
         logDriver = "awslogs"

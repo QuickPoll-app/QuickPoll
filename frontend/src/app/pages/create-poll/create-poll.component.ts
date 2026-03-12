@@ -1,88 +1,116 @@
-import { Component, ChangeDetectionStrategy } from "@angular/core";
+import {
+  Component,
+  signal,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ChangeDetectionStrategy,
+  inject,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 import { PollService } from "../../services/poll.service";
+import { ICreatePollRequest } from "../../models/poll.model";
+import { ButtonsComponent } from "../../shared/components/buttons/buttons.component";
+import { ToggleComponent } from "../../shared/components/toggle/toggle.component";
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: "app-create-poll",
-  imports: [CommonModule, FormsModule],
-  template: `
-    <main style="max-width:600px;margin:60px auto">
-      <h1>Create New Poll</h1>
-      @if (error) {
-        <p style="color:red">{{ error }}</p>
-      }
-      <form (ngSubmit)="onSubmit()">
-        <input
-          type="text"
-          [(ngModel)]="question"
-          name="question"
-          placeholder="Your question"
-          required
-        />
-        <textarea
-          [(ngModel)]="description"
-          name="description"
-          rows="3"
-          placeholder="Description (optional)"
-        ></textarea>
-        <h3>Options</h3>
-        @for (opt of options; track $index; let i = $index) {
-          <input
-            type="text"
-            [(ngModel)]="options[i]"
-            [name]="'option' + i"
-            [placeholder]="'Option ' + (i + 1)"
-            required
-          />
-        }
-        <button type="button" class="btn" style="margin-bottom:12px" (click)="addOption()">
-          + Add Option
-        </button>
-        <label style="display:block;margin-bottom:12px">
-          <input type="checkbox" [(ngModel)]="multipleChoice" name="multipleChoice" /> Allow
-          multiple selections
-        </label>
-        <button type="submit" class="btn btn-primary" style="width:100%">Create Poll</button>
-      </form>
-    </main>
-  `,
+  imports: [CommonModule, ReactiveFormsModule, ButtonsComponent, ToggleComponent],
+  templateUrl: "./create-poll.component.html",
+  styleUrl: "./create-poll.component.css",
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class CreatePollComponent {
-  question = "";
-  description = "";
-  multipleChoice = false;
-  options = ["", ""];
-  error = "";
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private pollService = inject(PollService);
 
-  constructor(
-    private pollService: PollService,
-    private router: Router,
-  ) {}
+  public pollForm: FormGroup;
+  public questionCharCount = signal(0);
+  public descriptionCharCount = signal(0);
+  public anonymousVoting = signal(false);
 
-  addOption() {
-    this.options.push("");
+  constructor() {
+    this.pollForm = this.fb.group({
+      question: ["", [Validators.required, Validators.maxLength(200)]],
+      description: ["", Validators.maxLength(500)],
+      pollType: ["single", Validators.required],
+      expiryDate: ["", Validators.required],
+      options: this.fb.array([
+        this.fb.control("", Validators.required),
+        this.fb.control("", Validators.required),
+      ]),
+    });
+
+    this.pollForm.get("question")?.valueChanges.subscribe((value) => {
+      this.questionCharCount.set(value?.length || 0);
+    });
+
+    this.pollForm.get("description")?.valueChanges.subscribe((value) => {
+      this.descriptionCharCount.set(value?.length || 0);
+    });
   }
 
-  onSubmit() {
-    const validOptions = this.options.filter((o) => o.trim());
+  public get options(): FormArray {
+    return this.pollForm.get("options") as FormArray;
+  }
 
-    if (validOptions.length < 2) {
-      this.error = "At least 2 options required";
+  public addOption() {
+    this.options.push(this.fb.control("", Validators.required));
+  }
+
+  public removeOption(index: number) {
+    if (this.options.length > 2) {
+      this.options.removeAt(index);
+    }
+  }
+
+  public onToggleAnonymous(checked: boolean) {
+    this.anonymousVoting.set(checked);
+  }
+
+  public onCancel() {
+    this.router.navigate(["/polls"]);
+  }
+
+  public onSubmit() {
+    if (!this.pollForm.valid) {
+      this.pollForm.markAllAsTouched();
       return;
     }
-    this.pollService
-      .create({
-        question: this.question,
-        description: this.description,
-        options: validOptions,
-        multipleChoice: this.multipleChoice,
-      })
-      .subscribe({
-        next: () => this.router.navigate(["/"]),
-        error: () => (this.error = "Failed to create poll"),
-      });
+
+    const formValue = this.pollForm.getRawValue();
+
+    const options = ((formValue.options ?? []) as string[])
+      .map((opt: string) => (opt ?? "").toString().trim())
+      .filter((opt: string) => opt.length > 0);
+
+    const uniqueOptions = Array.from(new Set<string>(options));
+
+    if (uniqueOptions.length < 2) {
+      console.error("Poll must have at least 2 unique options");
+      return;
+    }
+
+    const pollRequest: ICreatePollRequest = {
+      question: (formValue.question ?? "").trim(),
+      description:
+        formValue.description && formValue.description.trim() !== ""
+          ? formValue.description.trim()
+          : "No description provided",
+      options: uniqueOptions,
+      multipleChoice: formValue.pollType === "multiple",
+      expiresAt: formValue.expiryDate ? `${formValue.expiryDate}T23:59:59Z` : null,
+    };
+
+    this.pollService.createPoll(pollRequest).subscribe({
+      next: () => {
+        this.router.navigate(["/polls"]);
+      },
+      error: (error) => {
+        console.error("Error creating poll", error);
+      },
+    });
   }
 }

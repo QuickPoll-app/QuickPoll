@@ -1,0 +1,40 @@
+.nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.icon-wrapper iconify-icon {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.33333;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+}
+
+.nav-button.active .icon-wrapper iconify-icon {
+  color: var(--color-primary-700);
+}
+
+.nav-button.active .label {
+  color: var(--color-primary-700);
+  font-weight: 500;
+}

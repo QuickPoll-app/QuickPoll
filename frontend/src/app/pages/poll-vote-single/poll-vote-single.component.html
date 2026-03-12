@@ -1,0 +1,118 @@
+<div class="poll-container">
+  <aside class="sidebar">
+    <app-sidebar [navItems]="navItems" [userProfile]="userProfile"></app-sidebar>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-section">
+      <button type="button" class="back-button" (click)="onBackClick()">
+        <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+        <span>Back to Polls</span>
+      </button>
+    </div>
+
+    <div class="poll-card">
+      <div class="poll-header">
+        <div class="poll-title-section">
+          <h1 class="poll-title">{{ poll.title }}</h1>
+          <p class="poll-description">{{ poll.description }}</p>
+        </div>
+        <app-badge variant="type">{{ poll.type }}</app-badge>
+      </div>
+
+      <div class="poll-meta">
+        <div class="meta-item">
+          <iconify-icon icon="lucide:clock" class="meta-icon"></iconify-icon>
+          <span class="meta-text">Expires in {{ poll.expiresIn }}</span>
+        </div>
+        <div class="meta-item">
+          <iconify-icon icon="lucide:users" class="meta-icon"></iconify-icon>
+          <span class="meta-text">{{ poll.votes }} votes so far</span>
+        </div>
+      </div>
+
+      @if (poll.isAnonymous) {
+        <div class="anonymous-notice">
+          <iconify-icon icon="lucide:eye-off"></iconify-icon>
+          <span>This poll is anonymous - your identity will not be revealed with your vote</span>
+        </div>
+      }
+    </div>
+
+    <div class="options-section">
+      <h2 class="options-title">Select your choice:</h2>
+      <div class="options-list">
+        @for (option of options; track option.id) {
+          <label class="option-item" [class.selected]="selectedOption() === option.id">
+            <input
+              type="radio"
+              [value]="option.id"
+              [checked]="selectedOption() === option.id"
+              (change)="onOptionSelect(option.id)"
+              class="option-input"
+            />
+            <div class="option-content">
+              <div class="option-header">
+                <div
+                  class="radio-indicator"
+                  [class.selected]="selectedOption() === option.id"
+                ></div>
+                <div class="option-text">
+                  <h3 class="option-label">{{ option.label }}</h3>
+                  <p class="option-description">{{ option.description }}</p>
+                </div>
+              </div>
+            </div>
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="submit-section">
+      @if (error()) {
+        <div class="error-message">
+          <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+          <span>{{ error() }}</span>
+          <app-buttons variant="secondary" (clicked)="onRetry()">
+            <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
+            <span>Retry</span>
+          </app-buttons>
+        </div>
+      }
+
+      @if (!isSubmitted()) {
+        <app-buttons
+          [disabled]="!selectedOption() || isSubmitting()"
+          [loading]="isSubmitting()"
+          variant="primary"
+          (clicked)="onSubmitVote()"
+        >
+          <iconify-icon icon="lucide:vote"></iconify-icon>
+          <span>{{ isSubmitting() ? "Submitting..." : "Submit Vote" }}</span>
+        </app-buttons>
+      }
+
+      <div class="warning-text">
+        <p>⚠️ Votes are final and cannot be changed once submitted</p>
+      </div>
+    </div>
+
+    <app-modal [isOpen]="showSuccessModal()" (closed)="onCloseSuccessModal()">
+      <div class="success-modal-content">
+        <div class="success-icon">
+          <iconify-icon icon="lucide:check-circle"></iconify-icon>
+        </div>
+        <h2 class="success-title">Vote Submitted Successfully!</h2>
+        <p class="success-description">You voted for:</p>
+        <div class="voted-option">
+          <iconify-icon icon="lucide:vote"></iconify-icon>
+          <strong>{{ votedOptionLabel() }}</strong>
+        </div>
+        <app-buttons variant="primary" (clicked)="onCloseSuccessModal()">
+          <span>View Results</span>
+          <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+        </app-buttons>
+      </div>
+    </app-modal>
+  </main>
+</div>

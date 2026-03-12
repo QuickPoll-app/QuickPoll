@@ -6,6 +6,7 @@ let nextId = 0;
 
 @Component({
   selector: "app-input",
+  standalone: true,
   imports: [CommonModule],
   templateUrl: "./input.component.html",
   styleUrl: "./input.component.css",

@@ -66,6 +66,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       JWT_SECRET: ${JWT_SECRET}
       SERVER_PORT: "${SERVER_PORT:-8081}"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: "http://jaeger:4318/v1/traces"
     depends_on:
       postgres:
         condition: service_healthy

@@ -18,14 +18,17 @@
       }
     </ul>
   </nav>
-
+  <button type="button" class="theme-toggle" (click)="onToggleTheme()" title="Toggle theme">
+    <iconify-icon [icon]="isDarkMode() ? 'lucide:sun' : 'lucide:moon'"></iconify-icon>
+  </button>
   <footer class="sidebar-footer">
     <div class="user-profile">
-      <img [src]="userProfile().avatar" [alt]="userProfile().name" class="user-avatar" />
+      <div class="user-avatar-initials">{{ userInitials() }}</div>
       <div class="user-info">
         <div class="user-name">{{ userProfile().name }}</div>
         <div class="user-role">{{ userProfile().role }}</div>
       </div>
+      <button type="button" class="logout-btn" (click)="onLogout()" title="Logout">Logout</button>
     </div>
   </footer>
 </aside>

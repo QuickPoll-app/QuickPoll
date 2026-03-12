@@ -19,6 +19,10 @@ variable "service_discovery_namespace_id" {
   type = string
 }
 
+variable "service_discovery_namespace_name" {
+  type = string
+}
+
 variable "monitoring_security_group_id" {
   type = string
 }

@@ -1,4 +1,11 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal, DestroyRef, inject } from "@angular/core";
+import {
+  Component,
+  ChangeDetectionStrategy,
+  OnInit,
+  signal,
+  DestroyRef,
+  inject,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Router } from "@angular/router";
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
@@ -34,61 +41,71 @@ import {
 })
 export class DashboardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
-  
+  private router = inject(Router);
+  private dashboardService = inject(DashboardService);
+
   public stats = signal<IStatCard[]>([]);
   public activePolls = signal<IActivePoll[]>([]);
   public recentResults = signal<IRecentResult[]>([]);
+  public activePollsTotal = signal<number>(0);
   public statsLoading = signal(true);
   public activePollsLoading = signal(true);
   public recentResultsLoading = signal(true);
   public error = signal<string | null>(null);
 
-  constructor(
-    private router: Router,
-    private dashboardService: DashboardService,
-  ) {}
-
-  ngOnInit() {
+  public ngOnInit() {
     this.loadDashboardData();
   }
 
   private loadDashboardData() {
-    this.dashboardService.getStats()
+    this.statsLoading.set(true);
+    this.activePollsLoading.set(true);
+    this.recentResultsLoading.set(true);
+    this.error.set(null);
+
+    this.dashboardService
+      .getStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats) => {
           this.stats.set(stats);
           this.statsLoading.set(false);
         },
-        error: () => {
+        error: (error) => {
+          console.error("Stats loading error:", error);
           this.statsLoading.set(false);
-          this.error.set('Failed to load statistics');
+          this.stats.set([]);
         },
       });
 
-    this.dashboardService.getActivePolls()
+    this.dashboardService
+      .getActivePolls(0, 10)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (polls) => {
-          this.activePolls.set(polls);
+        next: (response) => {
+          this.activePolls.set(response.polls);
+          this.activePollsTotal.set(response.total);
           this.activePollsLoading.set(false);
         },
-        error: () => {
+        error: (error) => {
+          console.error("Active polls loading error:", error);
           this.activePollsLoading.set(false);
-          this.error.set('Failed to load active polls');
+          this.error.set("Failed to load active polls");
         },
       });
 
-    this.dashboardService.getRecentResults()
+    this.dashboardService
+      .getRecentResults()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (results) => {
           this.recentResults.set(results);
           this.recentResultsLoading.set(false);
         },
-        error: () => {
+        error: (error) => {
+          console.error("Recent results loading error:", error);
           this.recentResultsLoading.set(false);
-          this.error.set('Failed to load recent results');
+          this.recentResults.set([]);
         },
       });
   }

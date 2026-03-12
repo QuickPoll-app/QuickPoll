@@ -106,7 +106,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "SERVER_PORT", value = "8081" },
         { name = "SPRING_DATA_REDIS_HOST", value = var.redis_host },
         { name = "SPRING_DATA_REDIS_PORT", value = var.redis_port },
-        { name = "MANAGEMENT_OTLP_TRACING_ENDPOINT", value = "http://jaeger.monitoring.local:4318/v1/traces" }
+        { name = "MANAGEMENT_OTLP_TRACING_ENDPOINT", value = "http://jaeger.${var.service_discovery_namespace_name}:4318/v1/traces" }
       ]
 
       secrets = [
@@ -115,14 +115,11 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       logConfiguration = {
-        logDriver = "awsfirelens"
+        logDriver = "awslogs"
         options = {
-          "Name"       = "loki"
-          "Url"        = "http://loki.monitoring.local:3100/loki/api/v1/push"
-          "Labels"     = "{job=\"backend\", env=\"${var.environment}\"}"
-          "RemoveKeys" = "container_id,container_name"
-          "LabelKeys"  = "container_name"
-          "LineFormat" = "key_value"
+          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "backend"
         }
       }
 
@@ -134,26 +131,7 @@ resource "aws_ecs_task_definition" "backend" {
         startPeriod = 60
       }
     },
-    {
-      name      = "log_router"
-      image     = "amazon/aws-for-fluent-bit:latest"
-      essential = true
-      firelensConfiguration = {
-        type = "fluentbit"
-        options = {
-          "enable-ecs-log-metadata" = "true"
-        }
-      }
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-firelens"
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "firelens"
-          "awslogs-create-group"  = "true"
-        }
-      }
-    }
+
   ])
 
   tags = merge(var.tags, {
@@ -228,11 +206,11 @@ resource "aws_service_discovery_service" "backend" {
 
 # Backend Service
 resource "aws_ecs_service" "backend" {
-  name            = trimsuffix(substr("${var.project_name}-${var.environment}-backend", 0, 255), "-")
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.backend.arn
-  desired_count   = var.backend_desired_count
-  launch_type     = "FARGATE"
+  name                  = trimsuffix(substr("${var.project_name}-${var.environment}-backend", 0, 255), "-")
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.backend.arn
+  desired_count         = var.backend_desired_count
+  launch_type           = "FARGATE"
   wait_for_steady_state = true
 
   network_configuration {
@@ -270,11 +248,11 @@ resource "aws_ecs_service" "backend" {
 
 # Frontend Service
 resource "aws_ecs_service" "frontend" {
-  name            = trimsuffix(substr("${var.project_name}-${var.environment}-frontend", 0, 255), "-")
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.frontend.arn
-  desired_count   = var.frontend_desired_count
-  launch_type     = "FARGATE"
+  name                  = trimsuffix(substr("${var.project_name}-${var.environment}-frontend", 0, 255), "-")
+  cluster               = aws_ecs_cluster.main.id
+  task_definition       = aws_ecs_task_definition.frontend.arn
+  desired_count         = var.frontend_desired_count
+  launch_type           = "FARGATE"
   wait_for_steady_state = true
 
   network_configuration {
