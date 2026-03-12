@@ -305,8 +305,8 @@ resource "aws_ecs_task_definition" "prometheus" {
       name  = "prometheus"
       image = "prom/prometheus:v2.50.1"
       command = [
-        "--config.file=/etc/prometheus/prometheus.yml",
-        "--storage.tsdb.path=/prometheus"
+        "sh", "-c",
+        "if [ ! -f /etc/prometheus/prometheus.yml ]; then echo 'global:\n  scrape_interval: 15s\nscrape_configs:\n  - job_name: prometheus\n    static_configs:\n      - targets: [\"localhost:9090\"]\n  - job_name: backend\n    metrics_path: /actuator/prometheus\n    static_configs:\n      - targets: [\"$BACKEND_HOST:8081\"]' > /etc/prometheus/prometheus.yml; fi; /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
       ]
       portMappings = [
         { containerPort = 9090, protocol = "tcp" }
@@ -426,6 +426,10 @@ resource "aws_ecs_task_definition" "alertmanager" {
           containerPath = "/etc/alertmanager"
           sourceVolume  = "alertmanager-config"
         }
+      ]
+      command = [
+        "sh", "-c",
+        "if [ ! -f /etc/alertmanager/alertmanager.yml ]; then echo 'route:\n  receiver: \"slack\"\nreceivers:\n  - name: \"slack\"\n    slack_configs:\n      - api_url: \"$SLACK_WEBHOOK_URL\"\n        channel: \"#deployments\"' > /etc/alertmanager/alertmanager.yml; fi; /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml"
       ]
       environment = [
         { name = "SLACK_WEBHOOK_URL", value = var.slack_webhook_url }
