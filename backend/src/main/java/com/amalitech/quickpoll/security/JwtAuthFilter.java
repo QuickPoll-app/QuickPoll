@@ -1,6 +1,7 @@
 package com.amalitech.quickpoll.security;
 
 import com.amalitech.quickpoll.model.User;
+import com.amalitech.quickpoll.repository.UserRepository;
 import com.amalitech.quickpoll.service.CustomUserDetailService;
 import com.amalitech.quickpoll.service.JwtService;
 import io.jsonwebtoken.JwtException;
@@ -21,7 +22,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-
+    private final UserRepository userRepository;
     private final JwtService jwtService;
     private final CustomUserDetailService customUserDetailService;
     private final RedisTemplate<String, String> redisTemplate;
@@ -67,6 +68,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     writeUnauthorized(response, "Token is invalid or expired");
                     return;
                 }
+
+                User user = userRepository.findByEmail(email).orElse(null);
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(

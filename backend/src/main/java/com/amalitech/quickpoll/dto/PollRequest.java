@@ -16,7 +16,8 @@ public record PollRequest(
         String description,
         @NotEmpty(message = "Expected Poll Options")
         List<String> options,
-        boolean multipleChoice,
+        @NotNull(message = "Expected Multiple Choice or Single Choice")
+        Boolean multipleChoice,
         @NotNull(message = "Expected Expiry Date")
         Instant expiresAt
 ) {

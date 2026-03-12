@@ -29,32 +29,21 @@ public class DashBoardController {
 
     @GetMapping("/me")
     @Operation(summary = "Get dashboard for current user")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getMyDashboard(Pageable pageable, @AuthenticationPrincipal User user) {
         Page<PollResponse> polls = dashBoardService.getMyDashboard(pageable, user);
-        if (polls.isEmpty()) {
-            return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "No polls found", polls));
-        }
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Retrieved polls", polls));
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, polls.isEmpty()? "No polls found" : "Retrieved polls", polls));
     }
     @GetMapping("/active")
     @Operation(summary = "Get all active polls")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getActivePolls(Pageable pageable) {
         Page<PollResponse> polls = dashBoardService.getActivePolls(pageable);
-        if (polls.isEmpty()) {
-            return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "No active polls found", polls));
-        }
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Retrieved active polls", polls));
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, polls.isEmpty()? "No active polls found" : "Retrieved active polls", polls));
     }
     @GetMapping("/trending")
     @Operation(summary = "Get trending polls")
     public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getTrendingPolls(Pageable pageable) {
         Page<PollResponse> polls = dashBoardService.getTrendingPolls(pageable);
-        if (polls.isEmpty()) {
-            return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "No trending polls found", polls));
-        }
-        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Retrieved trending polls", polls));
-
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, polls.isEmpty()? "No trending polls found" : "Retrieved trending polls", polls));
     }
     
 }
