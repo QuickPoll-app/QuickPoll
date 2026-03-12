@@ -115,14 +115,11 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       logConfiguration = {
-        logDriver = "awsfirelens"
+        logDriver = "awslogs"
         options = {
-          "Name"       = "loki"
-          "Url"        = "http://loki.monitoring.local:3100/loki/api/v1/push"
-          "Labels"     = "{job=\"backend\", env=\"${var.environment}\"}"
-          "RemoveKeys" = "container_id,container_name"
-          "LabelKeys"  = "container_name"
-          "LineFormat" = "key_value"
+          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "backend"
         }
       }
 
@@ -134,26 +131,7 @@ resource "aws_ecs_task_definition" "backend" {
         startPeriod = 60
       }
     },
-    {
-      name      = "log_router"
-      image     = "amazon/aws-for-fluent-bit:latest"
-      essential = true
-      firelensConfiguration = {
-        type = "fluentbit"
-        options = {
-          "enable-ecs-log-metadata" = "true"
-        }
-      }
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = "/ecs/${var.project_name}-${var.environment}-firelens"
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "firelens"
-          "awslogs-create-group"  = "true"
-        }
-      }
-    }
+
   ])
 
   tags = merge(var.tags, {
