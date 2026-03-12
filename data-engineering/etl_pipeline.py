@@ -182,6 +182,64 @@ def extract_votes(conn, last_run=None):
 
     logger.info("Extracting votes")
 
+    # Attempt incremental extraction
+    if last_run:
+
+        incremental_query = text("""
+            SELECT 
+                v.id,
+                v.created_at,
+                v.poll_id,
+                po.option_text,
+                u.full_name AS voter_name
+            FROM votes v
+            JOIN poll_options po ON v.option_id = po.id
+            JOIN users u ON v.user_id = u.id
+            WHERE v.created_at > :last_run
+        """)
+
+        df = pd.read_sql(incremental_query, conn, params={"last_run": last_run})
+
+        # If incremental returns nothing, fallback to full load
+        if df.empty:
+            logger.warning("Incremental extraction returned 0 rows. Falling back to full extraction.")
+
+            full_query = text("""
+                SELECT 
+                    v.id,
+                    v.created_at,
+                    v.poll_id,
+                    po.option_text,
+                    u.full_name AS voter_name
+                FROM votes v
+                JOIN poll_options po ON v.option_id = po.id
+                JOIN users u ON v.user_id = u.id
+            """)
+
+            df = pd.read_sql(full_query, conn)
+
+    else:
+
+        full_query = text("""
+            SELECT 
+                v.id,
+                v.created_at,
+                v.poll_id,
+                po.option_text,
+                u.full_name AS voter_name
+            FROM votes v
+            JOIN poll_options po ON v.option_id = po.id
+            JOIN users u ON v.user_id = u.id
+        """)
+
+        df = pd.read_sql(full_query, conn)
+
+    logger.info(f"Extracted {len(df)} votes")
+
+    return df
+
+    logger.info("Extracting votes")
+
     if last_run:
 
         query = text("""
@@ -369,6 +427,13 @@ def run_pipeline():
             poll_summary = transform_poll_summary(polls_df, votes_df)
             vote_trends = transform_vote_trends(votes_df)
             participation = transform_user_participation(votes_df)
+
+            # Remove existing records for the same vote_date
+            for d in vote_trends["vote_date"].unique():
+                conn.execute(
+                    text("DELETE FROM analytics_vote_trends WHERE vote_date = :date"),
+                    {"date": d}
+             )
 
             load_table(conn, poll_summary, "analytics_poll_summary")
             load_table(conn, vote_trends, "analytics_vote_trends")
