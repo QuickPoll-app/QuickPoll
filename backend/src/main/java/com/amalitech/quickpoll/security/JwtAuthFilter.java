@@ -68,9 +68,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     writeUnauthorized(response, "Token is invalid or expired");
                     return;
                 }
-
-                User user = userRepository.findByEmail(email).orElse(null);
-
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 (User) userDetails, null, userDetails.getAuthorities()
