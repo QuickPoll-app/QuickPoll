@@ -57,7 +57,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}-prod
           cache-to: type=gha,scope=${{ matrix.service }}-prod,mode=max
 
-  # Deploy infrastructure — requires Lennox approval
+  # Deploy infrastructure — requires approval
   terraform-apply:
     name: Terraform Apply (Production)
     runs-on: ubuntu-latest
@@ -70,6 +70,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
