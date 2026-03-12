@@ -17,4 +17,10 @@
         </classes>
     </test>
 
+    <test name="Dashboard Tests">
+        <classes>
+            <class name="com.amalitech.qa.dash.DashboardApiTest"/>
+        </classes>
+    </test>
+
 </suite>
