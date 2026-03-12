@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class PollController {
 
     @GetMapping
     @Operation(summary = "Get all polls")
-    public ResponseEntity<ResponseWrapper<Page<PollResponse>>> getAllPolls(Pageable pageable) {
+    public ResponseEntity<ResponseWrapper<PageResponse<PollResponse>>> getAllPolls(Pageable pageable) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Polls retrieved successfully", pollService.getAllPolls(pageable)));
     }
 
@@ -46,13 +47,6 @@ public class PollController {
     @Operation(summary = "Edit a poll")
     public ResponseEntity<ResponseWrapper<PollResponse>> editPoll(@PathVariable @NonNull UUID id, @Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
         return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll edited successfully", pollService.editPoll(id, request, creator)));
-    }
-
-    @PostMapping("/{id}/vote")
-    @Operation(summary = "Record a vote for a poll")
-    public ResponseEntity<ResponseWrapper<Void>> vote(@PathVariable @NonNull UUID id, @Valid @RequestBody VoteRequest request, @AuthenticationPrincipal User voter) {
-        pollService.vote(id, request, voter);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "Vote recorded successfully"));
     }
 
     @PutMapping("/{id}/close")

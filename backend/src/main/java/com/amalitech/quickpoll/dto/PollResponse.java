@@ -1,12 +1,14 @@
 package com.amalitech.quickpoll.dto;
 
 import com.amalitech.quickpoll.model.enums.PollStatus;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 @Builder
 public record PollResponse (
         UUID id,
