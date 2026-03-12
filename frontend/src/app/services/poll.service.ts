@@ -19,7 +19,7 @@ export class PollService {
   }
 
   public createPoll(poll: ICreatePollRequest): Observable<IResponseWrapper<IPollResponse>> {
-    return this.http.post<IResponseWrapper<IPollResponse>>(this.apiUrl, poll);
+    return this.http.post<IResponseWrapper<IPollResponse>>(`${this.apiUrl}`, poll);
   }
 
   // TODO: Implement vote method

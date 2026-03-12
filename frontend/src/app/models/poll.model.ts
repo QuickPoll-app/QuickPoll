@@ -9,9 +9,10 @@ export interface IPoll {
 }
 
 export interface IPollOption {
-  id: number;
+  id: string;
   text: string;
-  votes: number;
+  voteCount: number;
+  percentage: number;
 }
 
 export interface ICreatePollRequest {
@@ -19,7 +20,7 @@ export interface ICreatePollRequest {
   description: string;
   options: string[];
   multipleChoice: boolean;
-  expiresAt: string | number | null;
+  expiresAt: string | null;
 }
 
 export interface IVoteRequest {
@@ -38,12 +39,13 @@ export interface IPollResponse {
   question: string;
   description: string;
   creatorName: string;
-  hasVoted: boolean;
+  HasVoted: boolean;
   status: PollStatus;
   multipleChoice: boolean;
   createdAt: string;
   expiresAt: string;
   totalVotes: number;
+  participationRate: number;
   options: IPollOption[];
 }
 

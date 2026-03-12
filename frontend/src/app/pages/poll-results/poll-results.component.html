@@ -2,13 +2,13 @@
   <app-sidebar [navItems]="navItems()" [userProfile]="userProfile()"></app-sidebar>
 
   <main class="results-main">
-    <!-- Success Banner -->
-    <div class="success-banner">
-      <iconify-icon icon="lucide:check-circle"></iconify-icon>
-      <span>You have voted for {{ poll().userVote }}</span>
-    </div>
+    @if (poll()?.HasVoted) {
+      <div class="success-banner">
+        <iconify-icon icon="lucide:check-circle"></iconify-icon>
+        <span>You have voted</span>
+      </div>
+    }
 
-    <!-- Back Button -->
     <div class="back-button-container">
       <button type="button" class="back-button" (click)="onBackClick()">
         <iconify-icon icon="lucide:arrow-left"></iconify-icon>
@@ -16,25 +16,30 @@
       </button>
     </div>
 
-    <!-- Poll Header -->
-    <div class="poll-header-card">
-      <div class="header-content">
-        <h1>{{ poll().title }}</h1>
-        <p>{{ poll().description }}</p>
-      </div>
-      <span class="poll-type-badge">{{ poll().type }}</span>
+    @if (poll(); as pollData) {
+      <div class="poll-header-card">
+        <div class="header-content">
+          <h1>{{ pollData.question }}</h1>
+          <p>{{ pollData.description }}</p>
+        </div>
+        <span class="poll-type-badge">{{ pollData.multipleChoice ? 'Multiple Choice' : 'Single Choice' }}</span>
 
-      <div class="poll-meta">
-        <div class="meta-item">
-          <iconify-icon icon="lucide:clock" class="meta-icon"></iconify-icon>
-          <span>Expires in {{ poll().expiresIn }}</span>
-        </div>
-        <div class="meta-item">
-          <iconify-icon icon="lucide:users" class="meta-icon"></iconify-icon>
-          <span>{{ poll().totalVotes }} votes so far</span>
+        <div class="poll-meta">
+          <div class="meta-item">
+            <iconify-icon icon="lucide:clock" class="meta-icon"></iconify-icon>
+            <span>Expires: {{ pollData.expiresAt | date: 'short' }}</span>
+          </div>
+          <div class="meta-item">
+            <iconify-icon icon="lucide:users" class="meta-icon"></iconify-icon>
+            <span>{{ pollData.totalVotes }} votes</span>
+          </div>
+          <div class="meta-item">
+            <iconify-icon icon="lucide:user" class="meta-icon"></iconify-icon>
+            <span>By {{ pollData.creatorName }}</span>
+          </div>
         </div>
       </div>
-    </div>
+    }
 
     <!-- Chart View Tabs -->
     <div class="chart-tabs">
@@ -58,41 +63,43 @@
       </label>
     </div>
 
-    <!-- Results Section -->
-    <div class="results-card">
-      <h2>Poll Results</h2>
+    @if (poll(); as pollData) {
+      <div class="results-card">
+        <h2>Poll Results</h2>
 
-      <!-- Bar Chart View -->
-      @if (chartView() === "bar") {
-        <div class="bar-chart-view">
-          @for (option of optionsWithPercentages(); track $index) {
-            <app-results-bar
-              [label]="option.label"
-              [percentage]="option.percentage"
-              [votes]="option.votes"
-              [isWinner]="option.isWinner"
-              [isZeroVotes]="option.isZeroVotes"
-              [animationDelay]="option.animationDelay"
-            ></app-results-bar>
-          }
-        </div>
-      }
+        <!-- Bar Chart View -->
+        @if (chartView() === "bar") {
+          <div class="bar-chart-view">
+            @for (option of optionsWithPercentages(); track option.id) {
+              <app-results-bar
+                [label]="option.text"
+                [percentage]="option.percentage"
+                [votes]="option.voteCount"
+                [isWinner]="option.isWinner"
+                [isZeroVotes]="option.isZeroVotes"
+                [animationDelay]="option.animationDelay"
+              ></app-results-bar>
+            }
+          </div>
+        }
 
-      <!-- Pie Chart View -->
-      @if (chartView() === "pie") {
-        <div class="pie-chart-view">
-          <p class="pie-placeholder">Pie chart visualization</p>
-        </div>
-      }
-    </div>
+        <!-- Pie Chart View -->
+        @if (chartView() === "pie") {
+          <div class="pie-chart-view">
+            <p class="pie-placeholder">Pie chart visualization</p>
+          </div>
+        }
+      </div>
+    }
 
-    <!-- Results Footer -->
-    <app-results-footer
-      [totalVotes]="totalVotes()"
-      [participation]="poll().participation"
-      [lastUpdated]="lastUpdated()"
-      [isExpired]="false"
-      (refreshClick)="onRefresh()"
-    ></app-results-footer>
+    @if (poll(); as pollData) {
+      <app-results-footer
+        [totalVotes]="totalVotes()"
+        [participation]="pollData.participationRate"
+        [lastUpdated]="lastUpdated()"
+        [isExpired]="pollData.status === 'EXPIRED'"
+        (refreshClick)="onRefresh()"
+      ></app-results-footer>
+    }
   </main>
 </div>

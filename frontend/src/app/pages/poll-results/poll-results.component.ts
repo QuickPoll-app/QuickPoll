@@ -17,22 +17,26 @@ import {
 import { INavItem, IUserProfile } from "../../models";
 import { AuthService } from "../../services/auth.service";
 
-interface PollOption {
+interface OptionResponse {
   id: string;
-  label: string;
-  votes: number;
+  text: string;
+  voteCount: number;
+  percentage: number;
 }
 
 interface Poll {
   id: string;
-  title: string;
+  question: string;
   description: string;
-  type: string;
-  expiresIn: string;
+  creatorName: string;
+  HasVoted: boolean;
+  status: string;
+  multipleChoice: boolean;
+  createdAt: string;
+  expiresAt: string;
   totalVotes: number;
-  participation: number;
-  userVote: string;
-  options: PollOption[];
+  participationRate: number;
+  options: OptionResponse[];
 }
 
 @Component({
@@ -68,40 +72,24 @@ export class PollResultsComponent {
     })(),
   );
 
-  public poll = signal<Poll>({
-    id: "1",
-    title: "Programming language for next project",
-    description:
-      "Help us decide which programming language to use for our upcoming web application. Consider factors like team expertise, project requirements, and long-term maintainability.",
-    type: "Single Choice",
-    expiresIn: "2d 5h 23m",
-    totalVotes: 142,
-    participation: 73,
-    userVote: "JavaScript (Node.js)",
-    options: [
-      { id: "1", label: "JavaScript (Node.js)", votes: 92 },
-      { id: "2", label: "Python (Django/Flask)", votes: 28 },
-      { id: "3", label: "Java (Spring Boot)", votes: 14 },
-      { id: "4", label: "C# (.NET Core)", votes: 8 },
-      { id: "5", label: "Go (Golang)", votes: 0 },
-    ],
-  });
+  public poll = signal<Poll | null>(null);
 
-  public totalVotes = computed(() => this.poll().totalVotes);
+  public totalVotes = computed(() => this.poll()?.totalVotes ?? 0);
   public winnerOption = computed(() => {
-    const options = this.poll().options;
+    const poll = this.poll();
 
-    return options.reduce((max, opt) => (opt.votes > max.votes ? opt : max));
+    if (!poll) return null;
+    return poll.options.reduce((max, opt) => (opt.voteCount > max.voteCount ? opt : max));
   });
 
   public optionsWithPercentages = computed(() => {
-    const total = this.totalVotes();
+    const poll = this.poll();
 
-    return this.poll().options.map((opt, idx) => ({
+    if (!poll) return [];
+    return poll.options.map((opt, idx) => ({
       ...opt,
-      percentage: total > 0 ? Math.round((opt.votes / total) * 100) : 0,
-      isWinner: opt.votes === this.winnerOption().votes && opt.votes > 0,
-      isZeroVotes: opt.votes === 0,
+      isWinner: opt.voteCount === this.winnerOption()?.voteCount && opt.voteCount > 0,
+      isZeroVotes: opt.voteCount === 0,
       animationDelay: idx * 100,
     }));
   });
@@ -109,11 +97,15 @@ export class PollResultsComponent {
   constructor() {
     effect(() => {
       const pollId = this.route.snapshot.paramMap.get("id");
-
+      
       if (pollId) {
         // Load poll data based on ID
       }
     });
+  }
+
+  public setPollData(poll: Poll) {
+    this.poll.set(poll);
   }
 
   public onChartViewChange(view: "bar" | "pie") {

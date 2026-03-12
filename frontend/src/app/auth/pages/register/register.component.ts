@@ -65,7 +65,7 @@ export class RegisterComponent {
     });
   }
 
-  calculatePasswordStrength(password: string) {
+  public calculatePasswordStrength(password: string) {
     if (!password) {
       this.passwordStrength.set("weak");
       return;

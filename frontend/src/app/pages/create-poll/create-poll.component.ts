@@ -46,7 +46,7 @@ export class CreatePollComponent {
     });
   }
 
-  get options(): FormArray {
+  public get options(): FormArray {
     return this.pollForm.get("options") as FormArray;
   }
 
@@ -69,38 +69,42 @@ export class CreatePollComponent {
   }
 
   public onSubmit() {
-    if (this.pollForm.valid) {
-      const formValue = this.pollForm.value;
-
-      let expiryDateStr: string | null = null;
-
-      if (formValue.expiryDate) {
-        const date = new Date(formValue.expiryDate);
-
-        expiryDateStr = date.toISOString();
-      }
-
-      const pollRequest: ICreatePollRequest = {
-        question: formValue.question,
-        description:
-          formValue.description && formValue.description.trim() !== ""
-            ? formValue.description
-            : "No description provided",
-        options: formValue.options.filter((opt: string) => opt && opt.trim() !== ""),
-        multipleChoice: formValue.pollType === "multiple",
-        expiresAt: expiryDateStr,
-      };
-
-      console.log("Sending payload to backend:", JSON.stringify(pollRequest, null, 2));
-
-      this.pollService.createPoll(pollRequest).subscribe({
-        next: () => {
-          this.router.navigate(["/polls"]);
-        },
-        error: (error) => {
-          console.error("Error creating poll", error);
-        },
-      });
+    if (!this.pollForm.valid) {
+      this.pollForm.markAllAsTouched();
+      return;
     }
+
+    const formValue = this.pollForm.getRawValue();
+
+    const options = ((formValue.options ?? []) as string[])
+      .map((opt: string) => (opt ?? "").toString().trim())
+      .filter((opt: string) => opt.length > 0);
+
+    const uniqueOptions = Array.from(new Set<string>(options));
+
+    if (uniqueOptions.length < 2) {
+      console.error("Poll must have at least 2 unique options");
+      return;
+    }
+
+    const pollRequest: ICreatePollRequest = {
+      question: (formValue.question ?? "").trim(),
+      description:
+        formValue.description && formValue.description.trim() !== ""
+          ? formValue.description.trim()
+          : "No description provided",
+      options: uniqueOptions,
+      multipleChoice: formValue.pollType === "multiple",
+      expiresAt: formValue.expiryDate ? `${formValue.expiryDate}T23:59:59Z` : null,
+    };
+
+    this.pollService.createPoll(pollRequest).subscribe({
+      next: () => {
+        this.router.navigate(["/polls"]);
+      },
+      error: (error) => {
+        console.error("Error creating poll", error);
+      },
+    });
   }
 }
