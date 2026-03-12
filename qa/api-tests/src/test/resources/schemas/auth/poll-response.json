@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Poll Response Schema",
+  "type": "object",
+  "required": ["pollId", "title", "type", "status", "options", "createdBy"],
+  "properties": {
+    "pollId": {
+      "type": "integer",
+      "description": "Unique poll identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Poll title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional poll description"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["SINGLE_SELECT", "MULTI_SELECT"],
+      "description": "Poll type"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OPEN", "CLOSED"],
+      "description": "Poll status"
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["optionId", "optionText"],
+        "properties": {
+          "optionId": {
+            "type": "integer"
+          },
+          "optionText": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "createdBy": {
+      "type": "string",
+      "description": "Creator username or email"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional expiry date in ISO 8601 format"
+    }
+  },
+  "additionalProperties": false
+}

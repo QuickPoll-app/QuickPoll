@@ -1,0 +1,20 @@
+<div
+  [class]="'option-row' + (selected() ? ' selected' : '')"
+  (click)="!disabled() && selectionChange.emit()"
+  (keydown.enter)="!disabled() && selectionChange.emit()"
+  (keydown.space)="!disabled() && selectionChange.emit()"
+  [attr.tabindex]="disabled() ? -1 : 0"
+  role="button"
+  [attr.aria-pressed]="selected()"
+>
+  @if (type() === "radio") {
+    <div [class]="'radio-indicator' + (selected() ? ' selected' : '')"></div>
+  } @else {
+    <div class="checkbox-indicator">
+      @if (selected()) {
+        <i class="pi pi-check"></i>
+      }
+    </div>
+  }
+  <span>{{ label() }}</span>
+</div>

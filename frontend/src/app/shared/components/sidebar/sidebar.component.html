@@ -1,0 +1,34 @@
+<aside class="sidebar">
+  <header class="sidebar-header">
+    <div class="logo">
+      <iconify-icon icon="lucide:vote" class="logo-icon"></iconify-icon>
+      <span class="logo-text">QuickPoll</span>
+    </div>
+  </header>
+
+  <nav class="sidebar-nav">
+    <ul>
+      @for (item of navItems(); track item.route) {
+        <li>
+          <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+            <iconify-icon [icon]="item.icon"></iconify-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+  <button type="button" class="theme-toggle" (click)="onToggleTheme()" title="Toggle theme">
+    <iconify-icon [icon]="isDarkMode() ? 'lucide:sun' : 'lucide:moon'"></iconify-icon>
+  </button>
+  <footer class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar-initials">{{ userInitials() }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ userProfile().name }}</div>
+        <div class="user-role">{{ userProfile().role }}</div>
+      </div>
+      <button type="button" class="logout-btn" (click)="onLogout()" title="Logout">Logout</button>
+    </div>
+  </footer>
+</aside>

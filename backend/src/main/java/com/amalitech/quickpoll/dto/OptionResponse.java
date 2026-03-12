@@ -1,11 +1,15 @@
 package com.amalitech.quickpoll.dto;
 
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Builder;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class OptionResponse {
-    private Long id;
-    private String text;
-    private int voteCount;
-    private double percentage;
-}
+import java.util.UUID;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+@Builder
+public record OptionResponse (
+        UUID id,
+        String text,
+        int voteCount,
+        double percentage
+) {}

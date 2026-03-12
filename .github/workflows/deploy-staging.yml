@@ -1,0 +1,270 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: "${{ vars.AWS_REGION }}"
+  ECR_REGISTRY: "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com"
+  IMAGE_TAG: "staging-${{ github.sha }}"
+  TF_WORKSPACE: staging
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  # Build and push Docker images to ECR
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: backend
+            context: ./backend
+          - service: frontend
+            context: ./frontend
+          - service: data-generator
+            context: ./data-engineering
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+            ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-${{ matrix.service }}:staging-latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+
+  # Deploy infrastructure with Terraform
+  terraform-apply:
+    name: Terraform Apply (Staging)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    outputs:
+      alb_url: ${{ steps.capture-alb.outputs.alb_url }}
+      cluster_name: ${{ steps.capture-alb.outputs.cluster_name }}
+      subnet_ids: ${{ steps.capture-alb.outputs.subnet_ids }}
+      sg_id: ${{ steps.capture-alb.outputs.sg_id }}
+    environment:
+      name: staging
+      url: "${{ vars.STAGING_ALB_URL }}"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/environments/staging
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=staging/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_STATE_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Plan
+        working-directory: ./infrastructure/environments/staging
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_backend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-backend:${{ env.IMAGE_TAG }}
+          TF_VAR_frontend_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-frontend:${{ env.IMAGE_TAG }}
+          TF_VAR_data_generator_image: ${{ env.ECR_REGISTRY }}/${{ vars.PROJECT_NAME }}-data-generator:${{ env.IMAGE_TAG }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+
+      - name: Terraform Apply
+        working-directory: ./infrastructure/environments/staging
+        run: |
+          terraform apply -auto-approve tfplan
+          # If apply succeeded but state save failed, push the errored state
+          if [ -f errored.tfstate ]; then
+            echo "::warning::State save failed during apply. Pushing errored.tfstate..."
+            terraform state push errored.tfstate
+            rm -f errored.tfstate
+          fi
+
+      - name: Capture ALB URL and set GitHub Variable
+        id: capture-alb
+        working-directory: ./infrastructure/environments/staging
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ALB_DNS=$(terraform output -raw alb_dns_name)
+          echo "ALB DNS: $ALB_DNS"
+          echo "alb_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
+          gh variable set STAGING_ALB_URL --env staging --body "http://$ALB_DNS" || echo "::warning::Could not set STAGING_ALB_URL variable. Set it manually to http://$ALB_DNS"
+          echo "STAGING_ALB_URL set to http://$ALB_DNS"
+          
+          CLUSTER=$(terraform output -raw ecs_cluster_name)
+          echo "cluster_name=$CLUSTER" >> "$GITHUB_OUTPUT"
+          
+          SUBNETS=$(terraform output -json private_subnet_ids | jq -r 'join(",")')
+          echo "subnet_ids=$SUBNETS" >> "$GITHUB_OUTPUT"
+          
+          SG=$(terraform output -raw ecs_tasks_security_group_id)
+          echo "sg_id=$SG" >> "$GITHUB_OUTPUT"
+
+  # Health check after deploy
+  health-check:
+    name: Post-Deploy Health Check
+    runs-on: ubuntu-latest
+    needs: terraform-apply
+    env:
+      ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
+    steps:
+      - name: Wait for services to stabilize
+        run: sleep 60
+
+      - name: Health check backend
+        run: |
+          for i in {1..20}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+              "${ALB_URL}/actuator/health" || true)
+            if [ "$status" = "200" ]; then
+              echo "Backend health check passed"
+              exit 0
+            fi
+            echo "Attempt $i/20 - Status: $status"
+            sleep 15
+          done
+          echo "Backend health check failed"
+          exit 1
+
+      - name: Health check frontend
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${ALB_URL}/" || true)
+          if [ "$status" = "200" ]; then
+            echo "Frontend health check passed"
+          else
+            echo "Frontend health check failed with status: $status"
+            exit 1
+          fi
+
+  seed-data:
+    name: Run Data Generator Task
+    runs-on: ubuntu-latest
+    needs: [terraform-apply, health-check]
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run ECS Task
+        run: |
+          # Convert comma-separated "subnet-1,subnet-2" to "\"subnet-1\",\"subnet-2\""
+          SUBNETS_FMT=$(echo "${{ needs.terraform-apply.outputs.subnet_ids }}" | sed 's/,/","/g')
+          
+          aws ecs run-task \
+            --cluster "${{ needs.terraform-apply.outputs.cluster_name }}" \
+            --task-definition "${{ vars.PROJECT_NAME }}-staging-data-generator" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[\"${SUBNETS_FMT}\"],securityGroups=[${{ needs.terraform-apply.outputs.sg_id }}],assignPublicIp=DISABLED}"
+
+  # Post deploy status and Slack notification
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [build-and-push, terraform-apply, health-check, seed-data]
+    if: always()
+    env:
+      ALB_URL: ${{ needs.terraform-apply.outputs.alb_url }}
+    steps:
+      - name: Set commit status
+        if: needs.health-check.result == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              target_url: '${{ needs.terraform-apply.outputs.alb_url }}',
+              description: 'Staging deployment successful',
+              context: 'staging/deploy'
+            });
+
+      - name: Notify Slack on success
+        if: needs.health-check.result == 'success'
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Staging Deploy Successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*QuickPoll Staging Deployed*\n*Commit:* `${{ github.sha }}`\n*By:* ${{ github.actor }}\n*URL:* ${{ needs.terraform-apply.outputs.alb_url }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on failure
+        if: needs.health-check.result == 'failure' || needs.terraform-apply.result == 'failure' || needs.build-and-push.result == 'failure'
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Staging Deploy Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*QuickPoll Staging Deploy Failed*\n*Commit:* `${{ github.sha }}`\n*By:* ${{ github.actor }}\n*Run:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }

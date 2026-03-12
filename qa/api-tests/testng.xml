@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="QuickPoll API Test Suite" verbose="2" thread-count="1">
+
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+
+    <parameter name="baseUrl"       value="http://quickpoll-team7-staging-alb-2039703138.eu-north-1.elb.amazonaws.com/api"/>
+    <parameter name="adminEmail"    value="admin@amalitech.com"/>
+    <parameter name="userEmail"     value="user@amalitech.com"/>
+    <parameter name="validPassword" value="password123"/>
+
+    <test name="Authentication Tests">
+        <classes>
+            <class name="com.amalitech.qa.auth.AuthApiTest"/>
+        </classes>
+    </test>
+
+</suite>

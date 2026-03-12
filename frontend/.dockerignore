@@ -1,0 +1,22 @@
+# Frontend .dockerignore
+node_modules/
+dist/
+.git/
+.gitignore
+.idea/
+.vscode/
+.claude/
+*.md
+*.log
+.env*
+.angular/
+e2e/
+coverage/
+docker-compose*.yml
+Dockerfile
+.dockerignore
+proxy.conf.json
+tsconfig.spec.json
+karma.conf.js
+.browserslistrc
+.editorconfig

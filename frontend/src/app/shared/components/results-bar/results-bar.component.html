@@ -1,0 +1,25 @@
+<div
+  [ngClass]="{ 'winner-row': isWinner(), 'zero-votes': isZeroVotes() }"
+  class="result-row"
+  [style]="barStyle()"
+>
+  <div class="label-section">
+    @if (isWinner()) {
+      <iconify-icon icon="lucide:crown" class="crown-icon"></iconify-icon>
+    }
+    <span [ngClass]="{ 'winner-label': isWinner(), 'muted-label': isZeroVotes() }">
+      {{ label() }}
+    </span>
+  </div>
+
+  <div class="bar-section">
+    <div class="bar-container">
+      <div class="bar-fill" [style.width]="barWidth()"></div>
+    </div>
+  </div>
+
+  <div class="stats-section">
+    <span class="percentage">{{ percentage() }}%</span>
+    <span class="vote-count">{{ votes() }}</span>
+  </div>
+</div>

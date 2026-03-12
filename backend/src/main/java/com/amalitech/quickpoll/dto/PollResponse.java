@@ -1,18 +1,26 @@
 package com.amalitech.quickpoll.dto;
 
-import lombok.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.amalitech.quickpoll.model.enums.PollStatus;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Builder;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class PollResponse {
-    private Long id;
-    private String question;
-    private String description;
-    private String creatorName;
-    private String status;
-    private boolean multipleChoice;
-    private LocalDateTime createdAt;
-    private int totalVotes;
-    private List<OptionResponse> options;
-}
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+@Builder
+public record PollResponse (
+        UUID id,
+        String question,
+        String description,
+        String creatorName,
+        boolean HasVoted,
+        PollStatus status,
+        boolean multipleChoice,
+        Instant createdAt,
+        Instant expiresAt,
+        int totalVotes,
+        float participationRate,
+        List<OptionResponse> options
+) {}

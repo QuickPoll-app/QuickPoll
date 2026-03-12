@@ -1,11 +1,12 @@
 package com.amalitech.quickpoll.dto;
 
-import lombok.*;
+import com.amalitech.quickpoll.model.enums.Role;
+import lombok.Builder;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class AuthResponse {
-    private String token;
-    private String email;
-    private String name;
-    private String role;
-}
+@Builder
+public record AuthResponse (
+        String token,
+        String email,
+        String name,
+        Role role
+) {}

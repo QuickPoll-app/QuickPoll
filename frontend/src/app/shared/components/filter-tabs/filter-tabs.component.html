@@ -1,0 +1,14 @@
+<div class="filter-tabs">
+  @for (tab of tabs; track tab.value) {
+    <label>
+      <input 
+        type="radio" 
+        class="peer" 
+        [checked]="activeTab() === tab.value"
+        (change)="selectTab(tab.value)">
+      <div [class.active]="activeTab() === tab.value" class="tab-button">
+        {{ tab.label }}
+      </div>
+    </label>
+  }
+</div>

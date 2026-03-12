@@ -1,0 +1,67 @@
+# ============================================
+# Alertmanager Configuration — QuickPoll
+# ============================================
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ["alertname", "severity", "service"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: "slack-alerts"
+  routes:
+    # Critical alerts — immediate notification
+    - match:
+        severity: critical
+      receiver: "slack-critical"
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts — standard notification
+    - match:
+        severity: warning
+      receiver: "slack-alerts"
+      group_wait: 1m
+      repeat_interval: 4h
+
+receivers:
+  - name: "slack-alerts"
+    slack_configs:
+      - channel: "#quickpoll-alerts"
+        send_resolved: true
+        api_url: "${SLACK_WEBHOOK_URL}"
+        title: '{{ if eq .Status "firing" }}🔔{{ else }}✅{{ end }} [{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: >-
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Service:* {{ .CommonLabels.service }}
+          *Description:* {{ .CommonAnnotations.description }}
+          *Details:*
+          {{ range .Alerts }}
+            - {{ .Annotations.summary }}
+          {{ end }}
+
+  - name: "slack-critical"
+    slack_configs:
+      - channel: "#quickpoll-alerts"
+        send_resolved: true
+        api_url: "${SLACK_WEBHOOK_URL}"
+        title: '{{ if eq .Status "firing" }}🚨 CRITICAL{{ else }}✅ RESOLVED{{ end }} {{ .CommonLabels.alertname }}'
+        text: >-
+          🚨 *CRITICAL ALERT*
+          *Alert:* {{ .CommonLabels.alertname }}
+          *Service:* {{ .CommonLabels.service }}
+          *Description:* {{ .CommonAnnotations.description }}
+          {{ range .Alerts }}
+            - {{ .Annotations.summary }}
+          {{ end }}
+
+inhibit_rules:
+  # If a critical alert fires, suppress matching warning alerts
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ["alertname", "service"]

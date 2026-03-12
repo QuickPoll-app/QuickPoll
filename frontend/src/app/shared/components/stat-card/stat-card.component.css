@@ -1,0 +1,82 @@
+.stat-card {
+  background: var(--color-surface-primary);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 0.75rem;
+  transition: border-color 200ms ease;
+}
+
+.stat-card:hover {
+  border-color: #c7c3bd;
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+}
+
+.stat-icon iconify-icon {
+  font-size: 1.125rem;
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.stat-trend iconify-icon {
+  font-size: 0.75rem;
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-header iconify-icon {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.stat-value {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.trend-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.trend-indicator.positive {
+  color: #2d7a4f;
+}
+
+.trend-indicator.negative {
+  color: #c53030;
+}

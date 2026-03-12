@@ -1,0 +1,195 @@
+name: Terraform Pipeline
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "infrastructure/**"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action to perform"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: "${{ vars.AWS_REGION }}"
+  TF_VERSION: "1.7.0"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # PR: Validate + Plan on both environments
+  terraform-plan:
+    name: Plan (${{ matrix.environment }})
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, prod]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        working-directory: ./infrastructure/environments/${{ matrix.environment }}
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/environments/${{ matrix.environment }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ matrix.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_STATE_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Validate
+        working-directory: ./infrastructure/environments/${{ matrix.environment }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ./infrastructure/environments/${{ matrix.environment }}
+        run: |
+          terraform plan -no-color -out=tfplan 2>&1 | tee plan_output.txt
+        env:
+          TF_VAR_backend_image: "placeholder:latest"
+          TF_VAR_frontend_image: "placeholder:latest"
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Post plan to PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const planOutput = fs.readFileSync(
+              'infrastructure/environments/${{ matrix.environment }}/plan_output.txt', 'utf8'
+            );
+            const truncated = planOutput.length > 60000 
+              ? planOutput.substring(0, 60000) + '\n... (truncated)' 
+              : planOutput;
+
+            const body = `### Terraform Plan — \`${{ matrix.environment }}\`
+
+            <details>
+            <summary>${'${{ steps.plan.outcome }}' === 'success' ? 'Pass' : 'Fail'} Click to expand plan</summary>
+
+            \`\`\`terraform
+            ${truncated}
+            \`\`\`
+
+            </details>
+
+            *Triggered by @${{ github.actor }} on \`${{ github.event.pull_request.head.ref }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  # Manual dispatch: plan/apply/destroy
+  manual-terraform:
+    name: Manual ${{ inputs.action }} on ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Block destroy on production
+        if: inputs.action == 'destroy' && inputs.environment == 'prod'
+        run: |
+          echo "Destroy on production is blocked via manual trigger"
+          echo "Use a PR-based workflow for production infrastructure changes"
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/environments/${{ inputs.environment }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.TF_STATE_TABLE }}" \
+            -backend-config="encrypt=true"
+
+      - name: Terraform Plan
+        if: inputs.action == 'plan' || inputs.action == 'apply'
+        working-directory: ./infrastructure/environments/${{ inputs.environment }}
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_backend_image: "placeholder:latest"
+          TF_VAR_frontend_image: "placeholder:latest"
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}
+
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        working-directory: ./infrastructure/environments/${{ inputs.environment }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy' && inputs.environment == 'staging'
+        working-directory: ./infrastructure/environments/${{ inputs.environment }}
+        run: terraform destroy -auto-approve
+        env:
+          TF_VAR_backend_image: "placeholder:latest"
+          TF_VAR_frontend_image: "placeholder:latest"
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_slack_webhook_url: ${{ secrets.SLACK_DEPLOYMENTS_WEBHOOK }}

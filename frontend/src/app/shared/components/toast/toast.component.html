@@ -1,0 +1,18 @@
+<div [class]="'toast toast-' + variant()">
+  @if (variant() === "success") {
+    <i class="pi pi-check-circle"></i>
+  } @else if (variant() === "error") {
+    <i class="pi pi-times-circle"></i>
+  } @else if (variant() === "warning") {
+    <i class="pi pi-exclamation-triangle"></i>
+  } @else {
+    <i class="pi pi-info-circle"></i>
+  }
+  <span>{{ message() }}</span>
+  <button type="button" class="btn-icon" (click)="closeToast.emit()">
+    <i class="pi pi-times"></i>
+  </button>
+  @if (autoClose()) {
+    <div class="toast-progress"></div>
+  }
+</div>

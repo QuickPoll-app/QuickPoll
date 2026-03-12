@@ -3,40 +3,62 @@ package com.amalitech.quickpoll.controller;
 import com.amalitech.quickpoll.dto.*;
 import com.amalitech.quickpoll.model.User;
 import com.amalitech.quickpoll.service.PollService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/polls")
 @RequiredArgsConstructor
+@Tag(name = "Polls", description = "Poll management endpoints")
 public class PollController {
     private final PollService pollService;
 
     @GetMapping
-    public ResponseEntity<Page<PollResponse>> getAllPolls(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(pollService.getAllPolls(page, size));
+    @Operation(summary = "Get all polls")
+    public ResponseEntity<ResponseWrapper<PageResponse<PollResponse>>> getAllPolls(Pageable pageable) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Polls retrieved successfully", pollService.getAllPolls(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PollResponse> getPollById(@PathVariable Long id) {
-        return ResponseEntity.ok(pollService.getPollById(id));
+    @Operation(summary = "Get poll by ID")
+    public ResponseEntity<ResponseWrapper<PollResponse>> getPollById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll retrieved successfully", pollService.getPollById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<PollResponse> createPoll(
-            @Valid @RequestBody PollRequest request,
-            @AuthenticationPrincipal User creator) {
-        return ResponseEntity.ok(pollService.createPoll(request, creator));
+    @Operation(summary = "Create a new poll")
+    public ResponseEntity<ResponseWrapper<PollResponse>> createPoll(@Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(HttpStatus.CREATED, "Poll created successfully", pollService.createPoll(request, creator)));
     }
 
-    // TODO: Add vote endpoint - POST /api/polls/{id}/vote
-    // TODO: Add close poll endpoint - PUT /api/polls/{id}/close
-    // TODO: Add delete poll endpoint - DELETE /api/polls/{id}
-    // TODO: Add get results endpoint - GET /api/polls/{id}/results
+    @PutMapping("/{id}")
+    @Operation(summary = "Edit a poll")
+    public ResponseEntity<ResponseWrapper<PollResponse>> editPoll(@PathVariable @NonNull UUID id, @Valid @RequestBody PollRequest request, @AuthenticationPrincipal User creator) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "Poll edited successfully", pollService.editPoll(id, request, creator)));
+    }
+
+    @PutMapping("/{id}/close")
+    @Operation(summary = "Close a poll")
+    public ResponseEntity<ResponseWrapper<PollResponse>> closePoll(@PathVariable @NonNull UUID id, @AuthenticationPrincipal User creator) {
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, "", pollService.closePoll(id, creator)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a poll")
+    public ResponseEntity<ResponseWrapper<Void>> deletePoll(@PathVariable @NonNull UUID id, @AuthenticationPrincipal User creator) {
+        pollService.deletePoll(id, creator);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ResponseWrapper.success(HttpStatus.NO_CONTENT, "Poll deleted successfully"));
+    }
 }

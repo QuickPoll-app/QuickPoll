@@ -1,0 +1,17 @@
+# Backend .dockerignore
+target/
+!target/*.jar
+.git/
+.gitignore
+.idea/
+.vscode/
+.claude/
+*.md
+*.log
+.env*
+docker-compose*.yml
+Dockerfile
+.dockerignore
+.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd

@@ -1,0 +1,42 @@
+<article
+  [class]="'card' + (poll().HasVoted ? ' voted' : '') + (poll().status === 'ACTIVE' ? '' : ' expired')"
+  (click)="cardClick.emit()"
+  (keydown.enter)="cardClick.emit()"
+  (keydown.space)="cardClick.emit()"
+  tabindex="0"
+  role="button"
+  [attr.aria-label]="'View poll: ' + poll().question"
+>
+  <header class="card-header">
+    <app-badge [variant]="getStatusVariant()">
+      {{ poll().status === "ACTIVE" ? "Active" : "Expired" }}
+    </app-badge>
+
+    <app-badge [variant]="'type'">
+      {{ getPollType() === "single" ? "Single" : "Multi" }}
+    </app-badge>
+
+    @if (poll().HasVoted) {
+      <div class="badge-voted">
+        <i class="pi pi-check"></i>
+      </div>
+    }
+  </header>
+
+  <section class="card-body">
+    <h3 class="card-title">{{ poll().question }}</h3>
+    @if (poll().description) {
+      <p class="card-description">{{ poll().description }}</p>
+    }
+  </section>
+
+  <footer class="card-footer">
+    <div class="footer-stats">
+      <span>{{ poll().totalVotes }} votes</span>
+      <span>{{ poll().participationRate }}% participated</span>
+    </div>
+    <span [class]="poll().status === 'ACTIVE' ? 'time-left' : 'time-expired'">
+      {{ calculateTimeLeft() }}
+    </span>
+  </footer>
+</article>

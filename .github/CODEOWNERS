@@ -1,20 +1,43 @@
-# DevOps and Infrastructure
-infrastructure/ @Viateur-akimana
-.github/ @Viateur-akimana
-**/Dockerfile @Viateur-akimana
-docker-compose*.yml @Viateur-akimana
+# ============================================
+# QuickPoll CODEOWNERS
+# ============================================
+# Lennox is required reviewer on all PRs to main
+# Viateur owns all DevOps and infrastructure code
+# ============================================
 
-# Backend
-backend/ @mahorobonheur @GargoilXD
+# ── Default: DevOps lead + Backend lead review everything ──
+* @Viateur-akimana @mahorobonheur
 
-# Frontend
-frontend/ @Bentil4
+# ── Infrastructure & DevOps (Viateur owns exclusively) ──
+infrastructure/          @Viateur-akimana
+.github/                 @Viateur-akimana
+.github/workflows/       @Viateur-akimana
+**/Dockerfile            @Viateur-akimana
+**/.dockerignore         @Viateur-akimana
+docker-compose*.yml      @Viateur-akimana
+monitoring/              @Viateur-akimana
+scripts/                 @Viateur-akimana
+.env.example             @Viateur-akimana
 
-# QA
-qa/ @Lennox-Owusu
+# ── Backend (Bonheur + Emmanuel, Viateur reviews Dockerfiles) ──
+backend/                 @mahorobonheur @GargoilXD
+backend/Dockerfile       @Viateur-akimana @mahorobonheur
+backend/.dockerignore    @Viateur-akimana
 
-# Data Engineering
-data-engineering/ @Damas200
+# ── Frontend (Broderick, Viateur reviews Dockerfiles) ──
+frontend/                @Bentil4
+frontend/Dockerfile      @Viateur-akimana @Bentil4
+frontend/nginx.conf      @Viateur-akimana @Bentil4
+frontend/.dockerignore   @Viateur-akimana
 
-# Default
-* @Viateur-akimana @Lennox-Owusu 
+# ── QA (Lennox owns all test code) ──
+qa/                      @Lennox-Owusu
+backend/src/test/        @Lennox-Owusu
+
+# ── Data Engineering (Damas) ──
+data-engineering/        @Damas200
+data-engineering/Dockerfile @Viateur-akimana @Damas200
+
+# ── Documentation ──
+docs/                    @Viateur-akimana @Lennox-Owusu
+README.md                @Viateur-akimana
