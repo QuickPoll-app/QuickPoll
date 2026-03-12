@@ -1,26 +1,22 @@
 <article
-  [class]="'card' + (isVoted() ? ' voted' : '') + (status() === 'expired' ? ' expired' : '')"
+  [class]="'card' + (poll().HasVoted ? ' voted' : '') + (poll().status === 'ACTIVE' ? '' : ' expired')"
   (click)="cardClick.emit()"
   (keydown.enter)="cardClick.emit()"
   (keydown.space)="cardClick.emit()"
   tabindex="0"
   role="button"
-  [attr.aria-label]="'View poll: ' + title()"
+  [attr.aria-label]="'View poll: ' + poll().question"
 >
   <header class="card-header">
-    <app-badge [variant]="status()">
-      {{ status() === "active" ? "Active" : "Expired" }}
+    <app-badge [variant]="getStatusVariant()">
+      {{ poll().status === "ACTIVE" ? "Active" : "Expired" }}
     </app-badge>
 
     <app-badge [variant]="'type'">
-      {{ pollType() === "single" ? "Single" : "Multi" }}
+      {{ getPollType() === "single" ? "Single" : "Multi" }}
     </app-badge>
 
-    @if (isAnonymous()) {
-      <app-badge [variant]="'anonymous'">Anonymous</app-badge>
-    }
-
-    @if (isVoted()) {
+    @if (poll().HasVoted) {
       <div class="badge-voted">
         <i class="pi pi-check"></i>
       </div>
@@ -28,21 +24,19 @@
   </header>
 
   <section class="card-body">
-    <h3 class="card-title">{{ title() }}</h3>
-    @if (description()) {
-      <p class="card-description">{{ description() }}</p>
+    <h3 class="card-title">{{ poll().question }}</h3>
+    @if (poll().description) {
+      <p class="card-description">{{ poll().description }}</p>
     }
   </section>
 
   <footer class="card-footer">
     <div class="footer-stats">
-      <span>{{ votes() }} votes</span>
-      <span>{{ participation() }}% participated</span>
+      <span>{{ poll().totalVotes }} votes</span>
+      <span>{{ poll().participationRate }}% participated</span>
     </div>
-    @if (timeLeft()) {
-      <span [class]="status() === 'active' ? 'time-left' : 'time-expired'">
-        {{ timeLeft() }}
-      </span>
-    }
+    <span [class]="poll().status === 'ACTIVE' ? 'time-left' : 'time-expired'">
+      {{ calculateTimeLeft() }}
+    </span>
   </footer>
 </article>

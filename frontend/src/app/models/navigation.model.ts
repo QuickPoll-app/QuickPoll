@@ -7,5 +7,5 @@ export interface INavItem {
 export interface IUserProfile {
   name: string;
   role: string;
-  avatar: string;
+  avatar?: string;
 }

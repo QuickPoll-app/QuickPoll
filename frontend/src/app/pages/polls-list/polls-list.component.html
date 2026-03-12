@@ -1,0 +1,39 @@
+<main class="polls-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Polls</h1>
+      <p class="page-subtitle">Manage and monitor all your polls</p>
+    </div>
+    <app-buttons variant="primary" (clicked)="onCreatePoll()">
+      <div class="button-content">
+        <iconify-icon icon="lucide:plus"></iconify-icon>
+        <span>Create Poll</span>
+      </div>
+    </app-buttons>
+  </div>
+
+  <div class="filters-section">
+    <app-input placeholder="Search polls..."> </app-input>
+
+    <app-filter-tabs [activeTab]="activeFilter()" (tabChanged)="onFilterChange($event)">
+    </app-filter-tabs>
+  </div>
+
+  <div class="polls-grid">
+    @if (loading()) {
+      <p>Loading polls...</p>
+    } @else if (filteredPolls.length > 0) {
+      @for (poll of filteredPolls; track poll.id) {
+        <app-poll-card
+          [poll]="poll"
+          (cardClick)="onPollClick(poll)"
+        >
+        </app-poll-card>
+      }
+    } @else {
+      <div class="no-results">
+        <p>No poll at the moment</p>
+      </div>
+    }
+  </div>
+</main>

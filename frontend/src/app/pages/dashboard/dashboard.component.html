@@ -40,7 +40,7 @@
     <div class="card-section">
       <app-card>
         <div class="section-header">
-          <h3 class="section-title">Active Polls</h3>
+          <h3 class="section-title">Active Polls @if (activePollsTotal() > 0) { <span>({{ activePollsTotal() }})</span> }</h3>
         </div>
         <div class="section-content">
           @if (activePollsLoading()) {

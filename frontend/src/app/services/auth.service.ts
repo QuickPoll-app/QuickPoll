@@ -1,15 +1,18 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
+import { Router } from "@angular/router";
 import { Observable, tap, map } from "rxjs";
 import { ILoginRequest, IRegisterRequest, IAuthResponse } from "../models";
+import { environment } from "../../environments/environment";
 
 type StoredUser = Omit<IAuthResponse, "token">;
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
-  private apiUrl = "/api/auth";
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   public login(email: string, password: string): Observable<IAuthResponse> {
     const request: ILoginRequest = { email, password };
@@ -72,6 +75,7 @@ export class AuthService {
   public logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    this.router.navigate(["/login"]);
   }
 
   public isLoggedIn(): boolean {

@@ -1,0 +1,119 @@
+<div class="expired-container">
+  <app-sidebar [navItems]="navItems()" [userProfile]="userProfile()"></app-sidebar>
+
+  <main class="expired-main">
+    <!-- Poll Closed Banner -->
+    <div class="closed-banner">
+      <iconify-icon icon="lucide:x-circle"></iconify-icon>
+      <span>Poll Closed - Voting has ended</span>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-button-container">
+      <button type="button" class="back-button" (click)="onBackClick()">
+        <iconify-icon icon="lucide:arrow-left"></iconify-icon>
+        <span>Back to Polls</span>
+      </button>
+    </div>
+
+    <!-- Poll Header -->
+    <div class="poll-header-card">
+      <div class="header-content">
+        <h1>{{ poll().title }}</h1>
+        <p>{{ poll().description }}</p>
+      </div>
+      <span class="poll-type-badge">{{ poll().type }}</span>
+
+      <div class="poll-meta">
+        <div class="meta-item">
+          <iconify-icon icon="lucide:calendar-x" class="meta-icon"></iconify-icon>
+          <span>Expired on {{ poll().closedDate }} at 5:00 PM</span>
+        </div>
+        <div class="meta-item">
+          <iconify-icon icon="lucide:users" class="meta-icon"></iconify-icon>
+          <span>{{ poll().totalVotes }} total votes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Winner Callout -->
+    <app-winner-callout
+      [winnerLabel]="winnerOption().label"
+      [winnerPercentage]="
+        totalVotes() > 0 ? Math.round((winnerOption().votes / totalVotes()) * 100) : 0
+      "
+      [winnerVotes]="winnerOption().votes"
+    ></app-winner-callout>
+
+    <!-- Chart View Tabs -->
+    <div class="chart-tabs">
+      <label class="tab-label">
+        <input
+          type="radio"
+          name="chart"
+          [checked]="chartView() === 'bar'"
+          (change)="onChartViewChange('bar')"
+        />
+        <span class="tab-text">Bar Chart</span>
+      </label>
+      <label class="tab-label">
+        <input
+          type="radio"
+          name="chart"
+          [checked]="chartView() === 'pie'"
+          (change)="onChartViewChange('pie')"
+        />
+        <span class="tab-text">Pie Chart</span>
+      </label>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-card">
+      <h2>Final Results</h2>
+
+      <!-- Bar Chart View -->
+     @if (chartView() === 'bar') {
+       <div  class="bar-chart-view">
+        @for (option of optionsWithPercentages(); track option.id) {
+          <app-results-bar
+            [label]="option.label"
+            [percentage]="option.percentage"
+            [votes]="option.votes"
+            [isWinner]="option.isWinner"
+            [isZeroVotes]="option.isZeroVotes"
+            [animationDelay]="option.animationDelay"
+          ></app-results-bar>
+        }
+      </div>
+     }
+
+      <!-- Pie Chart View -->
+      <div *ngIf="chartView() === 'pie'" class="pie-chart-view">
+        <p class="pie-placeholder">Pie chart visualization</p>
+      </div>
+    </div>
+
+    <!-- Results Footer -->
+    <div class="footer-container">
+      <div class="stats-group">
+        <div class="stat-item">
+          <div class="stat-value">{{ totalVotes() }}</div>
+          <div class="stat-label">Total Votes</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ poll().participation }}%</div>
+          <div class="stat-label">Participation</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value closed-date">{{ poll().closedDate }}</div>
+          <div class="stat-label">Closed Date</div>
+        </div>
+      </div>
+
+      <button type="button" class="export-btn" (click)="onExport()">
+        <iconify-icon icon="lucide:download"></iconify-icon>
+        <span>Export</span>
+      </button>
+    </div>
+  </main>
+</div>

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { inject } from "@angular/core";
 import { ButtonsComponent } from "../../../shared/components/buttons/buttons.component";
 import { InputComponent } from "../../../shared/components/input/input.component";
 import { AuthService } from "../../../services/auth.service";
@@ -14,16 +15,16 @@ import { AuthService } from "../../../services/auth.service";
   styleUrl: "./login.component.css",
 })
 export class LoginComponent {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+
   public loginForm: FormGroup;
   public isLoading = signal(false);
   public showError = signal(false);
   public showPassword = signal(false);
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private authService: AuthService,
-  ) {
+  constructor() {
     this.loginForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
       password: ["", [Validators.required]],

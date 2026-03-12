@@ -1,0 +1,95 @@
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-surface-primary);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+}
+
+.stats-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.33333;
+  color: rgba(13, 115, 119, 1);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value.expired-date {
+  color: rgba(197, 48, 48, 1);
+  font-size: 0.875rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  line-height: 1.42857;
+  color: rgba(115, 115, 115, 1);
+}
+
+.actions-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auto-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.42857;
+  color: rgba(115, 115, 115, 1);
+}
+
+.pulse-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: rgba(45, 122, 79, 1);
+  border-radius: 9999px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 255, 255, 1);
+  color: rgba(13, 115, 119, 1);
+  border: 1px solid rgba(224, 221, 217, 1);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.42857;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  border-color: rgba(199, 195, 189, 1);
+}
+
+.refresh-btn iconify-icon {
+  font-size: 0.875rem;
+  line-height: 1.42857;
+}

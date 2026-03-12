@@ -1,9 +1,8 @@
-/* Poll card styles are defined in global styles.css */
-
 .card-body {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
+  cursor: pointer;
 }
 
 .footer-stats {
