@@ -1,0 +1,59 @@
+.winner-container {
+  background-color: rgba(232, 244, 237, 1);
+  border: 2px solid rgba(165, 214, 184, 1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.winner-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.trophy-icon {
+  color: rgba(217, 119, 6, 1);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.winner-label {
+  font-size: 1.125rem;
+  line-height: 1.55556;
+  font-weight: 600;
+  color: rgba(45, 122, 79, 1);
+}
+
+.winner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.winner-name {
+  font-size: 1.5rem;
+  line-height: 1.33333;
+  font-weight: 600;
+  color: rgba(26, 26, 26, 1);
+  margin: 0;
+}
+
+.winner-stats {
+  text-align: right;
+}
+
+.winner-percentage {
+  font-size: 1.875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  color: rgba(45, 122, 79, 1);
+  margin-bottom: 0.25rem;
+}
+
+.winner-votes {
+  font-size: 0.875rem;
+  line-height: 1.42857;
+  color: rgba(115, 115, 115, 1);
+}
