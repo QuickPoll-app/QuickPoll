@@ -44,6 +44,11 @@ variable "service_discovery_namespace_id" {
   type        = string
 }
 
+variable "service_discovery_namespace_name" {
+  description = "Name of the Cloud Map private DNS namespace"
+  type        = string
+}
+
 variable "backend_target_group_arn" {
   description = "ARN of the backend ALB target group"
   type        = string

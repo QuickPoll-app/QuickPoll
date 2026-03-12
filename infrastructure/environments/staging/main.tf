@@ -126,7 +126,8 @@ module "ecs" {
   frontend_memory                = var.frontend_memory
   backend_desired_count          = var.backend_desired_count
   frontend_desired_count         = var.frontend_desired_count
-  service_discovery_namespace_id = module.networking.service_discovery_namespace_id
+  service_discovery_namespace_id   = module.networking.service_discovery_namespace_id
+  service_discovery_namespace_name = module.networking.service_discovery_namespace_name
 
   # Autoscaling — staging runs conservative
   backend_min_count      = 1
@@ -156,6 +157,7 @@ module "monitoring" {
   vpc_id                           = module.networking.vpc_id
   private_subnet_ids               = module.networking.private_subnet_ids
   service_discovery_namespace_id   = module.networking.service_discovery_namespace_id
+  service_discovery_namespace_name = module.networking.service_discovery_namespace_name
   monitoring_security_group_id     = module.security.monitoring_security_group_id
   ecs_cluster_id                   = module.ecs.cluster_id
   ecs_task_execution_role_arn      = module.security.ecs_task_execution_role_arn
