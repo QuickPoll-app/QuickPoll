@@ -4,6 +4,8 @@ import com.amalitech.qa.base.BaseTest;
 import com.amalitech.qa.testdata.AuthTestData;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
@@ -11,6 +13,127 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 import static org.hamcrest.Matchers.*;
 
 public class AuthApiTest extends BaseTest {
+
+    // Real user UUID from staging DB
+    private static final String TEST_USER_UUID = "550e8400-e29b-41d4-a716-446655440001";
+
+    // ════════════════════════════════════════════════════════════════════════
+    // CLEANUP — Delete test-registered users before all tests run
+    // ════════════════════════════════════════════════════════════════════════
+
+    @BeforeClass
+    public void cleanUpBeforeTests() {
+        String[] testEmails = {
+                "johndoe@amalitech.com",
+                "janesmith@amalitech.com",
+                "testuser@amalitech.com"
+        };
+
+        String cleanupAdminToken = given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                            "email": "admin@amalitech.com",
+                            "password": "password123"
+                        }
+                        """)
+                .when()
+                .post(AUTH_URL + "/login")
+                .then()
+                .statusCode(200)
+                .extract().response()
+                .jsonPath().getString("data.token");
+
+        for (String email : testEmails) {
+            try {
+                Response userResponse = given()
+                        .header("Authorization", "Bearer " + cleanupAdminToken)
+                        .when()
+                        .get(BASE_URL + "/users/email/" + email)
+                        .then()
+                        .extract().response();
+
+                if (userResponse.statusCode() == 200) {
+                    String userId = userResponse.jsonPath().getString("id");
+                    given()
+                            .header("Authorization", "Bearer " + cleanupAdminToken)
+                            .when()
+                            .delete(BASE_URL + "/users/" + userId);
+                    System.out.println("Pre-cleaned user: " + email);
+                }
+            } catch (Exception e) {
+                System.out.println("Pre-clean skipped for: " + email);
+            }
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // CLEANUP — Delete test-registered users after all tests run
+    // ════════════════════════════════════════════════════════════════════════
+
+    @AfterClass
+    public void cleanUpTestUsers() {
+        String[] testEmails = {
+                "johndoe@amalitech.com",
+                "janesmith@amalitech.com",
+                "testuser@amalitech.com"
+        };
+
+        // Login as admin to get fresh token for cleanup
+        String cleanupAdminToken = given()
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                            "email": "admin@amalitech.com",
+                            "password": "password123"
+                        }
+                        """)
+                .when()
+                .post(AUTH_URL + "/login")
+                .then()
+                .statusCode(200)
+                .extract().response()
+                .jsonPath().getString("data.token");
+
+        for (String email : testEmails) {
+            try {
+                // Get user UUID by email
+                Response userResponse = given()
+                        .header("Authorization", "Bearer " + cleanupAdminToken)
+                        .when()
+                        .get(BASE_URL + "/users/email/" + email)
+                        .then()
+                        .extract().response();
+
+                if (userResponse.statusCode() == 200) {
+                    String userId = userResponse.jsonPath().getString("id");
+                    // Delete user
+                    given()
+                            .header("Authorization", "Bearer " + cleanupAdminToken)
+                            .when()
+                            .delete(BASE_URL + "/users/" + userId)
+                            .then()
+                            .extract().response();
+                    System.out.println("Cleaned up test user: " + email);
+                }
+            } catch (Exception e) {
+                System.out.println("Could not clean up user: " + email + " — " + e.getMessage());
+            }
+        }
+
+        // Reset test user role back to USER after role update tests
+        try {
+            given()
+                    .header("Authorization", "Bearer " + cleanupAdminToken)
+                    .when()
+                    .patch(BASE_URL + "/users/" + TEST_USER_UUID + "/role-update?role=USER")
+                    .then()
+                    .extract().response();
+            System.out.println("Reset test user role back to USER");
+        } catch (Exception e) {
+            System.out.println("Could not reset user role: " + e.getMessage());
+        }
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     // AUTH-001 — USER REGISTRATION
@@ -133,12 +256,9 @@ public class AuthApiTest extends BaseTest {
                 .body("data.role", equalTo(expectedRole))
                 .extract().response();
 
-        // Save user token for use in JWT tests
         if (expectedRole.equals("USER")) {
             userToken = response.jsonPath().getString("data.token");
         }
-
-        // Save admin token for use in role management tests
         if (expectedRole.equals("ADMIN")) {
             adminToken = response.jsonPath().getString("data.token");
         }
@@ -244,64 +364,41 @@ public class AuthApiTest extends BaseTest {
 
     // ════════════════════════════════════════════════════════════════════════
     // AUTH-007 — ROLE MANAGEMENT
+    // PATCH /api/users/{userId}/role-update?role=ADMIN
     // ════════════════════════════════════════════════════════════════════════
 
     @Test(priority = 10,
-            description = "AUTH-007: Admin can update user role successfully",
+            description = "AUTH-007: Non-admin cannot update user role — returns 403",
             dependsOnMethods = "testValidLogin")
-    public void testAdminCanUpdateUserRole() {
-        String body = """
-                {
-                    "role": "ADMIN"
-                }
-                """;
-
+    public void testNonAdminCannotUpdateRole() {
         given()
-                .header("Authorization", "Bearer " + adminToken)
-                .contentType(ContentType.JSON)
-                .body(body)
+                .header("Authorization", "Bearer " + userToken)
                 .when()
-                .put(BASE_URL + "/admin/users/2/role")
+                .patch(BASE_URL + "/users/" + TEST_USER_UUID + "/role-update?role=ADMIN")
                 .then()
-                .statusCode(200);
+                .statusCode(403);
     }
 
     @Test(priority = 11,
-            description = "AUTH-007: Non-admin cannot update user role",
+            description = "AUTH-007: Admin can update user role successfully",
             dependsOnMethods = "testValidLogin")
-    public void testNonAdminCannotUpdateRole() {
-        String body = """
-                {
-                    "role": "ADMIN"
-                }
-                """;
-
+    public void testAdminCanUpdateUserRole() {
         given()
-                .header("Authorization", "Bearer " + userToken)
-                .contentType(ContentType.JSON)
-                .body(body)
+                .header("Authorization", "Bearer " + adminToken)
                 .when()
-                .put(BASE_URL + "/admin/users/2/role")
+                .patch(BASE_URL + "/users/" + TEST_USER_UUID + "/role-update?role=ADMIN")
                 .then()
-                .statusCode(403);
+                .statusCode(200);
     }
 
     @Test(priority = 12,
             description = "AUTH-007: Updating role for non-existent user returns 404",
             dependsOnMethods = "testValidLogin")
     public void testUpdateRoleNonExistentUser() {
-        String body = """
-                {
-                    "role": "ADMIN"
-                }
-                """;
-
         given()
                 .header("Authorization", "Bearer " + adminToken)
-                .contentType(ContentType.JSON)
-                .body(body)
                 .when()
-                .put(BASE_URL + "/admin/users/99999/role")
+                .patch(BASE_URL + "/users/00000000-0000-0000-0000-000000000000/role-update?role=ADMIN")
                 .then()
                 .statusCode(404);
     }
@@ -316,18 +413,10 @@ public class AuthApiTest extends BaseTest {
                                                String scenario) {
         System.out.println("Running scenario: " + scenario);
 
-        String body = String.format("""
-                {
-                    "role": "%s"
-                }
-                """, role);
-
         given()
                 .header("Authorization", "Bearer " + adminToken)
-                .contentType(ContentType.JSON)
-                .body(body)
                 .when()
-                .put(BASE_URL + "/admin/users/2/role")
+                .patch(BASE_URL + "/users/" + TEST_USER_UUID + "/role-update?role=" + role)
                 .then()
                 .statusCode(expectedStatus);
     }
