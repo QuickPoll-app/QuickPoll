@@ -30,6 +30,20 @@
     }
   </section>
 
+  <section class="card-results">
+    @for (option of getTopOptions(); track option.id) {
+      <div class="result-item">
+        <div class="result-label">
+          <span class="option-text">{{ option.text }}</span>
+          <span class="option-percentage">{{ option.percentage.toFixed(1) }}%</span>
+        </div>
+        <div class="result-bar">
+          <div class="result-fill" [style.width.%]="option.percentage"></div>
+        </div>
+      </div>
+    }
+  </section>
+
   <footer class="card-footer">
     <div class="footer-stats">
       <span>{{ poll().totalVotes }} votes</span>

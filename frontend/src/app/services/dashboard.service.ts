@@ -117,6 +117,21 @@ export class DashboardService {
     return this.http.get<IRecentResult[]>(`${this.apiUrl}/recent-results`);
   }
 
+  public recordVote(pollId: string, optionIds: string[]): Observable<IResponseWrapper<null>> {
+    return this.http.post<IResponseWrapper<null>>(
+      `${this.pollsApiUrl}/${pollId}/vote`,
+      { optionIds }
+    );
+  }
+
+  public getPollById(pollId: string): Observable<IResponseWrapper<IPollResponse>> {
+    return this.http.get<IResponseWrapper<IPollResponse>>(`${this.pollsApiUrl}/${pollId}`);
+  }
+
+  public refreshPolls(): Observable<IResponseWrapper<IPage<IPollResponse>>> {
+    return this.getAllPolls(0, 100);
+  }
+
   private calculateParticipation(totalVotes: number): number {
     // Handle null/undefined values to prevent NaN
     if (!totalVotes || totalVotes === 0) {

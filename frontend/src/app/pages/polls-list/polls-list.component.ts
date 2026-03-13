@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, DestroyRef } from "@angular/core";
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, AfterViewInit, DestroyRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, NavigationEnd } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { filter } from "rxjs/operators";
 import {
   PollCardComponent,
   InputComponent,
@@ -13,6 +14,7 @@ import {
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { IPollResponse } from "../../models/poll.model";
 import { DashboardService } from "../../services/dashboard.service";
+import { VoteTrackingService } from "../../services/vote-tracking.service";
 
 @Component({
   selector: "app-polls-list",
@@ -30,9 +32,10 @@ import { DashboardService } from "../../services/dashboard.service";
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class PollsListComponent implements OnInit {
+export class PollsListComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private dashboardService = inject(DashboardService);
+  private voteTrackingService = inject(VoteTrackingService);
   private destroyRef = inject(DestroyRef);
 
   public searchQuery = signal("");
@@ -90,13 +93,20 @@ export class PollsListComponent implements OnInit {
     this.router.navigate(["/create-poll"]);
   }
 
-  ngOnInit() {
+  private loadPolls() {
     this.loading.set(true);
     this.dashboardService.getAllPolls(0, 100)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.polls.set(response.data?.content || []);
+          const polls = response.data?.content || [];
+          const updatedPolls = polls.map(p => ({
+            ...p,
+            HasVoted: p.HasVoted || this.voteTrackingService.hasVoted(p.id)
+          }));
+          
+          console.log('Polls loaded:', updatedPolls.map(p => ({ question: p.question, HasVoted: p.HasVoted })));
+          this.polls.set(updatedPolls);
           this.loading.set(false);
         },
         error: (error) => {
@@ -105,4 +115,32 @@ export class PollsListComponent implements OnInit {
         }
       });
   }
+
+  ngOnInit() {
+    this.loadPolls();
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        if (this.router.url === '/polls') {
+          this.loadPolls();
+        }
+      });
+  }
+
+  ngAfterViewInit() {
+    const focusListener = () => this.loadPolls();
+
+    window.addEventListener('focus', focusListener);
+    
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('focus', focusListener);
+    });
+  }
+
+  // ngOnDestroy() {
+  //   // Cleanup handled by destroyRef
+  // }
 }
