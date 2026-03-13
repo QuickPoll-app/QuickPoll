@@ -69,14 +69,14 @@ public class DashBoardController {
     }
 
     @GetMapping("/vote-trends")
-    public ResponseEntity<List<VoteTrendDto>> getVoteTrends() {
+    public ResponseEntity<ResponseWrapper<List<VoteTrendDto>>> getVoteTrends() {
         List<VoteTrend> data = voteTrendRepository.findAll();
         List<VoteTrendDto> dto = data.stream()
                 .map(v -> new VoteTrendDto(
                         v.getVoteDate(),
                         v.getVotesPerDay()
                 )).toList();
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, dto.isEmpty()? "No vote trends found" : "Retrieved vote trends", dto));
     }
 
     @GetMapping("/user-participation")
