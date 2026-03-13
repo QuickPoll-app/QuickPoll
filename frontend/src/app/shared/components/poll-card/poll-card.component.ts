@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, effect } from "@angular/core";
+import { ChangeDetectionStrategy, Component, input, output} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { BadgeComponent } from "../badge/badge.component";
 import { IPollResponse } from "../../../models";
@@ -15,11 +15,7 @@ export class PollCardComponent {
   public poll = input.required<IPollResponse>();
   public cardClick = output<void>();
 
-  constructor() {
-    effect(() => {
-      console.log('Poll card received:', this.poll().question, 'HasVoted:', this.poll().HasVoted);
-    });
-  }
+ 
 
   public getStatusVariant() {
     return this.poll().status === 'ACTIVE' ? 'active' : 'expired';

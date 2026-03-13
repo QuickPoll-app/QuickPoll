@@ -29,6 +29,18 @@ export class SidebarComponent {
 
   public isDarkMode = this.themeService.isDarkMode;
 
+  public filteredNavItems = computed(() => {
+    const user = this.authService.getUser();
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
+    
+    return this.navItems().filter(item => {
+      if (item.label === 'Create Poll' && !isAdmin) {
+        return false;
+      }
+      return true;
+    });
+  });
+
   public userInitials = computed(() => {
     const name = this.userProfile().name;
     const nameParts = name.trim().split(' ').filter(part => part.length > 0);

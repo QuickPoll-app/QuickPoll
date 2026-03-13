@@ -12,6 +12,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { IStatCard, IActivePoll, IRecentResult } from "../../models";
 import { DashboardService } from "../../services/dashboard.service";
+import { AuthService } from "../../services/auth.service";
 import {
   StatCardComponent,
   BadgeComponent,
@@ -43,6 +44,7 @@ export class DashboardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private router = inject(Router);
   private dashboardService = inject(DashboardService);
+  private authService = inject(AuthService);
 
   public stats = signal<IStatCard[]>([]);
   public activePolls = signal<IActivePoll[]>([]);
@@ -52,6 +54,13 @@ export class DashboardComponent implements OnInit {
   public activePollsLoading = signal(true);
   public recentResultsLoading = signal(true);
   public error = signal<string | null>(null);
+  public isAdmin = signal(false);
+
+  constructor() {
+    const user = this.authService.getUser();
+    
+    this.isAdmin.set(user?.role?.toLowerCase() === 'admin');
+  }
 
   public ngOnInit() {
     this.loadDashboardData();

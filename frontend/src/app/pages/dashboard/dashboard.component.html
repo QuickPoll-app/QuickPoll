@@ -11,7 +11,7 @@
       <h1 class="page-title">Dashboard</h1>
       <p class="page-subtitle">Overview of all your polling activity</p>
     </div>
-    <app-buttons variant="primary" (clicked)="onCreatePoll()">
+    <app-buttons variant="primary" (clicked)="onCreatePoll()" *ngIf="isAdmin()">
       <iconify-icon icon="lucide:plus"></iconify-icon>
       <span>Create Poll</span>
     </app-buttons>

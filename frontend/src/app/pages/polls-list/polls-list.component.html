@@ -4,16 +4,30 @@
       <h1 class="page-title">Polls</h1>
       <p class="page-subtitle">Manage and monitor all your polls</p>
     </div>
-    <app-buttons variant="primary" (clicked)="onCreatePoll()">
-      <div class="button-content">
-        <iconify-icon icon="lucide:plus"></iconify-icon>
-        <span>Create Poll</span>
-      </div>
-    </app-buttons>
+    @if (isAdmin()) {
+      <app-buttons variant="primary" (clicked)="onCreatePoll()">
+        <div class="button-content">
+          <iconify-icon icon="lucide:plus"></iconify-icon>
+          <span>Create Poll</span>
+        </div>
+      </app-buttons>
+    }
   </div>
 
   <div class="filters-section">
-    <app-input placeholder="Search polls..."> </app-input>
+    <div class="search-container">
+      <app-input placeholder="Search polls by name..." (input)="onSearch($event)" [value]="searchInputValue()"></app-input>
+      <app-buttons variant="primary" (clicked)="onSearchById()" [loading]="searchLoading()">
+        <iconify-icon icon="lucide:search"></iconify-icon>
+        <span>Search</span>
+      </app-buttons>
+    </div>
+    @if (searchError()) {
+      <div class="search-error">
+        <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+        <span>{{ searchError() }}</span>
+      </div>
+    }
 
     <app-filter-tabs [activeTab]="activeFilter()" (tabChanged)="onFilterChange($event)">
     </app-filter-tabs>

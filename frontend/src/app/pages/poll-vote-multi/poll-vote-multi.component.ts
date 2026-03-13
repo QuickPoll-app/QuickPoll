@@ -55,11 +55,19 @@ export class PollVoteMultiComponent implements OnInit {
   public poll = signal<IPollResponse | null>(null);
   public loading = signal(true);
 
-  public navItems: INavItem[] = [
-    { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
-    { label: "Polls", icon: "lucide:vote", route: "/polls" },
-    { label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" },
-  ];
+  public navItems: INavItem[] = (() => {
+    const user = this.authService.getUser();
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
+    const items: INavItem[] = [
+      { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
+      { label: "Polls", icon: "lucide:vote", route: "/polls" },
+    ];
+    
+    if (isAdmin) {
+      items.push({ label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" });
+    }
+    return items;
+  })();
 
   public userProfile: IUserProfile = (() => {
     const user = this.authService.getUser();

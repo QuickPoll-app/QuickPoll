@@ -49,6 +49,28 @@
   gap: 1rem;
 }
 
+.search-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.search-container app-input {
+  flex: 1;
+}
+
+.search-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.5rem;
+  color: rgba(220, 38, 38, 1);
+  font-size: 0.875rem;
+}
+
 .polls-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
