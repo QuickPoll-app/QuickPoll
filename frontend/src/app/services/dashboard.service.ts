@@ -114,7 +114,41 @@ export class DashboardService {
   }
 
   public getRecentResults(): Observable<IRecentResult[]> {
-    return this.http.get<IRecentResult[]>(`${this.apiUrl}/recent-results`);
+    const params = new HttpParams()
+      .set('page', '0')
+      .set('size', '10')
+      .set('status', PollStatus.CLOSED);
+
+    return this.http.get<IResponseWrapper<IPage<IPollResponse>>>(`${this.pollsApiUrl}`, { params })
+      .pipe(
+        map(response => {
+          if (!response.data || !response.data.content) {
+            return [];
+          }
+
+          const content = Array.isArray(response.data.content) ? 
+            response.data.content.filter(item => typeof item === 'object' && item !== null) : 
+            [];
+
+          const results: IRecentResult[] = content.map(poll => {
+            const winnerOption = poll.options.reduce((max, opt) => 
+              opt.voteCount > max.voteCount ? opt : max
+            );
+
+            return {
+              id: poll.id,
+              title: poll.question,
+              winner: winnerOption.text,
+              winnerPercentage: Math.round(winnerOption.percentage),
+              totalVotes: poll.totalVotes || 0,
+              participation: Math.round(poll.participationRate || 0),
+              status: poll.status
+            };
+          });
+
+          return results;
+        })
+      );
   }
 
   public recordVote(pollId: string, optionIds: string[]): Observable<IResponseWrapper<null>> {
@@ -133,12 +167,9 @@ export class DashboardService {
   }
 
   private calculateParticipation(totalVotes: number): number {
-    // Handle null/undefined values to prevent NaN
     if (!totalVotes || totalVotes === 0) {
       return 0;
     }
-    // This is a simplified calculation. You may want to adjust based on your business logic
-    // For example, divide by total users or eligible voters
     return Math.min(Math.round((totalVotes / 100) * 100), 100);
   }
 

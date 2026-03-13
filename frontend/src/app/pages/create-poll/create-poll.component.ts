@@ -30,6 +30,7 @@ export class CreatePollComponent {
   public questionCharCount = signal(0);
   public descriptionCharCount = signal(0);
   public anonymousVoting = signal(false);
+  public dateError = signal<string | null>(null);
 
   constructor() {
     this.pollForm = this.fb.group({
@@ -49,6 +50,10 @@ export class CreatePollComponent {
 
     this.pollForm.get("description")?.valueChanges.subscribe((value) => {
       this.descriptionCharCount.set(value?.length || 0);
+    });
+
+    this.pollForm.get("expiryDate")?.valueChanges.subscribe((value) => {
+      this.validateExpiryDate(value);
     });
   }
 
@@ -74,8 +79,26 @@ export class CreatePollComponent {
     this.router.navigate(["/polls"]);
   }
 
+  private validateExpiryDate(dateValue: string): void {
+    if (!dateValue) {
+      this.dateError.set(null);
+      return;
+    }
+
+    const selectedDate = new Date(dateValue);
+    const today = new Date();
+    
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      this.dateError.set("Please select a date in the future. Past dates are not allowed.");
+    } else {
+      this.dateError.set(null);
+    }
+  }
+
   public onSubmit() {
-    if (!this.pollForm.valid) {
+    if (!this.pollForm.valid || this.dateError()) {
       this.pollForm.markAllAsTouched();
       return;
     }

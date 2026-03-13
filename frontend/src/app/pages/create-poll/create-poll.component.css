@@ -64,6 +64,15 @@
   color: var(--color-text-muted);
 }
 
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-error-700);
+}
+
 .poll-type-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

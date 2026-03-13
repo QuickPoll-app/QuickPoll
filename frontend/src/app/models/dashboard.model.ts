@@ -23,4 +23,5 @@ export interface IRecentResult {
   winnerPercentage: number;
   totalVotes: number;
   participation: number;
+  status: string;
 }
