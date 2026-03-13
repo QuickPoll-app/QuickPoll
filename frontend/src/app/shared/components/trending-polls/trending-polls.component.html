@@ -66,6 +66,7 @@
     @if (totalPages() > 1) {
       <div class="pagination-container">
         <button
+          type="button"
           class="pagination-btn prev-btn"
           (click)="previousPage()"
           [disabled]="currentPage() === 1"
@@ -81,6 +82,7 @@
               <span class="page-ellipsis">...</span>
             } @else {
               <button
+                type="button"
                 class="page-btn"
                 [class.active]="page === currentPage()"
                 (click)="goToPage(page)"
@@ -94,6 +96,7 @@
         </div>
 
         <button
+          type="button"
           class="pagination-btn next-btn"
           (click)="nextPage()"
           [disabled]="currentPage() === totalPages()"
