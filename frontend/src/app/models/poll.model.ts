@@ -73,3 +73,66 @@ export interface IResponseWrapper<T> {
   message: string;
   data?: T;
 }
+
+export interface IOptionResponse {
+  id: string;
+  text: string;
+  voteCount: number;
+  percentage: number;
+}
+
+export interface IPollResultsResponse {
+  id: string;
+  question: string;
+  description: string;
+  creatorName: string;
+  HasVoted: boolean;
+  status: string;
+  multipleChoice: boolean;
+  createdAt: string;
+  expiresAt: string;
+  totalVotes: number;
+  participationRate: number;
+  options: IOptionResponse[];
+}
+
+export interface IChartDataset {
+  data: number[];
+  backgroundColor: string[];
+  hoverBackgroundColor: string[];
+  borderColor: string;
+  borderWidth: number;
+}
+
+export interface IChartData {
+  labels: string[];
+  datasets: IChartDataset[];
+}
+
+export interface ILegendLabels {
+  color: string;
+  font: {
+    size: number;
+  };
+  padding: number;
+}
+
+export interface ITooltipConfig {
+  backgroundColor: string;
+  titleColor: string;
+  bodyColor: string;
+  borderColor: string;
+  borderWidth: number;
+}
+
+export interface IChartOptions {
+  cutout: string;
+  plugins: {
+    legend: {
+      labels: ILegendLabels;
+    };
+    tooltip: ITooltipConfig;
+  };
+  maintainAspectRatio: boolean;
+  responsive: boolean;
+}

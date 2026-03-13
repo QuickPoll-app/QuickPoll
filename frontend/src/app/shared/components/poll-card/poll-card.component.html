@@ -35,7 +35,7 @@
       <div class="result-item">
         <div class="result-label">
           <span class="option-text">{{ option.text }}</span>
-          <span class="option-percentage">{{ option.percentage.toFixed(1) }}%</span>
+          <span class="option-percentage">{{ (option.percentage | number: '1.2-2') }}%</span>
         </div>
         <div class="result-bar">
           <div class="result-fill" [style.width.%]="option.percentage"></div>
@@ -47,7 +47,7 @@
   <footer class="card-footer">
     <div class="footer-stats">
       <span>{{ poll().totalVotes }} votes</span>
-      <span>{{ poll().participationRate }}% participated</span>
+      <span>{{ (poll().participationRate | number: '1.2-2') }}% participated</span>
     </div>
     <span [class]="poll().status === 'ACTIVE' ? 'time-left' : 'time-expired'">
       {{ calculateTimeLeft() }}

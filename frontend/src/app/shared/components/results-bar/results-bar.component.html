@@ -19,7 +19,7 @@
   </div>
 
   <div class="stats-section">
-    <span class="percentage">{{ percentage() }}%</span>
+    <span class="percentage">{{ (percentage() | number: '1.2-2') }}%</span>
     <span class="vote-count">{{ votes() }}</span>
   </div>
 </div>
