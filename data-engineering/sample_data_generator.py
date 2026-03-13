@@ -80,7 +80,7 @@ def generate_users(conn):
             {
                 "id": user_id,
                 "email": fake.email(),
-                "password": "password123",
+                "password": "$2a$10$Pbjy8rZd5CnfNlmMtx6sSOdksvM7VnaVX7sSFNuzz8S14MczE/UuS",
                 "full_name": fake.name(),
                 "role": "USER",
                 "created_at": datetime.utcnow(),
@@ -89,6 +89,77 @@ def generate_users(conn):
         )
 
         user_ids.append(user_id)
+
+    """
+    Extra Admin And User
+    """
+    user_id = str(uuid.uuid4())
+    user_ids.append(user_id)
+    conn.execute(
+            text("""
+            INSERT INTO users (
+                id,
+                email,
+                password,
+                full_name,
+                role,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                :id,
+                :email,
+                :password,
+                :full_name,
+                :role,
+                :created_at,
+                :updated_at
+            )
+            """),
+            {
+                "id": user_id,
+                "email": "adminadmin@quickpoll.com",
+                "password": "$2a$10$Pbjy8rZd5CnfNlmMtx6sSOdksvM7VnaVX7sSFNuzz8S14MczE/UuS",
+                "full_name": "Admin User",
+                "role": "ADMIN",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+        )
+    user_id = str(uuid.uuid4())
+    user_ids.append(user_id)
+    conn.execute(
+            text("""
+            INSERT INTO users (
+                id,
+                email,
+                password,
+                full_name,
+                role,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                :id,
+                :email,
+                :password,
+                :full_name,
+                :role,
+                :created_at,
+                :updated_at
+            )
+            """),
+            {
+                "id": user_id,
+                "email": "useruser@quickpoll.com",
+                "password": "$2a$10$Pbjy8rZd5CnfNlmMtx6sSOdksvM7VnaVX7sSFNuzz8S14MczE/UuS",
+                "full_name": "Regular User",
+                "role": "USER",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+        )
+
 
     return user_ids
 
