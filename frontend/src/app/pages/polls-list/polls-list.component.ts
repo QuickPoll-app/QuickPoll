@@ -79,7 +79,7 @@ export class PollsListComponent implements OnInit, AfterViewInit {
       );
     }
 
-    return filtered;
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   public onSearch(event: Event | string) {

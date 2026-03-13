@@ -1,0 +1,299 @@
+.user-management-container {
+  width: calc(100vw - 16rem);
+  margin-left: 16rem;
+  padding: 1.5rem 2rem;
+}
+
+@media (max-width: 1023px) {
+  .user-management-container {
+    width: 100%;
+    margin-left: 0;
+    padding: 1.5rem 1rem;
+  }
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.page-subtitle {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.error-banner iconify-icon {
+  font-size: 1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: var(--color-text-secondary);
+  gap: 0.75rem;
+}
+
+.empty-state iconify-icon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.users-table thead {
+  background: var(--color-bg-secondary);
+  border-bottom: 2px solid var(--color-border-primary);
+}
+
+.users-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.users-table tbody tr {
+  border-bottom: 1px solid var(--color-border-primary);
+  transition: background 150ms ease;
+}
+
+.users-table tbody tr:hover {
+  background: var(--color-bg-secondary);
+}
+
+.users-table td {
+  padding: 1rem;
+  color: var(--color-text-primary);
+}
+
+.email-cell {
+  font-weight: 500;
+  color: var(--color-primary-600);
+}
+
+.name-cell {
+  font-weight: 500;
+}
+
+.role-cell {
+  display: flex;
+  align-items: center;
+}
+
+.role-edit {
+  display: flex;
+  align-items: center;
+}
+
+.role-select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 0.4rem;
+  background: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.role-select:hover,
+.role-select:focus {
+  border-color: var(--color-primary-500);
+  outline: none;
+}
+
+.date-cell {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 0.4rem;
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-size: 1rem;
+}
+
+.edit-btn {
+  color: var(--color-primary-600);
+}
+
+.edit-btn:hover {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.delete-btn {
+  color: var(--color-error-600);
+}
+
+.delete-btn:hover {
+  background: var(--color-error-100);
+  color: var(--color-error-700);
+}
+
+.save-btn {
+  color: var(--color-success-600);
+}
+
+.save-btn:hover {
+  background: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+.cancel-btn {
+  color: var(--color-text-muted);
+}
+
+.cancel-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.confirmation-cell {
+  padding: 1rem !important;
+  background: var(--color-error-50);
+}
+
+.delete-confirmation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-error-100);
+  border: 1px solid var(--color-error-300);
+  border-radius: 0.5rem;
+}
+
+.confirmation-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-error-700);
+  font-weight: 500;
+}
+
+.confirmation-content iconify-icon {
+  font-size: 1.25rem;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.btn-cancel {
+  background: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+}
+
+.btn-cancel:hover {
+  border-color: var(--color-text-primary);
+}
+
+.btn-confirm {
+  background: var(--color-error-600);
+  color: white;
+}
+
+.btn-confirm:hover {
+  background: var(--color-error-700);
+}
+
+@media (max-width: 768px) {
+  .users-table {
+    font-size: 0.75rem;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+
+  .delete-confirmation {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .confirmation-actions {
+    width: 100%;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    flex: 1;
+  }
+}

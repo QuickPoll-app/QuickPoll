@@ -36,6 +36,7 @@ export class MainLayoutComponent {
     },
     { label: "Polls", icon: "lucide:vote", route: "/polls" },
     { label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" },
+    { label: "Users", icon: "lucide:users", route: "/users" },
   ];
 
   public userProfile: IUserProfile = (() => {

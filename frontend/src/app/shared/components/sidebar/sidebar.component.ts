@@ -37,6 +37,9 @@ export class SidebarComponent {
       if (item.label === 'Create Poll' && !isAdmin) {
         return false;
       }
+      if (item.label === 'Users' && !isAdmin) {
+        return false;
+      }
       return true;
     });
   });

@@ -20,3 +20,4 @@ export { StatCardComponent } from "./stat-card/stat-card.component";
 export { ToastComponent } from "./toast/toast.component";
 export { ToggleComponent } from "./toggle/toggle.component";
 export { WinnerCalloutComponent } from "./winner-callout/winner-callout.component";
+export { TrendingPollsComponent } from "./trending-polls/trending-polls.component";

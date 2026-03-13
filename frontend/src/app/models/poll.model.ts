@@ -136,3 +136,7 @@ export interface IChartOptions {
   maintainAspectRatio: boolean;
   responsive: boolean;
 }
+
+export interface ITrendingPoll extends IPollResponse {
+  trendingScore?: number;
+}

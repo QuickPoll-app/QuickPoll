@@ -10,6 +10,7 @@ import { PollVoteMultiComponent } from "./pages/poll-vote-multi/poll-vote-multi.
 import { PollVoteSingleComponent } from "./pages/poll-vote-single/poll-vote-single.component";
 import { PollExpiredComponent } from "./pages/poll-expired/poll-expired.component";
 import { PollResultsComponent } from "./pages/poll-results/poll-results.component";
+import { UserManagementComponent } from "./pages/user-management/user-management.component";
 import { NotFoundComponent } from "./pages/not-found/not-found.component";
 import { authGuard } from "./guards/auth.guard";
 
@@ -47,6 +48,10 @@ export const routes: Routes = [
       {
         path: "edit-poll/:id",
         component: EditPollComponent,
+      },
+      {
+        path: "users",
+        component: UserManagementComponent,
       },
       {
         path: "poll/:id/vote-single",

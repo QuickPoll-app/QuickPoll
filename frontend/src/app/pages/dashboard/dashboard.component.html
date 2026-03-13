@@ -110,4 +110,22 @@
       </app-card>
     </div>
   </div>
+
+  <div class="trending-section">
+    <app-card>
+      <div class="section-header">
+        <h3 class="section-title">
+          <iconify-icon icon="lucide:trending-up"></iconify-icon>
+          Trending Polls
+        </h3>
+      </div>
+      <div class="section-content">
+        <app-trending-polls
+          [polls]="trendingPolls()"
+          [loading]="trendingLoading()"
+          (pollClick)="onTrendingPollClick($event)"
+        ></app-trending-polls>
+      </div>
+    </app-card>
+  </div>
 </div>

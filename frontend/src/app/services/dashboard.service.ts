@@ -166,6 +166,10 @@ export class DashboardService {
     return this.getAllPolls(0, 100);
   }
 
+  public getTrendingPolls(): Observable<IResponseWrapper<IPage<IPollResponse>>> {
+    return this.http.get<IResponseWrapper<IPage<IPollResponse>>>(`${this.apiUrl}/trending`);
+  }
+
   private calculateParticipation(totalVotes: number): number {
     if (!totalVotes || totalVotes === 0) {
       return 0;
