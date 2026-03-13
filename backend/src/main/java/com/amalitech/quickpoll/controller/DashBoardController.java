@@ -80,7 +80,7 @@ public class DashBoardController {
     }
 
     @GetMapping("/user-participation")
-    public ResponseEntity<List<UserParticipationDto>> getUserParticipation() {
+    public ResponseEntity<ResponseWrapper<List<UserParticipationDto>>> getUserParticipation() {
         List<UserParticipation> data = userParticipationRepository.findAll();
         List<UserParticipationDto> dto = data.stream()
                 .map(u -> new UserParticipationDto(
@@ -89,6 +89,6 @@ public class DashBoardController {
                         u.getParticipationRate()
                 )).toList();
 
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(ResponseWrapper.success(HttpStatus.OK, dto.isEmpty()? "No user participation found" : "Retrieved user participation", dto));
     }
 }
