@@ -1,0 +1,46 @@
+<div class="theme-selector">
+  <label class="theme-option" for="themeLight">
+    <input id="themeLight" type="radio" name="theme" value="light" (change)="selectTheme('light')" />
+    <div class="theme-card">
+      <div class="theme-preview light-preview"></div>
+      <div class="theme-info">
+        <iconify-icon icon="lucide:sun" class="theme-icon"></iconify-icon>
+        <div>
+          <h3>Light</h3>
+          <p>Bright and clear interface</p>
+        </div>
+      </div>
+      <div class="radio-indicator"></div>
+    </div>
+  </label>
+
+  <label class="theme-option" for="themeDark">
+    <input id="themeDark" type="radio" name="theme" value="dark" (change)="selectTheme('dark')" />
+    <div class="theme-card">
+      <div class="theme-preview dark-preview"></div>
+      <div class="theme-info">
+        <iconify-icon icon="lucide:moon" class="theme-icon"></iconify-icon>
+        <div>
+          <h3>Dark</h3>
+          <p>Easy on the eyes in low light</p>
+        </div>
+      </div>
+      <div class="radio-indicator"></div>
+    </div>
+  </label>
+
+  <label class="theme-option" for="themeSystem">
+    <input id="themeSystem" type="radio" name="theme" value="system" (change)="selectTheme('system')" />
+    <div class="theme-card">
+      <div class="theme-preview system-preview"></div>
+      <div class="theme-info">
+        <iconify-icon icon="lucide:monitor" class="theme-icon"></iconify-icon>
+        <div>
+          <h3>System</h3>
+          <p>Matches your device settings</p>
+        </div>
+      </div>
+      <div class="radio-indicator"></div>
+    </div>
+  </label>
+</div>

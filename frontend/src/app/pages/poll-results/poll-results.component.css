@@ -193,6 +193,26 @@
   font-size: 1rem;
 }
 
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
 @media (max-width: 1023px) {
   .results-container {
     width: 100%;

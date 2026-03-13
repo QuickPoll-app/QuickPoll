@@ -10,7 +10,6 @@ import {
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import { INavItem, IUserProfile } from "../../../models";
 import { AuthService } from "../../../services/auth.service";
-import { ThemeService } from "../../../services/theme.service";
 
 @Component({
   selector: "app-sidebar",
@@ -25,9 +24,21 @@ export class SidebarComponent {
   public userProfile = input.required<IUserProfile>();
 
   private authService = inject(AuthService);
-  private themeService = inject(ThemeService);
 
-  public isDarkMode = this.themeService.isDarkMode;
+  public filteredNavItems = computed(() => {
+    const user = this.authService.getUser();
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
+    
+    return this.navItems().filter(item => {
+      if (item.label === 'Create Poll' && !isAdmin) {
+        return false;
+      }
+      if (item.label === 'Users' && !isAdmin) {
+        return false;
+      }
+      return true;
+    });
+  });
 
   public userInitials = computed(() => {
     const name = this.userProfile().name;
@@ -42,10 +53,6 @@ export class SidebarComponent {
 
   public onLogout(): void {
     this.authService.logout();
-  }
-
-  public onToggleTheme(): void {
-    this.themeService.toggleTheme();
   }
 }
 
