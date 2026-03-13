@@ -3,63 +3,59 @@ import {
   ChangeDetectionStrategy,
   signal,
   computed,
-  effect,
   inject,
+  OnInit,
+  DestroyRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
+  PieChartComponent,
   ResultsBarComponent,
   ResultsFooterComponent,
   SidebarComponent,
 } from "../../shared/components";
 import { INavItem, IUserProfile } from "../../models";
+import { IPollResultsResponse } from "../../models/poll.model";
 import { AuthService } from "../../services/auth.service";
-
-interface OptionResponse {
-  id: string;
-  text: string;
-  voteCount: number;
-  percentage: number;
-}
-
-interface Poll {
-  id: string;
-  question: string;
-  description: string;
-  creatorName: string;
-  HasVoted: boolean;
-  status: string;
-  multipleChoice: boolean;
-  createdAt: string;
-  expiresAt: string;
-  totalVotes: number;
-  participationRate: number;
-  options: OptionResponse[];
-}
+import { DashboardService } from "../../services/dashboard.service";
 
 @Component({
   selector: "app-poll-results",
   templateUrl: "./poll-results.component.html",
   styleUrl: "./poll-results.component.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ResultsBarComponent, ResultsFooterComponent, SidebarComponent],
+  imports: [CommonModule, PieChartComponent, ResultsBarComponent, ResultsFooterComponent, SidebarComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class PollResultsComponent {
+export class PollResultsComponent implements OnInit {
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private dashboardService = inject(DashboardService);
+  private destroyRef = inject(DestroyRef);
 
   public chartView = signal<"bar" | "pie">("bar");
-  public lastUpdated = signal("2 min ago");
+  public lastUpdated = signal("just now");
+  public loading = signal(true);
 
-  public navItems = signal<INavItem[]>([
-    { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
-    { label: "Polls", icon: "lucide:vote", route: "/polls" },
-    { label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" },
-  ]);
+  public navItems = signal<INavItem[]>(
+    (() => {
+      const user = this.authService.getUser();
+      const isAdmin = user?.role?.toLowerCase() === "admin";
+      const items: INavItem[] = [
+        { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
+        { label: "Polls", icon: "lucide:vote", route: "/polls" },
+      ];
+
+      if (isAdmin) {
+        items.push({ label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" });
+      }
+      return items;
+    })(),
+  );
 
   public userProfile = signal<IUserProfile>(
     (() => {
@@ -72,7 +68,7 @@ export class PollResultsComponent {
     })(),
   );
 
-  public poll = signal<Poll | null>(null);
+  public poll = signal<IPollResultsResponse | null>(null);
 
   public totalVotes = computed(() => this.poll()?.totalVotes ?? 0);
   public winnerOption = computed(() => {
@@ -94,18 +90,27 @@ export class PollResultsComponent {
     }));
   });
 
-  constructor() {
-    effect(() => {
-      const pollId = this.route.snapshot.paramMap.get("id");
-      
-      if (pollId) {
-        // Load poll data based on ID
-      }
-    });
-  }
+  ngOnInit() {
+    const pollId = this.route.snapshot.paramMap.get("id");
 
-  public setPollData(poll: Poll) {
-    this.poll.set(poll);
+    if (pollId) {
+      this.loading.set(true);
+      this.dashboardService
+        .getPollById(pollId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (response) => {
+            if (response.data) {
+              this.poll.set(response.data as IPollResultsResponse);
+            }
+            this.loading.set(false);
+          },
+          error: (error) => {
+            console.error("Error fetching poll results:", error);
+            this.loading.set(false);
+          },
+        });
+    }
   }
 
   public onChartViewChange(view: "bar" | "pie") {
@@ -113,8 +118,24 @@ export class PollResultsComponent {
   }
 
   public onRefresh() {
-    this.lastUpdated.set("just now");
-    // Trigger data refresh
+    const pollId = this.route.snapshot.paramMap.get("id");
+
+    if (pollId) {
+      this.dashboardService
+        .getPollById(pollId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (response) => {
+            if (response.data) {
+              this.poll.set(response.data as IPollResultsResponse);
+              this.lastUpdated.set("just now");
+            }
+          },
+          error: (error) => {
+            console.error("Error refreshing poll results:", error);
+          },
+        });
+    }
   }
 
   public onBackClick() {

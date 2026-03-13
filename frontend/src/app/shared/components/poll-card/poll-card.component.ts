@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output } from "@angular/core";
+import { ChangeDetectionStrategy, Component, input, output, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { BadgeComponent } from "../badge/badge.component";
 import { IPollResponse } from "../../../models";
+import { AuthService } from "../../../services/auth.service";
 
 @Component({
   selector: "app-poll-card",
@@ -12,8 +13,14 @@ import { IPollResponse } from "../../../models";
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollCardComponent {
+  private authService = inject(AuthService);
+
   public poll = input.required<IPollResponse>();
   public cardClick = output<void>();
+  public editClick = output<void>();
+  public deleteClick = output<void>();
+
+  public isAdmin = this.authService.getUser()?.role?.toLowerCase() === 'admin';
 
   public getStatusVariant() {
     return this.poll().status === 'ACTIVE' ? 'active' : 'expired';
@@ -52,5 +59,19 @@ export class PollCardComponent {
 
       return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
     }
+  }
+
+  public getTopOptions() {
+    return this.poll().options.slice(0, 2).sort((a, b) => b.percentage - a.percentage);
+  }
+
+  public onEditClick(event: Event): void {
+    event.stopPropagation();
+    this.editClick.emit();
+  }
+
+  public onDeleteClick(event: Event): void {
+    event.stopPropagation();
+    this.deleteClick.emit();
   }
 }

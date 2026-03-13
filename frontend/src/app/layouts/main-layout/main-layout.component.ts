@@ -36,6 +36,8 @@ export class MainLayoutComponent {
     },
     { label: "Polls", icon: "lucide:vote", route: "/polls" },
     { label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" },
+    { label: "Users", icon: "lucide:users", route: "/users" },
+    { label: "Settings", icon: "lucide:settings", route: "/settings" },
   ];
 
   public userProfile: IUserProfile = (() => {
@@ -53,6 +55,10 @@ export class MainLayoutComponent {
 
   public navigateTo(route: string): void {
     this.router.navigate([route]);
+  }
+
+  public toggleSidebar(): void {
+    this.isSidebarOpen.update(v => !v);
   }
 
   public onToggleTheme(): void {

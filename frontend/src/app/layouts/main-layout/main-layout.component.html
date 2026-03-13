@@ -38,19 +38,5 @@
         </app-mobile-nav-button>
       </div>
     }
-    <div
-      (click)="onToggleTheme()"
-      (keydown.enter)="onToggleTheme()"
-      role="button"
-      tabindex="0"
-      aria-label="Toggle theme"
-    >
-      <app-mobile-nav-button
-        [icon]="isDarkMode() ? 'lucide:sun' : 'lucide:moon'"
-        [label]="'Theme'"
-        [isActive]="false"
-      >
-      </app-mobile-nav-button>
-    </div>
   </nav>
 </div>

@@ -104,7 +104,14 @@
                 <iconify-icon icon="lucide:calendar"></iconify-icon>
               </div>
             </div>
-            <p class="hint">Select when this poll should close</p>
+            @if (dateError()) {
+              <p class="error-message">
+                <iconify-icon icon="lucide:alert-circle"></iconify-icon>
+                {{ dateError() }}
+              </p>
+            } @else {
+              <p class="hint">Select when this poll should close</p>
+            }
           </div>
         </section>
 

@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit, DestroyRef } from "@angular/core";
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit, AfterViewInit, DestroyRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, NavigationEnd } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { filter } from "rxjs/operators";
 import {
   PollCardComponent,
   InputComponent,
@@ -13,6 +14,9 @@ import {
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import { IPollResponse } from "../../models/poll.model";
 import { DashboardService } from "../../services/dashboard.service";
+import { VoteTrackingService } from "../../services/vote-tracking.service";
+import { AuthService } from "../../services/auth.service";
+import { PollService } from "../../services/poll.service";
 
 @Component({
   selector: "app-polls-list",
@@ -30,15 +34,29 @@ import { DashboardService } from "../../services/dashboard.service";
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class PollsListComponent implements OnInit {
+export class PollsListComponent implements OnInit, AfterViewInit {
   private router = inject(Router);
   private dashboardService = inject(DashboardService);
+  private voteTrackingService = inject(VoteTrackingService);
+  private authService = inject(AuthService);
+  private pollService = inject(PollService);
   private destroyRef = inject(DestroyRef);
 
   public searchQuery = signal("");
   public activeFilter = signal<FilterTab>("all");
   public polls = signal<IPollResponse[]>([]);
   public loading = signal(true);
+  public isAdmin = signal(false);
+  public searchLoading = signal(false);
+  public searchError = signal<string | null>(null);
+  public searchInputValue = signal("");
+  public deleteConfirmation = signal<string | null>(null);
+
+  constructor() {
+    const user = this.authService.getUser();
+    
+    this.isAdmin.set(user?.role?.toLowerCase() === 'admin');
+  }
 
   get filteredPolls(): IPollResponse[] {
     let filtered = this.polls();
@@ -61,13 +79,53 @@ export class PollsListComponent implements OnInit {
       );
     }
 
-    return filtered;
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   public onSearch(event: Event | string) {
     const query = typeof event === "string" ? event : (event.target as HTMLInputElement).value;
-
+    
+    this.searchInputValue.set(query || "");
     this.searchQuery.set(query || "");
+  }
+
+  public onSearchById() {
+    const searchTerm = this.searchInputValue().trim().toLowerCase();
+
+    if (!searchTerm) {
+      this.searchError.set('Please enter a poll name');
+      return;
+    }
+
+    this.searchLoading.set(true);
+    this.searchError.set(null);
+
+    this.dashboardService.getAllPolls(0, 100)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.searchLoading.set(false);
+          const polls = response.data?.content || [];
+          const foundPoll = polls.find(p => p.question.toLowerCase().includes(searchTerm));
+          
+          if (foundPoll) {
+            const poll = {
+              ...foundPoll,
+              HasVoted: foundPoll.HasVoted || this.voteTrackingService.hasVoted(foundPoll.id)
+            };
+
+            this.searchInputValue.set('');
+
+            this.onPollClick(poll);
+          } else {
+            this.searchError.set('Poll not found');
+          }
+        },
+        error: (error) => {
+          this.searchLoading.set(false);
+          this.searchError.set(error?.error?.message || 'Error searching for poll');
+        }
+      });
   }
 
   public onFilterChange(filter: FilterTab) {
@@ -86,17 +144,50 @@ export class PollsListComponent implements OnInit {
     }
   }
 
+  public onEditPoll(poll: IPollResponse) {
+    this.router.navigate(["/edit-poll", poll.id]);
+  }
+
+  public onDeletePoll(poll: IPollResponse) {
+    this.deleteConfirmation.set(poll.id);
+  }
+
+  public confirmDelete(pollId: string) {
+    this.pollService.deletePoll(pollId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deleteConfirmation.set(null);
+          this.loadPolls();
+        },
+        error: (error) => {
+          console.error('Error deleting poll:', error);
+          this.deleteConfirmation.set(null);
+        }
+      });
+  }
+
+  public cancelDelete() {
+    this.deleteConfirmation.set(null);
+  }
+
   public onCreatePoll() {
     this.router.navigate(["/create-poll"]);
   }
 
-  ngOnInit() {
+  private loadPolls() {
     this.loading.set(true);
     this.dashboardService.getAllPolls(0, 100)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.polls.set(response.data?.content || []);
+          const polls = response.data?.content || [];
+          const updatedPolls = polls.map(p => ({
+            ...p,
+            HasVoted: p.HasVoted || this.voteTrackingService.hasVoted(p.id)
+          }));
+
+          this.polls.set(updatedPolls);
           this.loading.set(false);
         },
         error: (error) => {
@@ -104,5 +195,29 @@ export class PollsListComponent implements OnInit {
           this.loading.set(false);
         }
       });
+  }
+
+  ngOnInit() {
+    this.loadPolls();
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        if (this.router.url === '/polls') {
+          this.loadPolls();
+        }
+      });
+  }
+
+  ngAfterViewInit() {
+    const focusListener = () => this.loadPolls();
+
+    window.addEventListener('focus', focusListener);
+    
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('focus', focusListener);
+    });
   }
 }

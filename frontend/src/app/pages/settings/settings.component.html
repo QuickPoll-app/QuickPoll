@@ -1,0 +1,270 @@
+<div class="settings-container">
+  <!-- Desktop Layout -->
+  <div class="settings-desktop">
+    <main class="settings-main">
+      <div class="settings-header">
+        <h1>Settings</h1>
+        <p>Manage your account preferences</p>
+      </div>
+
+      <div class="settings-content">
+        <!-- Account Security Section -->
+        <app-card>
+          <div class="section-title">
+            <h2>Account Security</h2>
+          </div>
+
+          <form [formGroup]="passwordForm" class="form-section">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <div class="password-input-wrapper">
+                <input
+                  id="currentPassword"
+                  [type]="showPasswordToggle() ? 'text' : 'password'"
+                  formControlName="currentPassword"
+                  placeholder="Enter current password"
+                  class="form-input"
+                />
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  (click)="togglePasswordVisibility('current')"
+                  aria-label="Toggle password visibility"
+                >
+                  <iconify-icon [icon]="showPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <div class="password-input-wrapper">
+                <input
+                  id="newPassword"
+                  [type]="showNewPasswordToggle() ? 'text' : 'password'"
+                  formControlName="newPassword"
+                  placeholder="Enter new password"
+                  class="form-input"
+                  (input)="onNewPasswordChange($event.target.value)"
+                />
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  (click)="togglePasswordVisibility('new')"
+                  aria-label="Toggle password visibility"
+                >
+                  <iconify-icon [icon]="showNewPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+                </button>
+              </div>
+              <app-password-strength [strength]="passwordStrength()"></app-password-strength>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <div class="password-input-wrapper">
+                <input
+                  id="confirmPassword"
+                  [type]="showConfirmPasswordToggle() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  placeholder="Confirm new password"
+                  class="form-input"
+                />
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  (click)="togglePasswordVisibility('confirm')"
+                  aria-label="Toggle password visibility"
+                >
+                  <iconify-icon [icon]="showConfirmPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="savePassword()"
+              [disabled]="isLoadingPassword()"
+            >
+              <iconify-icon icon="lucide:save"></iconify-icon>
+              Save Password
+            </button>
+          </form>
+        </app-card>
+
+        <!-- Email Settings Section -->
+        <app-card>
+          <div class="section-title">
+            <h2>Email Settings</h2>
+          </div>
+          <app-email-change
+            [currentEmail]="currentUser()?.email || ''"
+            (changeStart)="onEmailChangeStart()"
+            (changeComplete)="onEmailChangeComplete()"
+          ></app-email-change>
+        </app-card>
+
+        <!-- Appearance Section -->
+        <app-card>
+          <div class="section-title">
+            <h2>Appearance</h2>
+          </div>
+          <app-theme-selector
+            [isDarkMode]="isDarkMode()"
+            (themeChange)="onThemeChange($event)"
+          ></app-theme-selector>
+        </app-card>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Layout -->
+  <div class="settings-mobile">
+    <header class="mobile-header">
+      <h1>Settings</h1>
+    </header>
+
+    <main class="mobile-main">
+      <!-- Account Security Section -->
+      <app-card>
+        <div class="section-title">
+          <h2>Account Security</h2>
+        </div>
+
+        <form [formGroup]="passwordForm" class="form-section">
+          <div class="form-group">
+            <label for="mobileCurrentPassword">Current Password</label>
+            <div class="password-input-wrapper">
+              <input
+                id="mobileCurrentPassword"
+                [type]="showPasswordToggle() ? 'text' : 'password'"
+                formControlName="currentPassword"
+                placeholder="Enter current password"
+                class="form-input"
+              />
+              <button
+                type="button"
+                class="toggle-btn"
+                (click)="togglePasswordVisibility('current')"
+                aria-label="Toggle password visibility"
+              >
+                <iconify-icon [icon]="showPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mobileNewPassword">New Password</label>
+            <div class="password-input-wrapper">
+              <input
+                id="mobileNewPassword"
+                [type]="showNewPasswordToggle() ? 'text' : 'password'"
+                formControlName="newPassword"
+                placeholder="Enter new password"
+                class="form-input"
+                (input)="onNewPasswordChange($event.target.value)"
+              />
+              <button
+                type="button"
+                class="toggle-btn"
+                (click)="togglePasswordVisibility('new')"
+                aria-label="Toggle password visibility"
+              >
+                <iconify-icon [icon]="showNewPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+              </button>
+            </div>
+            <app-password-strength [strength]="passwordStrength()"></app-password-strength>
+          </div>
+
+          <div class="form-group">
+            <label for="mobileConfirmPassword">Confirm New Password</label>
+            <div class="password-input-wrapper">
+              <input
+                id="mobileConfirmPassword"
+                [type]="showConfirmPasswordToggle() ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="Confirm new password"
+                class="form-input"
+              />
+              <button
+                type="button"
+                class="toggle-btn"
+                (click)="togglePasswordVisibility('confirm')"
+                aria-label="Toggle password visibility"
+              >
+                <iconify-icon [icon]="showConfirmPasswordToggle() ? 'lucide:eye-off' : 'lucide:eye'"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary btn-full"
+            (click)="savePassword()"
+            [disabled]="isLoadingPassword()"
+          >
+            <iconify-icon icon="lucide:save"></iconify-icon>
+            Save Password
+          </button>
+        </form>
+      </app-card>
+
+      <!-- Email Settings Section -->
+      <app-card>
+        <div class="section-title">
+          <h2>Email Settings</h2>
+        </div>
+        <app-email-change
+          [currentEmail]="currentUser()?.email || ''"
+          (changeStart)="onEmailChangeStart()"
+          (changeComplete)="onEmailChangeComplete()"
+        ></app-email-change>
+      </app-card>
+
+      <!-- Appearance Section -->
+      <app-card>
+        <div class="section-title">
+          <h2>Appearance</h2>
+        </div>
+        <app-theme-selector
+          [isDarkMode]="isDarkMode()"
+          (themeChange)="onThemeChange($event)"
+        ></app-theme-selector>
+      </app-card>
+
+      <!-- Logout Section -->
+      <app-card>
+        <div class="section-title">
+          <h2>Account</h2>
+        </div>
+        <button
+          type="button"
+          class="btn btn-danger btn-full"
+          (click)="logout()"
+        >
+          <iconify-icon icon="lucide:log-out"></iconify-icon>
+          Logout
+        </button>
+      </app-card>
+    </main>
+
+    <nav class="mobile-nav">
+      <a href="#" class="nav-item">
+        <iconify-icon icon="lucide:home"></iconify-icon>
+        <span>Home</span>
+      </a>
+      <a href="#" class="nav-item">
+        <iconify-icon icon="lucide:bar-chart-3"></iconify-icon>
+        <span>Polls</span>
+      </a>
+      <a href="#" class="nav-item">
+        <iconify-icon icon="lucide:plus-circle"></iconify-icon>
+        <span>Create</span>
+      </a>
+      <a href="#" class="nav-item active">
+        <iconify-icon icon="lucide:settings"></iconify-icon>
+        <span>Settings</span>
+      </a>
+    </nav>
+  </div>
+</div>

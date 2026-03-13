@@ -5,6 +5,7 @@ export { FilterTabsComponent, FilterTab } from "./filter-tabs/filter-tabs.compon
 export { InputComponent } from "./input/input.component";
 export { ModalComponent } from "./modal/modal.component";
 export { OptionRowComponent } from "./option-row/option-row.component";
+export { PieChartComponent } from "./pie-chart/pie-chart.component";
 export { PollCardComponent } from "./poll-card/poll-card.component";
 export { ProgressBarComponent } from "./progress-bar/progress-bar.component";
 export { ResultsBarComponent } from "./results-bar/results-bar.component";
@@ -19,3 +20,4 @@ export { StatCardComponent } from "./stat-card/stat-card.component";
 export { ToastComponent } from "./toast/toast.component";
 export { ToggleComponent } from "./toggle/toggle.component";
 export { WinnerCalloutComponent } from "./winner-callout/winner-callout.component";
+export { TrendingPollsComponent } from "./trending-polls/trending-polls.component";

@@ -4,10 +4,13 @@ import {
   signal,
   CUSTOM_ELEMENTS_SCHEMA,
   inject,
+  OnInit,
+  DestroyRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   BadgeComponent,
   SidebarComponent,
@@ -15,8 +18,10 @@ import {
   ModalComponent,
 } from "../../shared/components";
 import { INavItem, IUserProfile } from "../../shared/components/sidebar/sidebar.component";
-import { IVotePollOption } from "../../models";
+import { IPollResponse } from "../../models";
 import { AuthService } from "../../services/auth.service";
+import { DashboardService } from "../../services/dashboard.service";
+import { VoteTrackingService } from "../../services/vote-tracking.service";
 
 @Component({
   selector: "app-poll-vote-multi",
@@ -33,9 +38,13 @@ import { AuthService } from "../../services/auth.service";
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class PollVoteMultiComponent {
+export class PollVoteMultiComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private dashboardService = inject(DashboardService);
+  private voteTrackingService = inject(VoteTrackingService);
+  private destroyRef = inject(DestroyRef);
 
   public selectedOptions = signal<Set<string>>(new Set());
   public isSubmitting = signal(false);
@@ -43,12 +52,22 @@ export class PollVoteMultiComponent {
   public showSuccessModal = signal(false);
   public error = signal<string | null>(null);
   public votedOptionsLabels = signal<string[]>([]);
+  public poll = signal<IPollResponse | null>(null);
+  public loading = signal(true);
 
-  public navItems: INavItem[] = [
-    { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
-    { label: "Polls", icon: "lucide:vote", route: "/polls" },
-    { label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" },
-  ];
+  public navItems: INavItem[] = (() => {
+    const user = this.authService.getUser();
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
+    const items: INavItem[] = [
+      { label: "Dashboard", icon: "lucide:layout-dashboard", route: "/dashboard" },
+      { label: "Polls", icon: "lucide:vote", route: "/polls" },
+    ];
+    
+    if (isAdmin) {
+      items.push({ label: "Create Poll", icon: "lucide:plus-circle", route: "/create-poll" });
+    }
+    return items;
+  })();
 
   public userProfile: IUserProfile = (() => {
     const user = this.authService.getUser();
@@ -58,49 +77,6 @@ export class PollVoteMultiComponent {
       role: user?.role || "User",
     };
   })();
-
-  public poll = {
-    id: "2",
-    title: "Team building activities",
-    description:
-      "Select all team building activities you would be interested in participating in. We want to plan activities that appeal to as many team members as possible.",
-    type: "Multiple Choice",
-    timeLeft: "5d 12h",
-    votes: 89,
-  };
-
-  public options: IVotePollOption[] = [
-    {
-      id: "escape-room",
-      label: "Escape Room Challenge",
-      description: "Work together to solve puzzles and escape themed rooms within a time limit.",
-    },
-    {
-      id: "cooking-class",
-      label: "Cooking Class",
-      description: "Learn to prepare a meal together with a professional chef instructor.",
-    },
-    {
-      id: "outdoor-adventure",
-      label: "Outdoor Adventure Course",
-      description: "Navigate obstacle courses and zip lines in a natural outdoor setting.",
-    },
-    {
-      id: "bowling",
-      label: "Bowling Tournament",
-      description: "Friendly competition with teams and prizes in a relaxed bowling alley setting.",
-    },
-    {
-      id: "trivia-night",
-      label: "Trivia Night",
-      description: "Test your knowledge in various categories while enjoying refreshments.",
-    },
-    {
-      id: "art-workshop",
-      label: "Art Workshop",
-      description: "Create art pieces together with guided instruction from a local artist.",
-    },
-  ];
 
   public onOptionToggle(optionId: string) {
     const updated = new Set(this.selectedOptions());
@@ -118,29 +94,46 @@ export class PollVoteMultiComponent {
   }
 
   public onSubmitVote() {
-    if (this.selectedOptions().size < 2) return;
+    if (this.selectedOptions().size === 0 || !this.poll()) return;
 
     const selectedIds = Array.from(this.selectedOptions());
-    const selectedLabels = this.options
+    const selectedLabels = this.poll()!.options
       .filter((opt) => selectedIds.includes(opt.id))
-      .map((opt) => opt.label);
+      .map((opt) => opt.text);
 
     this.isSubmitting.set(true);
     this.error.set(null);
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      // Simulate success
-      this.isSubmitting.set(false);
-      this.isSubmitted.set(true);
-      this.votedOptionsLabels.set(selectedLabels);
-      this.showSuccessModal.set(true);
-    }, 1500);
+    this.dashboardService.recordVote(this.poll()!.id, selectedIds)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.isSubmitted.set(true);
+          this.votedOptionsLabels.set(selectedLabels);
+          this.voteTrackingService.markAsVoted(this.poll()!.id);
+          this.dashboardService
+            .getPollById(this.poll()!.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (response) => {
+                if (response.data) {
+                  this.poll.set(response.data);
+                }
+                this.showSuccessModal.set(true);
+              },
+            });
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          this.error.set(err?.error?.message || 'Failed to record vote');
+        }
+      });
   }
 
   public onCloseSuccessModal() {
     this.showSuccessModal.set(false);
-    this.router.navigate(["/poll", this.poll.id, "results"]);
+    this.router.navigate(["/poll", this.poll()?.id, "results"]);
   }
 
   public onRetry() {
@@ -150,5 +143,31 @@ export class PollVoteMultiComponent {
 
   public onBackClick() {
     this.router.navigate(["/polls"]);
+  }
+
+  ngOnInit() {
+    this.route.params
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const pollId = params['id'];
+
+        if (pollId) {
+          this.dashboardService.getAllPolls(0, 100)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (response) => {
+                const foundPoll = response.data?.content?.find(p => p.id === pollId);
+                
+                if (foundPoll) {
+                  this.poll.set(foundPoll);
+                }
+                this.loading.set(false);
+              },
+              error: () => {
+                this.loading.set(false);
+              }
+            });
+        }
+      });
   }
 }

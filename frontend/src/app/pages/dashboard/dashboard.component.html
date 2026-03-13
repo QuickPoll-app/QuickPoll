@@ -11,7 +11,7 @@
       <h1 class="page-title">Dashboard</h1>
       <p class="page-subtitle">Overview of all your polling activity</p>
     </div>
-    <app-buttons variant="primary" (clicked)="onCreatePoll()">
+    <app-buttons variant="primary" (clicked)="onCreatePoll()" *ngIf="isAdmin()">
       <iconify-icon icon="lucide:plus"></iconify-icon>
       <span>Create Poll</span>
     </app-buttons>
@@ -92,7 +92,7 @@
               <div class="poll-item">
                 <div class="poll-item-header">
                   <h4 class="poll-title">{{ result.title }}</h4>
-                  <app-badge variant="expired">Expired</app-badge>
+                  <app-badge [variant]="result.status === 'CLOSED' ? 'expired' : 'active'">{{ result.status }}</app-badge>
                 </div>
                 <div class="result-winner">
                   <div class="winner-info">
@@ -109,5 +109,23 @@
         </div>
       </app-card>
     </div>
+  </div>
+
+  <div class="trending-section">
+    <app-card>
+      <div class="section-header">
+        <h3 class="section-title">
+          <iconify-icon icon="lucide:trending-up"></iconify-icon>
+          Trending Polls
+        </h3>
+      </div>
+      <div class="section-content">
+        <app-trending-polls
+          [polls]="trendingPolls()"
+          [loading]="trendingLoading()"
+          (pollClick)="onTrendingPollClick($event)"
+        ></app-trending-polls>
+      </div>
+    </app-card>
   </div>
 </div>
