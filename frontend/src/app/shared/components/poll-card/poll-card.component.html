@@ -8,17 +8,42 @@
   [attr.aria-label]="'View poll: ' + poll().question"
 >
   <header class="card-header">
-    <app-badge [variant]="getStatusVariant()">
-      {{ poll().status === "ACTIVE" ? "Active" : "Expired" }}
-    </app-badge>
+    <div class="badges-container">
+      <app-badge [variant]="getStatusVariant()">
+        {{ poll().status === "ACTIVE" ? "Active" : "Expired" }}
+      </app-badge>
 
-    <app-badge [variant]="'type'">
-      {{ getPollType() === "single" ? "Single" : "Multi" }}
-    </app-badge>
+      <app-badge [variant]="'type'">
+        {{ getPollType() === "single" ? "Single" : "Multi" }}
+      </app-badge>
 
-    @if (poll().HasVoted) {
-      <div class="badge-voted">
-        <i class="pi pi-check"></i>
+      @if (poll().HasVoted) {
+        <div class="badge-voted">
+          <i class="pi pi-check"></i>
+        </div>
+      }
+    </div>
+
+    @if (isAdmin) {
+      <div class="admin-actions">
+        <button
+          type="button"
+          class="action-btn edit-btn"
+          (click)="onEditClick($event)"
+          title="Edit poll"
+          aria-label="Edit poll"
+        >
+          <iconify-icon icon="lucide:edit-2"></iconify-icon>
+        </button>
+        <button
+          type="button"
+          class="action-btn delete-btn"
+          (click)="onDeleteClick($event)"
+          title="Delete poll"
+          aria-label="Delete poll"
+        >
+          <iconify-icon icon="lucide:trash-2"></iconify-icon>
+        </button>
       </div>
     }
   </header>

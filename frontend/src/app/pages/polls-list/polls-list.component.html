@@ -38,11 +38,38 @@
       <p>Loading polls...</p>
     } @else if (filteredPolls.length > 0) {
       @for (poll of filteredPolls; track poll.id) {
-        <app-poll-card
-          [poll]="poll"
-          (cardClick)="onPollClick(poll)"
-        >
-        </app-poll-card>
+        <div class="poll-card-wrapper">
+          <app-poll-card
+            [poll]="poll"
+            (cardClick)="onPollClick(poll)"
+            (editClick)="onEditPoll(poll)"
+            (deleteClick)="onDeletePoll(poll)"
+          >
+          </app-poll-card>
+
+          @if (deleteConfirmation() === poll.id) {
+            <div class="delete-confirmation-overlay">
+              <div class="delete-confirmation-modal">
+                <div class="confirmation-header">
+                  <iconify-icon icon="lucide:alert-triangle"></iconify-icon>
+                  <h3>Delete Poll</h3>
+                </div>
+                <p class="confirmation-message">
+                  Are you sure you want to delete this poll? This action cannot be undone.
+                </p>
+                <div class="confirmation-actions">
+                  <app-buttons variant="secondary" (clicked)="cancelDelete()">
+                    Cancel
+                  </app-buttons>
+                  <app-buttons variant="primary" (clicked)="confirmDelete(poll.id)">
+                    <iconify-icon icon="lucide:trash-2"></iconify-icon>
+                    <span>Delete</span>
+                  </app-buttons>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
       }
     } @else {
       <div class="no-results">

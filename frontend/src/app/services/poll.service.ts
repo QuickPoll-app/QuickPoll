@@ -22,6 +22,10 @@ export class PollService {
     return this.http.post<IResponseWrapper<IPollResponse>>(`${this.apiUrl}`, poll);
   }
 
+  public deletePoll(pollId: string): Observable<IResponseWrapper<null>> {
+    return this.http.delete<IResponseWrapper<null>>(`${this.apiUrl}/${pollId}`);
+  }
+
   // TODO: Implement vote method
   // vote(pollId: number, optionIds: number[]): Observable<any> { ... }
 

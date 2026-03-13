@@ -5,6 +5,57 @@
   cursor: pointer;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+}
+
+.badges-container {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+.admin-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-left: auto;
+}
+
+.action-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-base);
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-size: 1rem;
+}
+
+.edit-btn {
+  color: var(--color-primary-600);
+}
+
+.edit-btn:hover {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.delete-btn {
+  color: var(--color-error-600);
+}
+
+.delete-btn:hover {
+  background: var(--color-error-100);
+  color: var(--color-error-700);
+}
+
 .card-results {
   display: flex;
   flex-direction: column;

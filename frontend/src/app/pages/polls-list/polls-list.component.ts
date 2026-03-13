@@ -16,6 +16,7 @@ import { IPollResponse } from "../../models/poll.model";
 import { DashboardService } from "../../services/dashboard.service";
 import { VoteTrackingService } from "../../services/vote-tracking.service";
 import { AuthService } from "../../services/auth.service";
+import { PollService } from "../../services/poll.service";
 
 @Component({
   selector: "app-polls-list",
@@ -38,6 +39,7 @@ export class PollsListComponent implements OnInit, AfterViewInit {
   private dashboardService = inject(DashboardService);
   private voteTrackingService = inject(VoteTrackingService);
   private authService = inject(AuthService);
+  private pollService = inject(PollService);
   private destroyRef = inject(DestroyRef);
 
   public searchQuery = signal("");
@@ -48,6 +50,7 @@ export class PollsListComponent implements OnInit, AfterViewInit {
   public searchLoading = signal(false);
   public searchError = signal<string | null>(null);
   public searchInputValue = signal("");
+  public deleteConfirmation = signal<string | null>(null);
 
   constructor() {
     const user = this.authService.getUser();
@@ -139,6 +142,33 @@ export class PollsListComponent implements OnInit, AfterViewInit {
 
       this.router.navigate(["/poll", poll.id, route]);
     }
+  }
+
+  public onEditPoll(poll: IPollResponse) {
+    this.router.navigate(["/edit-poll", poll.id]);
+  }
+
+  public onDeletePoll(poll: IPollResponse) {
+    this.deleteConfirmation.set(poll.id);
+  }
+
+  public confirmDelete(pollId: string) {
+    this.pollService.deletePoll(pollId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deleteConfirmation.set(null);
+          this.loadPolls();
+        },
+        error: (error) => {
+          console.error('Error deleting poll:', error);
+          this.deleteConfirmation.set(null);
+        }
+      });
+  }
+
+  public cancelDelete() {
+    this.deleteConfirmation.set(null);
   }
 
   public onCreatePoll() {
