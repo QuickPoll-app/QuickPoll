@@ -1,0 +1,52 @@
+<div class="email-settings">
+  <div class="current-email" [class.hidden]="showChangeForm()">
+    <label for="currentEmailDisplay">Current Email</label>
+    <div class="email-display">
+      <span id="currentEmailDisplay">{{ currentEmail() }}</span>
+      <button type="button" class="btn-change" (click)="toggleChangeForm()" aria-label="Change email">
+        Change
+      </button>
+    </div>
+  </div>
+
+  @if (showChangeForm()) {
+    <div class="change-form">
+      <form [formGroup]="emailForm">
+        <div class="form-group">
+          <label for="newEmailInput">New Email Address</label>
+          <input
+            id="newEmailInput"
+            type="email"
+            formControlName="newEmail"
+            placeholder="Enter new email address"
+            class="form-input"
+          />
+        </div>
+
+        <div class="info-box">
+          <iconify-icon icon="lucide:info"></iconify-icon>
+          <span>A verification email will be sent to your new address. Please verify before the change takes effect.</span>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="saveEmail()"
+            [disabled]="emailForm.invalid || isLoading()"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancel()"
+            [disabled]="isLoading()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

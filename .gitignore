@@ -85,3 +85,6 @@ monitoring/prometheus/data/
 monitoring/grafana/data/*.secrets-backup.env
 .secrets-backup.env
 .claude/
+frontend/src/app/pages/settings/NAVIGATION_INTEGRATION.md
+frontend/src/app/pages/settings/README.md
+frontend/src/app/pages/settings/NAVIGATION_INTEGRATION.md

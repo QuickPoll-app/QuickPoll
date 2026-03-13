@@ -11,6 +11,7 @@ import { PollVoteSingleComponent } from "./pages/poll-vote-single/poll-vote-sing
 import { PollExpiredComponent } from "./pages/poll-expired/poll-expired.component";
 import { PollResultsComponent } from "./pages/poll-results/poll-results.component";
 import { UserManagementComponent } from "./pages/user-management/user-management.component";
+import { SettingsComponent } from "./pages/settings/settings.component";
 import { NotFoundComponent } from "./pages/not-found/not-found.component";
 import { authGuard } from "./guards/auth.guard";
 
@@ -52,6 +53,10 @@ export const routes: Routes = [
       {
         path: "users",
         component: UserManagementComponent,
+      },
+      {
+        path: "settings",
+        component: SettingsComponent,
       },
       {
         path: "poll/:id/vote-single",

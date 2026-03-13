@@ -1,0 +1,195 @@
+.email-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.current-email {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.current-email label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.email-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.email-display span {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
+}
+
+.btn-change {
+  background: none;
+  border: none;
+  color: var(--color-primary-700);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: color 150ms ease;
+  white-space: nowrap;
+}
+
+.btn-change:hover {
+  color: var(--color-primary-900);
+}
+
+.change-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-top: var(--spacing-2);
+  border-top: var(--border-width-thin) solid var(--color-border-primary);
+}
+
+.change-form form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width-medium) solid var(--color-border-primary);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-primary);
+  transition: border-color 150ms ease;
+  font-family: var(--font-sans);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background-color: var(--color-user-100);
+  border: var(--border-width-thin) solid var(--color-user-300);
+  border-radius: var(--radius-base);
+}
+
+.info-box iconify-icon {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-user-700);
+  flex-shrink: 0;
+  margin-top: var(--spacing-1);
+}
+
+.info-box span {
+  font-size: var(--font-size-sm);
+  color: var(--color-user-700);
+  line-height: var(--line-height-normal);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width-medium) solid transparent;
+  border-radius: var(--radius-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  font-size: var(--font-size-base);
+  min-height: 44px;
+}
+
+.btn-primary {
+  background-color: var(--color-primary-700);
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary-700);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-900);
+  border-color: var(--color-primary-900);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--color-primary-700);
+  background-color: var(--color-primary-100);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background-color: var(--color-primary-300);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1023px) {
+  .email-display {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
