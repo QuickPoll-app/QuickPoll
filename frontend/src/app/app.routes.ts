@@ -4,6 +4,7 @@ import { RegisterComponent } from "./auth/pages/register/register.component";
 import { MainLayoutComponent } from "./layouts/main-layout/main-layout.component";
 import { DashboardComponent } from "./pages/dashboard/dashboard.component";
 import { CreatePollComponent } from "./pages/create-poll/create-poll.component";
+import { EditPollComponent } from "./pages/edit-poll/edit-poll.component";
 import { PollsListComponent } from "./pages/polls-list/polls-list.component";
 import { PollVoteMultiComponent } from "./pages/poll-vote-multi/poll-vote-multi.component";
 import { PollVoteSingleComponent } from "./pages/poll-vote-single/poll-vote-single.component";
@@ -42,6 +43,10 @@ export const routes: Routes = [
       {
         path: "create-poll",
         component: CreatePollComponent,
+      },
+      {
+        path: "edit-poll/:id",
+        component: EditPollComponent,
       },
       {
         path: "poll/:id/vote-single",

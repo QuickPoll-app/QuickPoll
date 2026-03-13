@@ -26,6 +26,7 @@
   font-size: 1.875rem;
   font-weight: 600;
   margin: 0;
+  color: var(--color-text-primary)
 }
 
 .page-subtitle {
@@ -95,7 +96,7 @@
 }
 
 .delete-confirmation-modal {
-  background: white;
+  background: var(--color-surface-primary);
   border-radius: 0.75rem;
   padding: 1.5rem;
   max-width: 400px;
